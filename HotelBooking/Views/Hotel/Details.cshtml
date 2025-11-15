@@ -1,0 +1,125 @@
+﻿@{
+    ViewBag.Title = "Chi tiết khách sạn";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div id="hotelDetails"></div>
+<div id="hotelRooms" class="mt-4"></div>
+<div id="hotelReviews" class="mt-4"></div>
+
+@section scripts {
+    <script>
+    var hotelId = @ViewBag.HotelId;
+
+    $(document).ready(function () {
+        loadHotelDetails();
+        loadHotelRooms();
+        loadHotelReviews();
+    });
+
+    function loadHotelDetails() {
+        $.ajax({
+            type: "GET",
+            url: window.location.origin + '/Hotel/GetDetails/' + hotelId,
+            success: function (response) {
+                if (response.success) {
+                    var hotel = response.data;
+                    var html = '<div class="row">';
+                    html += '<div class="col-md-8">';
+                    html += '<h2>' + hotel.Name + '</h2>';
+                    html += '<p>' + '⭐'.repeat(hotel.StarRating) + '</p>';
+                    html += '<p><strong>Địa chỉ:</strong> ' + hotel.Address + ', ' + hotel.City + ', ' + hotel.Country + '</p>';
+
+                    if (hotel.Images && hotel.Images.length > 0) {
+                        html += '<div id="hotelCarousel" class="carousel slide mb-4" data-bs-ride="carousel">';
+                        html += '<div class="carousel-inner">';
+                        hotel.Images.forEach(function(img, index) {
+                            html += '<div class="carousel-item ' + (index === 0 ? 'active' : '') + '">';
+                            html += '<img src="' + img.Url + '" class="d-block w-100" alt="' + img.AltText + '">';
+                            html += '</div>';
+                        });
+                        html += '</div>';
+                        html += '<button class="carousel-control-prev" type="button" data-bs-target="#hotelCarousel" data-bs-slide="prev">';
+                        html += '<span class="carousel-control-prev-icon"></span></button>';
+                        html += '<button class="carousel-control-next" type="button" data-bs-target="#hotelCarousel" data-bs-slide="next">';
+                        html += '<span class="carousel-control-next-icon"></span></button>';
+                        html += '</div>';
+                    }
+
+                    html += '<h4>Mô tả</h4><p>' + hotel.Description + '</p>';
+                    html += '</div></div>';
+
+                    $("#hotelDetails").html(html);
+                }
+            }
+        });
+    }
+
+    function loadHotelRooms() {
+        $.ajax({
+            type: "GET",
+            url: window.location.origin + '/Hotel/GetRooms/' + hotelId,
+            success: function (response) {
+                if (response.success && response.rooms.length > 0) {
+                    var html = '<h4>Phòng trống</h4>';
+                    response.rooms.forEach(function(room) {
+                        html += '<div class="card mb-3">';
+                        html += '<div class="card-body">';
+                        html += '<h5 class="card-title">' + room.Name + '</h5>';
+                        html += '<p class="card-text">' + room.Description + '</p>';
+                        html += '<ul class="list-unstyled">';
+                        html += '<li><strong>Sức chứa:</strong> ' + room.Capacity + ' người</li>';
+                        html += '<li><strong>Giá:</strong> ' + room.PricePerNight.toLocaleString() + ' VNĐ/đêm</li>';
+                        html += '<li><strong>Số phòng:</strong> ' + room.TotalRooms + '</li>';
+                        html += '</ul>';
+                        html += '<div class="d-flex justify-content-between">';
+                        html += '<a href="/Room/Details/' + room.Id + '" class="btn btn-info">Chi tiết</a>';
+
+                        var isAuthenticated = '@Request.IsAuthenticated'.toLowerCase() === 'true';
+                        if (isAuthenticated) {
+                            html += '<a href="/Customer/Booking/Create?roomId=' + room.Id + '&hotelId=' + hotelId + '" class="btn btn-success">Đặt phòng</a>';
+                        }
+
+                        html += '</div></div></div>';
+                    });
+                    $("#hotelRooms").html(html);
+                }
+            }
+        });
+    }
+
+    function loadHotelReviews() {
+        $.ajax({
+            type: "GET",
+            url: window.location.origin + '/Hotel/GetReviews/' + hotelId,
+            success: function (response) {
+                if (response.success) {
+                    var html = '<div class="card">';
+                    html += '<div class="card-header"><h5>Đánh giá</h5></div>';
+                    html += '<div class="card-body">';
+
+                    if (response.reviews.length > 0) {
+                        var avgRating = response.avgRating.toFixed(1);
+                        html += '<p><strong>Đánh giá trung bình:</strong> ' + avgRating + ' / 5.0 ⭐</p>';
+                        html += '<p><strong>Số đánh giá:</strong> ' + response.reviews.length + '</p><hr />';
+
+                        response.reviews.forEach(function(review) {
+                            html += '<div class="mb-3">';
+                            html += '<strong>' + review.UserEmail + '</strong>';
+                            html += '<p>' + '⭐'.repeat(review.Rating) + '</p>';
+                            html += '<p class="small">' + review.Content + '</p>';
+                            html += '<small class="text-muted">' + new Date(review.CreatedAt).toLocaleDateString() + '</small>';
+                            html += '</div>';
+                        });
+                    } else {
+                        html += '<p class="text-muted">Chưa có đánh giá nào</p>';
+                    }
+
+                    html += '</div></div>';
+                    $("#hotelReviews").html(html);
+                }
+            }
+        });
+    }
+    </script>
+}

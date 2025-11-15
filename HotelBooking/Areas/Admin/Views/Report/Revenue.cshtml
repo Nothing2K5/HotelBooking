@@ -1,0 +1,147 @@
+﻿
+@{
+    ViewBag.Title = "Báo cáo Doanh thu";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="app-content-header">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-6">
+                <h3 class="mb-0">Báo cáo Doanh thu</h3>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-end">
+                    <li class="breadcrumb-item"><a href="/Admin/Hotel">Admin</a></li>
+                    <li class="breadcrumb-item active">Báo cáo</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body">
+                        <form id="reportForm" class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="startDate">Từ ngày:</label>
+                                <input type="date" class="form-control" id="startDate" />
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="endDate">Đến ngày:</label>
+                                <input type="date" class="form-control" id="endDate" />
+                            </div>
+                            <div class="col-md-4 mb-3 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary w-100">Xem báo cáo</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-4">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <h5>Tổng doanh thu</h5>
+                        <h2 id="totalRevenue">0 VNĐ</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <h5>Booking thành công</h5>
+                        <h2 id="totalPaid">0</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-danger text-white">
+                    <div class="card-body">
+                        <h5>Booking hủy</h5>
+                        <h2 id="totalCancelled">0</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Doanh thu theo khách sạn</h5>
+                    </div>
+                    <div class="card-body">
+                        <table id="tbl_revenue" class="table table-bordered table-striped">
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(document).ready(function () {
+            // Set default dates: last 30 days
+            var today = new Date();
+            var lastMonth = new Date();
+            lastMonth.setDate(today.getDate() - 30);
+
+            $("#startDate").val(lastMonth.toISOString().split('T')[0]);
+            $("#endDate").val(today.toISOString().split('T')[0]);
+
+            loadReport();
+
+            $("#reportForm").submit(function (e) {
+                e.preventDefault();
+                loadReport();
+            });
+        });
+
+        function loadReport() {
+            var startDate = $("#startDate").val();
+            var endDate = $("#endDate").val();
+
+            $.ajax({
+                type: "GET",
+                url: window.location.origin + '/Admin/Report/GetRevenueReport',
+                data: { startDate: startDate, endDate: endDate },
+                success: function (response) {
+                    if (response.success) {
+                        var data = response.data;
+
+                        // Update summary cards
+                        $("#totalRevenue").text(data.totalRevenue.toLocaleString() + ' VNĐ');
+                        $("#totalPaid").text(data.totalPaid);
+                        $("#totalCancelled").text(data.totalCancelled);
+
+                        // Update table
+                        var tbl = $("#tbl_revenue");
+                        var html = "<thead><tr>";
+                        html += "<th>STT</th><th>Khách sạn</th><th>Số booking</th><th>Doanh thu</th>";
+                        html += "</tr></thead><tbody>";
+
+                        var revenueByHotel = data.revenueByHotel;
+                        var index = 1;
+                        for (var hotelName in revenueByHotel) {
+                            html += "<tr>";
+                            html += "<td>" + index + "</td>";
+                            html += "<td>" + hotelName + "</td>";
+                            html += "<td>" + revenueByHotel[hotelName].count + "</td>";
+                            html += "<td>" + revenueByHotel[hotelName].revenue.toLocaleString() + " VNĐ</td>";
+                            html += "</tr>";
+                            index++;
+                        }
+
+                        html += "</tbody>";
+                        tbl.html(html);
+                    }
+                }
+            });
+        }
+    </script>
+}

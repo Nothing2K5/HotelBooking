@@ -1,0 +1,133 @@
+﻿@{
+    ViewBag.Title = "Quản lý Phòng";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="app-content-header">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-6">
+                <h3 class="mb-0">Quản lý Phòng</h3>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-end">
+                    <li class="breadcrumb-item"><a href="/Admin/Hotel">Admin</a></li>
+                    <li class="breadcrumb-item active">Phòng</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-4 mb-3">
+                <label for="filterHotel">Lọc theo khách sạn:</label>
+                <select class="form-control" id="filterHotel">
+                    <option value="">-- Tất cả --</option>
+                </select>
+            </div>
+            <div class="col-md-8 mb-3 text-end">
+                <a href="/Admin/Room/Create" class="btn btn-success">+ Thêm phòng</a>
+            </div>
+
+            <div class="col-sm-12" id="div_ShowData">
+                <table id="tbl_rooms" class="table table-bordered table-striped">
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        var url_domain = window.location.origin;
+
+        $(document).ready(function () {
+            loadHotels();
+            loadRooms();
+
+            $("#filterHotel").change(function () {
+                loadRooms();
+            });
+        });
+
+        function loadHotels() {
+            $.ajax({
+                type: "GET",
+                url: url_domain + '/Admin/Hotel/GetAllHotels',
+                success: function (response) {
+                    if (response.success) {
+                        var hotels = response.data;
+                        var select = $("#filterHotel");
+                        hotels.forEach(function (hotel) {
+                            select.append('<option value="' + hotel.Id + '">' + hotel.Name + '</option>');
+                        });
+                    }
+                }
+            });
+        }
+
+        function loadRooms() {
+            var hotelId = $("#filterHotel").val();
+            var url = url_domain + '/Admin/Room/GetAllRooms';
+            if (hotelId) {
+                url += '?hotelId=' + hotelId;
+            }
+
+            $.ajax({
+                type: "GET",
+                url: url,
+                success: function (response) {
+                    if (response.success) {
+                        var rooms = response.data;
+                        var tbl = $("#tbl_rooms");
+                        var html = "<thead><tr>";
+                        html += "<th>STT</th><th>Khách sạn</th><th>Tên phòng</th>";
+                        html += "<th>Sức chứa</th><th>Giá/đêm</th><th>Số phòng</th><th>Trạng thái</th><th>Thao tác</th>";
+                        html += "</tr></thead><tbody>";
+
+                        for (var i = 0; i < rooms.length; i++) {
+                            var room = rooms[i];
+                            var statusBadge = room.IsActive
+                                ? '<span class="badge bg-success">Active</span>'
+                                : '<span class="badge bg-secondary">Inactive</span>';
+
+                            html += "<tr>";
+                            html += "<td>" + (i + 1) + "</td>";
+                            html += "<td>" + room.HotelName + "</td>";
+                            html += "<td>" + room.Name + "</td>";
+                            html += "<td>" + room.Capacity + " người</td>";
+                            html += "<td>" + room.PricePerNight.toLocaleString() + " VNĐ</td>";
+                            html += "<td>" + room.TotalRooms + "</td>";
+                            html += "<td>" + statusBadge + "</td>";
+                            html += "<td>";
+                            html += "<a href='" + url_domain + "/Admin/Room/Edit/" + room.Id + "' class='btn btn-sm btn-warning'>Sửa</a> ";
+                            html += "<button type='button' class='btn btn-sm btn-danger' onclick='deleteRoom(" + room.Id + ")'>Xóa</button>";
+                            html += "</td></tr>";
+                        }
+
+                        html += "</tbody>";
+                        tbl.html(html);
+                    }
+                }
+            });
+        }
+
+        function deleteRoom(id) {
+            if (confirm("Bạn có chắc chắn muốn xóa phòng này không?")) {
+                $.ajax({
+                    type: "POST",
+                    url: url_domain + '/Admin/Room/DeleteRoom',
+                    data: JSON.stringify({ id: id }),
+                    contentType: "application/json; charset=utf-8",
+                    success: function (response) {
+                        if (response.success) {
+                            alert(response.message);
+                            loadRooms();
+                        } else {
+                            alert(response.message);
+                        }
+                    }
+                });
+            }
+        }
+    </script>
+}

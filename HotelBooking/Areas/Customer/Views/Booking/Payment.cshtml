@@ -1,0 +1,115 @@
+﻿@{
+    ViewBag.Title = "Thanh toán";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Thanh toán Booking</h2>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4>Chọn phương thức thanh toán</h4>
+            </div>
+            <div class="card-body">
+                <form id="paymentForm">
+                    <input type="hidden" id="bookingId" value="@ViewBag.BookingId" />
+
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="radio" name="paymentMethod"
+                               id="onlinePayment" value="online" checked>
+                        <label class="form-check-label" for="onlinePayment">
+                            <strong>Thanh toán online</strong> (Mô phỏng - Tự động thành công)
+                        </label>
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="radio" name="paymentMethod"
+                               id="directPayment" value="direct">
+                        <label class="form-check-label" for="directPayment">
+                            <strong>Thanh toán trực tiếp</strong> tại khách sạn
+                        </label>
+                    </div>
+
+                    <hr />
+
+                    <button type="submit" class="btn btn-success btn-lg w-100">Xác nhận thanh toán</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Thông tin booking</h5>
+            </div>
+            <div class="card-body" id="bookingInfo">
+                <p class="text-muted">Đang tải...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        var bookingId = parseInt($("#bookingId").val());
+
+        $(document).ready(function () {
+            loadBookingInfo();
+
+            $("#paymentForm").submit(function (e) {
+                e.preventDefault();
+                processPayment();
+            });
+        });
+
+        function loadBookingInfo() {
+            $.ajax({
+                type: "GET",
+                url: window.location.origin + '/Customer/Booking/GetBookingInfo/' + bookingId,
+                success: function (response) {
+                    if (response.success) {
+                        var booking = response.data;
+                        var html = '<p><strong>Mã booking:</strong> ' + booking.Code + '</p>';
+                        html += '<p><strong>Khách sạn:</strong> ' + booking.HotelName + '</p>';
+                        html += '<p><strong>Check-in:</strong> ' + formatDate(booking.CheckInDate) + '</p>';
+                        html += '<p><strong>Check-out:</strong> ' + formatDate(booking.CheckOutDate) + '</p>';
+                        html += '<hr />';
+                        html += '<p class="h5"><strong>Tổng tiền:</strong> <span class="text-danger">' + booking.TotalAmount.toLocaleString() + ' VNĐ</span></p>';
+                        $("#bookingInfo").html(html);
+                    }
+                }
+            });
+        }
+
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleDateString('vi-VN');
+        }
+
+        function processPayment() {
+            var paymentMethod = $('input[name="paymentMethod"]:checked').val();
+
+            $.ajax({
+                type: "POST",
+                url: window.location.origin + '/Customer/Booking/ProcessPayment',
+                data: JSON.stringify({
+                    bookingId: bookingId,
+                    paymentMethod: paymentMethod
+                }),
+                contentType: "application/json; charset=utf-8",
+                success: function (response) {
+                    if (response.success) {
+                        alert(response.message);
+                        window.location.href = '/Customer/Booking/Details/' + bookingId;
+                    } else {
+                        alert(response.message);
+                    }
+                },
+                error: function () {
+                    alert("Đã xảy ra lỗi trong quá trình thanh toán");
+                }
+            });
+        }
+    </script>
+}

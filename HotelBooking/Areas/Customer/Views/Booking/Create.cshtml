@@ -1,0 +1,200 @@
+﻿@{
+    ViewBag.Title = "Đặt phòng";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Đặt phòng</h2>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-3">
+            <div class="card-header">
+                <h4>Thông tin đặt phòng</h4>
+            </div>
+            <div class="card-body">
+                <form id="bookingForm">
+                    <input type="hidden" id="hotelId" value="@Request.QueryString["hotelId"]" />
+                    <input type="hidden" id="roomId" value="@Request.QueryString["roomId"]" />
+
+                    <div id="error-message" class="alert alert-danger" style="display:none;"></div>
+
+                    <div class="form-group mb-3">
+                        <label for="checkInDate">Ngày nhận phòng</label>
+                        <input type="date" class="form-control" id="checkInDate" required />
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="checkOutDate">Ngày trả phòng</label>
+                        <input type="date" class="form-control" id="checkOutDate" required />
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="guests">Số khách</label>
+                        <input type="number" class="form-control" id="guests" value="1" min="1" max="10" required />
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="promoCode">Mã khuyến mãi (nếu có)</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="promoCode" placeholder="Nhập mã khuyến mãi" />
+                            <button class="btn btn-outline-secondary" type="button" id="btnApplyPromo">Áp dụng</button>
+                        </div>
+                        <small id="promoMessage" class="text-success" style="display:none;"></small>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="note">Yêu cầu đặc biệt</label>
+                        <textarea class="form-control" id="note" rows="3" placeholder="Ghi chú thêm..."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-success btn-lg w-100">Tiếp tục thanh toán</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Tóm tắt đặt phòng</h5>
+            </div>
+            <div class="card-body" id="bookingSummary">
+                <p class="text-muted">Đang tải thông tin...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        var roomId = parseInt($("#roomId").val());
+        var hotelId = parseInt($("#hotelId").val());
+        var roomPrice = 0;
+        var discount = 0;
+
+        $(document).ready(function () {
+            // Set min date to today
+            var today = new Date().toISOString().split('T')[0];
+            $("#checkInDate").attr('min', today).val(today);
+
+            var tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            $("#checkOutDate").attr('min', tomorrow.toISOString().split('T')[0]).val(tomorrow.toISOString().split('T')[0]);
+
+            loadRoomInfo();
+
+            $("#checkInDate, #checkOutDate").change(function () {
+                updateSummary();
+            });
+
+            $("#btnApplyPromo").click(function () {
+                applyPromoCode();
+            });
+
+            $("#bookingForm").submit(function (e) {
+                e.preventDefault();
+                createBooking();
+            });
+        });
+
+        function loadRoomInfo() {
+            $.ajax({
+                type: "GET",
+                url: window.location.origin + '/Customer/Booking/GetRoomInfo',
+                data: { roomId: roomId, hotelId: hotelId },
+                success: function (response) {
+                    if (response.success) {
+                        roomPrice = response.room.PricePerNight;
+                        var html = '<p><strong>Khách sạn:</strong> ' + response.hotel.Name + '</p>';
+                        html += '<p><strong>Loại phòng:</strong> ' + response.room.Name + '</p>';
+                        html += '<p><strong>Giá:</strong> ' + roomPrice.toLocaleString() + ' VNĐ/đêm</p>';
+                        $("#bookingSummary").html(html);
+                        updateSummary();
+                    }
+                }
+            });
+        }
+
+        function updateSummary() {
+            var checkIn = new Date($("#checkInDate").val());
+            var checkOut = new Date($("#checkOutDate").val());
+            var nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
+
+            if (nights > 0 && roomPrice > 0) {
+                var subtotal = roomPrice * nights;
+                var total = subtotal - discount;
+
+                var html = $("#bookingSummary").html();
+                html += '<hr />';
+                html += '<p><strong>Số đêm:</strong> ' + nights + '</p>';
+                html += '<p><strong>Tạm tính:</strong> ' + subtotal.toLocaleString() + ' VNĐ</p>';
+
+                if (discount > 0) {
+                    html += '<p class="text-success"><strong>Giảm giá:</strong> -' + discount.toLocaleString() + ' VNĐ</p>';
+                }
+
+                html += '<hr />';
+                html += '<p class="h5"><strong>Tổng tiền:</strong> <span class="text-danger">' + total.toLocaleString() + ' VNĐ</span></p>';
+
+                $("#bookingSummary").html(html);
+            }
+        }
+
+        function applyPromoCode() {
+            var code = $("#promoCode").val();
+            if (!code) {
+                alert("Vui lòng nhập mã khuyến mãi");
+                return;
+            }
+
+            $.ajax({
+                type: "POST",
+                url: window.location.origin + '/Customer/Booking/ValidatePromo',
+                data: JSON.stringify({ code: code }),
+                contentType: "application/json; charset=utf-8",
+                success: function (response) {
+                    if (response.success) {
+                        discount = response.discountAmount;
+                        $("#promoMessage").text("Áp dụng mã thành công! Giảm " + discount.toLocaleString() + " VNĐ").show();
+                        updateSummary();
+                    } else {
+                        alert(response.message);
+                        $("#promoMessage").hide();
+                    }
+                },
+                error: function () {
+                    alert("Mã khuyến mãi không hợp lệ");
+                }
+            });
+        }
+
+        function createBooking() {
+            var formData = {
+                HotelId: hotelId,
+                RoomId: roomId,
+                CheckInDate: $("#checkInDate").val(),
+                CheckOutDate: $("#checkOutDate").val(),
+                Guests: parseInt($("#guests").val()),
+                PromoCode: $("#promoCode").val(),
+                Note: $("#note").val()
+            };
+
+            $.ajax({
+                type: "POST",
+                url: window.location.origin + '/Customer/Booking/CreateBooking',
+                data: JSON.stringify(formData),
+                contentType: "application/json; charset=utf-8",
+                success: function (response) {
+                    if (response.success) {
+                        window.location.href = '/Customer/Booking/Payment/' + response.bookingId;
+                    } else {
+                        $("#error-message").text(response.message).show();
+                    }
+                },
+                error: function () {
+                    $("#error-message").text("Đã xảy ra lỗi. Vui lòng thử lại.").show();
+                }
+            });
+        }
+    </script>
+}

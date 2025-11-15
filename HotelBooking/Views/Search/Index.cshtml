@@ -1,0 +1,120 @@
+﻿@{
+    ViewBag.Title = "Tìm kiếm khách sạn";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Tìm kiếm khách sạn</h2>
+
+<div class="card">
+    <div class="card-body">
+        <form id="searchForm">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="location">Địa điểm</label>
+                    <input type="text" class="form-control" id="location" name="Location"
+                           placeholder="Thành phố hoặc tên khách sạn" required />
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <label for="checkInDate">Ngày nhận phòng</label>
+                    <input type="date" class="form-control" id="checkInDate" name="CheckInDate" required />
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <label for="checkOutDate">Ngày trả phòng</label>
+                    <input type="date" class="form-control" id="checkOutDate" name="CheckOutDate" required />
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <label for="guests">Số khách</label>
+                    <input type="number" class="form-control" id="guests" name="Guests"
+                           value="1" min="1" max="10" required />
+                </div>
+
+                <div class="col-md-9 mb-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary btn-lg w-100">🔍 Tìm kiếm</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="searchResults" style="margin-top: 30px;"></div>
+
+@section scripts {
+    <script>
+        $(document).ready(function () {
+            // Set min date to today
+            var today = new Date().toISOString().split('T')[0];
+            $("#checkInDate").attr('min', today);
+            $("#checkOutDate").attr('min', today);
+
+            $("#checkInDate").change(function () {
+                $("#checkOutDate").attr('min', $(this).val());
+            });
+
+            $("#searchForm").submit(function (e) {
+                e.preventDefault();
+
+                var formData = {
+                    Location: $("#location").val(),
+                    CheckInDate: $("#checkInDate").val(),
+                    CheckOutDate: $("#checkOutDate").val(),
+                    Guests: parseInt($("#guests").val())
+                };
+
+                $.ajax({
+                    type: "POST",
+                    url: window.location.origin + '/Search/SearchHotels',
+                    data: JSON.stringify(formData),
+                    contentType: "application/json; charset=utf-8",
+                    success: function (response) {
+                        if (response.success) {
+                            displayResults(response.hotels);
+                        } else {
+                            $("#searchResults").html('<div class="alert alert-warning">' + response.message + '</div>');
+                        }
+                    },
+                    error: function () {
+                        $("#searchResults").html('<div class="alert alert-danger">Đã xảy ra lỗi. Vui lòng thử lại.</div>');
+                    }
+                });
+            });
+
+            function displayResults(hotels) {
+                if (hotels.length === 0) {
+                    $("#searchResults").html('<div class="alert alert-info">Không tìm thấy khách sạn nào phù hợp.</div>');
+                    return;
+                }
+
+                var html = '<h3>Tìm thấy ' + hotels.length + ' khách sạn</h3><div class="row">';
+
+                hotels.forEach(function (hotel) {
+                    html += '<div class="col-md-12 mb-3">';
+                    html += '<div class="card">';
+                    html += '<div class="row g-0">';
+                    html += '<div class="col-md-4">';
+                    if (hotel.ImageUrl) {
+                        html += '<img src="' + hotel.ImageUrl + '" class="img-fluid rounded-start" alt="' + hotel.Name + '">';
+                    } else {
+                        html += '<img src="/Content/images/no-image.png" class="img-fluid rounded-start" alt="No image">';
+                    }
+                    html += '</div>';
+                    html += '<div class="col-md-8">';
+                    html += '<div class="card-body">';
+                    html += '<h5 class="card-title">' + hotel.Name + '</h5>';
+                    html += '<p class="card-text"><small class="text-muted">' + '⭐'.repeat(hotel.StarRating) + '</small></p>';
+                    html += '<p class="card-text">' + hotel.Address + ', ' + hotel.City + '</p>';
+                    html += '<p class="card-text">' + (hotel.Description || '').substring(0, 150) + '...</p>';
+                    html += '<a href="/Hotel/Details/' + hotel.Id + '" class="btn btn-primary">Xem chi tiết</a>';
+                    html += '</div></div></div></div></div>';
+                });
+
+                html += '</div>';
+                $("#searchResults").html(html);
+            }
+        });
+    </script>
+}
