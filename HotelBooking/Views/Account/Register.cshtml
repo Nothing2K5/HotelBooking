@@ -1,0 +1,90 @@
+﻿@{
+    ViewBag.Title = "Đăng ký";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3>Đăng ký tài khoản</h3>
+            </div>
+            <div class="card-body">
+                <form id="registerForm">
+                    <div id="error-message" class="alert alert-danger" style="display:none;"></div>
+                    <div id="success-message" class="alert alert-success" style="display:none;"></div>
+
+                    <div class="form-group mb-3">
+                        <label for="email">Email</label>
+                        <input type="email" class="form-control" id="email" name="Email" placeholder="Email" required />
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="password">Mật khẩu</label>
+                        <input type="password" class="form-control" id="password" name="Password"
+                               placeholder="Mật khẩu (tối thiểu 6 ký tự)" minlength="6" required />
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="fullName">Họ tên</label>
+                        <input type="text" class="form-control" id="fullName" name="FullName" placeholder="Họ tên" required />
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="phone">Số điện thoại</label>
+                        <input type="tel" class="form-control" id="phone" name="Phone" placeholder="Số điện thoại" />
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <button type="submit" class="btn btn-success btn-block w-100">Đăng ký</button>
+                    </div>
+
+                    <div class="text-center">
+                        <a href="/Account/Login">Đã có tài khoản? Đăng nhập</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(document).ready(function () {
+            $("#registerForm").submit(function (e) {
+                e.preventDefault();
+
+                var formData = {
+                    Email: $("#email").val(),
+                    Password: $("#password").val(),
+                    FullName: $("#fullName").val(),
+                    Phone: $("#phone").val()
+                };
+
+                $.ajax({
+                    type: "POST",
+                    url: window.location.origin + '/Account/Register',
+                    data: JSON.stringify(formData),
+                    contentType: "application/json; charset=utf-8",
+                    success: function (response) {
+                        if (response.success) {
+                            $("#success-message").text(response.message).show();
+                            $("#error-message").hide();
+                            setTimeout(function () {
+                                window.location.href = '/Home/Index';
+                            }, 1500);
+                        } else {
+                            $("#error-message").text(response.message).show();
+                            $("#success-message").hide();
+                        }
+                    },
+                    error: function (xhr) {
+                        var error = xhr.responseJSON;
+                        $("#error-message").text(error ? error.message : "Đã xảy ra lỗi").show();
+                        $("#success-message").hide();
+                    }
+                });
+            });
+        });
+    </script>
+}

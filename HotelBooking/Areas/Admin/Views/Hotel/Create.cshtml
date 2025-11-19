@@ -1,0 +1,91 @@
+﻿@{
+    ViewBag.Title = "Thêm Khách sạn";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <h2>Thêm Khách sạn mới</h2>
+
+    <div class="card">
+        <div class="card-body">
+            <form id="hotelForm">
+                <div id="success-message" class="alert alert-success" style="display:none;"></div>
+                <div id="error-message" class="alert alert-danger" style="display:none;"></div>
+
+                <div class="form-group mb-3">
+                    <label for="name">Tên khách sạn <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="name" required />
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="address">Địa chỉ</label>
+                        <input type="text" class="form-control" id="address" />
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="city">Thành phố</label>
+                        <input type="text" class="form-control" id="city" />
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="country">Quốc gia</label>
+                        <input type="text" class="form-control" id="country" value="Việt Nam" />
+                    </div>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="starRating">Hạng sao</label>
+                    <input type="number" class="form-control" id="starRating" min="1" max="5" value="3" />
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="description">Mô tả</label>
+                    <textarea class="form-control" id="description" rows="5"></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-success">Lưu</button>
+                <a href="/Admin/Hotel/Index" class="btn btn-secondary">Hủy</a>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(document).ready(function () {
+            $("#hotelForm").submit(function (e) {
+                e.preventDefault();
+
+                var formData = {
+                    Name: $("#name").val(),
+                    Address: $("#address").val(),
+                    City: $("#city").val(),
+                    Country: $("#country").val(),
+                    StarRating: parseInt($("#starRating").val()),
+                    Description: $("#description").val()
+                };
+
+                $.ajax({
+                    type: "POST",
+                    url: window.location.origin + '/Admin/Hotel/CreateHotel',
+                    data: JSON.stringify(formData),
+                    contentType: "application/json; charset=utf-8",
+                    success: function (response) {
+                        if (response.success) {
+                            $("#success-message").text(response.message).show();
+                            $("#error-message").hide();
+                            setTimeout(function () {
+                                window.location.href = '/Admin/Hotel/Index';
+                            }, 1500);
+                        } else {
+                            $("#error-message").text(response.message).show();
+                            $("#success-message").hide();
+                        }
+                    },
+                    error: function () {
+                        $("#error-message").text("Đã xảy ra lỗi. Vui lòng thử lại.").show();
+                    }
+                });
+            });
+        });
+    </script>
+}   

@@ -1,0 +1,23 @@
+﻿@model IEnumerable<HotelBooking.Models.Hotel>
+
+@{
+    ViewBag.Title = "Kết quả tìm kiếm";
+}
+
+<h2>Kết quả tìm kiếm</h2>
+
+@if (Model != null && Model.Any())
+{
+    <p class="text-muted">Tìm thấy @Model.Count() khách sạn</p>
+
+    foreach (var hotel in Model)
+    {
+        @Html.Partial("_HotelCard", hotel)
+    }
+}
+else
+{
+    <div class="alert alert-warning">
+        Không tìm thấy khách sạn nào phù hợp. Vui lòng thử lại với tiêu chí khác.
+    </div>
+}

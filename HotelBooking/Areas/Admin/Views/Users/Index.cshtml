@@ -1,0 +1,95 @@
+﻿@{
+    ViewBag.Title = "Quản lý Tài Khoản";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+<div class="app-content-header">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-6">
+                <h3 class="mb-0">Quản lý Tài Khoản</h3>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-end">
+                    <li class="breadcrumb-item"><a href="/Admin/Hotel">Admin</a></li>
+                    <li class="breadcrumb-item active">Tài Khoản</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-3 mb-3">
+                <a href="/Admin/Users/Create" class="btn btn-primary">Thêm tài khoản mới</a>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <table id="tbl_users" class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>STT</th>
+                            <th>ID</th>
+                            <th>Email</th>
+                            <th>Mật Khẩu</th>
+                            <th>Vai trò</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+    var url_domain = window.location.origin;
+
+    $(document).ready(function () {
+        loadUsers();
+    });
+
+    function loadUsers() {
+        $.ajax({
+            type: "GET",
+            url: url_domain + '/Admin/Users/GetAllUsers',
+            success: function (response) {
+                if (response.success) {
+                    var users = response.data;
+                    var html = "";
+                    for (var i = 0; i < users.length; i++) {
+                        var u = users[i];
+                        var status = u.isActive
+                            ? '<span class="badge bg-success">Hoạt động</span>'
+                            : '<span class="badge bg-secondary">Khóa</span>';
+
+                        var role = u.role === "admin" ? "Quản trị" : "Nhân viên";
+
+                        html += "<tr>";
+                        html += "<td>" + (i + 1) + "</td>";
+                        html += "<td>" + u.id + "</td>";
+                        html += "<td>" + u.email + "</td>";
+                        html += "<td>" + u.password + "</td>";
+                        html += "<td>" + role + "</td>";
+                        html += "<td>" + status + "</td>";
+                        html += "<td>";
+                        html += "<a href='/Admin/Users/Edit/" + u.id + "' class='btn btn-sm btn-warning'>Sửa</a> ";
+                        html += "</td>";
+                        html += "</tr>";
+                    }
+                    $("#tbl_users tbody").html(html);
+                } else {
+                    alert(response.message);
+                }
+            },
+            error: function () {
+                alert("Lỗi tải dữ liệu");
+            }
+        });
+    }
+
+
+    </script>
+}

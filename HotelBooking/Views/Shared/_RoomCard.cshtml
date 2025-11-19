@@ -1,0 +1,21 @@
+﻿@model HotelBooking.Models.Room
+
+<div class="card mb-3">
+    <div class="card-body">
+        <h5 class="card-title">@Model.Name</h5>
+        <p class="card-text">@Model.Description</p>
+        <ul class="list-unstyled">
+            <li><strong>Sức chứa:</strong> @Model.Capacity người</li>
+            <li><strong>Giá:</strong> @Model.PricePerNight.ToString("N0") VNĐ/đêm</li>
+            <li><strong>Số phòng:</strong> @Model.TotalRooms</li>
+        </ul>
+        <div class="d-flex justify-content-between">
+            <a href="@Url.Action("Details", "Room", new { id = Model.Id })" class="btn btn-info">Chi tiết</a>
+            @if (Request.IsAuthenticated)
+            {
+                <a href="@Url.Action("Create", "Booking", new { area = "Customer", roomId = Model.Id, hotelId = Model.HotelId })"
+                   class="btn btn-success">Đặt phòng</a>
+            }
+        </div>
+    </div>
+</div>

@@ -1,0 +1,115 @@
+﻿@{
+    ViewBag.Title = "Danh sách Booking";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="app-content-header">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-6">
+                <h3 class="mb-0">Danh sách Booking của tôi</h3>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-end">
+                    <li class="breadcrumb-item"><a href="/">Home</a></li>
+                    <li class="breadcrumb-item active">Bookings</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-sm-12" id="div_ShowData">
+                <table id="tbl_bookings" class="table table-bordered table-striped">
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        var url_domain = window.location.origin;
+
+        $(document).ready(function () {
+            loadBookings();
+        });
+
+        function loadBookings() {
+            $.ajax({
+                type: "GET",
+                url: url_domain + '/Customer/Booking/GetMyBookings',
+                contentType: "application/json; charset=utf-8",
+                success: function (response) {
+                    console.log(response);
+
+                    if (response.success) {
+                        var bookings = response.data;
+                        var tbl = $("#tbl_bookings");
+                        var html = "<thead><tr>";
+                        html += "<th>STT</th><th>Mã Booking</th><th>Khách sạn</th>";
+                        html += "<th>Check-in</th><th>Check-out</th><th>Trạng thái</th>";
+                        html += "<th>Tổng tiền</th><th>Hành động</th>";
+                        html += "</tr></thead><tbody>";
+
+                        if (bookings.length === 0) {
+                            html += "<tr><td colspan='8' class='text-center'>Chưa có booking nào</td></tr>";
+                        } else {
+                            for (var i = 0; i < bookings.length; i++) {
+                                var booking = bookings[i];
+                                html += "<tr>";
+                                html += "<td>" + (i + 1) + "</td>";
+                                html += "<td>" + booking.Code + "</td>";
+                                html += "<td>" + booking.HotelName + "</td>";
+                                html += "<td>" + formatDate(booking.CheckInDate) + "</td>";
+                                html += "<td>" + formatDate(booking.CheckOutDate) + "</td>";
+                                html += "<td>" + getStatusBadge(booking.Status) + "</td>";
+                                html += "<td>" + booking.TotalAmount.toLocaleString() + " VNĐ</td>";
+                                html += "<td>";
+                                html += "<a href='" + url_domain + "/Customer/Booking/Details/" + booking.Id + "' class='btn btn-sm btn-info'>Chi tiết</a> ";
+
+                                if (booking.Status !== 'cancelled' && booking.Status !== 'completed') {
+                                    html += "<a href='" + url_domain + "/Customer/Booking/Edit/" + booking.Id + "' class='btn btn-sm btn-warning'>Sửa</a> ";
+                                    html += "<button class='btn btn-sm btn-danger' onclick='cancelBooking(" + booking.Id + ")'>Hủy</button>";
+                                }
+
+                                html += "</td></tr>";
+                            }
+                        }
+
+                        html += "</tbody>";
+                        tbl.html(html);
+                    } else {
+                        $("#div_ShowData").html("<p style='color: red; font-size:18px;'>" + response.message + "</p>");
+                    }
+                },
+                error: function (xhr) {
+                    console.log(xhr);
+                    $("#div_ShowData").html("<p style='color: red;'>Đã xảy ra lỗi khi tải dữ liệu</p>");
+                }
+            });
+        }
+
+        function formatDate(dateString) {
+            var date = new Date(dateString);
+            return date.toLocaleDateString('vi-VN');
+        }
+
+        function getStatusBadge(status) {
+            var badges = {
+                'draft': '<span class="badge bg-secondary">Nháp</span>',
+                'pending': '<span class="badge bg-warning">Chờ thanh toán</span>',
+                'paid': '<span class="badge bg-success">Đã thanh toán</span>',
+                'confirmed': '<span class="badge bg-info">Đã xác nhận</span>',
+                'cancelled': '<span class="badge bg-danger">Đã hủy</span>',
+                'completed': '<span class="badge bg-primary">Hoàn thành</span>'
+            };
+            return badges[status] || status;
+        }
+
+        function cancelBooking(bookingId) {
+            if (confirm("Bạn có chắc chắn muốn hủy booking này không?")) {
+                window.location.href = url_domain + '/Customer/Booking/Cancel/' + bookingId;
+            }
+        }
+    </script>
+}
