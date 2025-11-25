@@ -1,4 +1,4 @@
-﻿@if (Request.IsAuthenticated)
+﻿@*@if (Request.IsAuthenticated)
 {
     <text>
         Xin chào, <strong>@User.Identity.Name</strong>
@@ -13,4 +13,4 @@ else
     <a href="@Url.Action("Login", "Account")">Đăng nhập</a>
     <span> | </span>
     <a href="@Url.Action("Register", "Account")">Đăng ký</a>
-}
+}*@

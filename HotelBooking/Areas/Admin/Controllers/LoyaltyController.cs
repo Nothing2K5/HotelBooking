@@ -35,6 +35,7 @@ namespace HotelBooking.Areas.Admin.Controllers
                         t.Name,
                         t.DiscountPercent,
                         t.Multiplier,
+                        t.MinPoints,
                         t.CreatedAt
                     })
                     .ToList();
@@ -99,7 +100,8 @@ namespace HotelBooking.Areas.Admin.Controllers
                         t.Id,
                         t.Name,
                         t.DiscountPercent,
-                        t.Multiplier
+                        t.Multiplier,
+                        t.MinPoints
                     })
                     .FirstOrDefault();
 
@@ -133,6 +135,7 @@ namespace HotelBooking.Areas.Admin.Controllers
                     tier.Name = model.Name;
                     tier.DiscountPercent = model.DiscountPercent;
                     tier.Multiplier = model.Multiplier;
+                    tier.MinPoints = model.MinPoints;
 
                     _db.SubmitChanges();
 

@@ -1,0 +1,96 @@
+﻿@{
+    ViewBag.Title = "Tạo Khuyến mãi";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h2 class="mb-4">Tạo Khuyến mãi mới</h2>
+
+<div class="card shadow-sm p-4">
+    <form id="createPromoForm">
+        <div class="mb-3">
+            <label for="Code" class="form-label">Mã khuyến mãi</label>
+            <input type="text" class="form-control" id="Code" name="Code" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="Description" class="form-label">Mô tả</label>
+            <textarea class="form-control" id="Description" name="Description" rows="3"></textarea>
+        </div>
+
+        <div class="mb-3">
+            <label for="Type" class="form-label">Loại khuyến mãi</label>
+            <select class="form-select" id="Type" name="Type" required>
+                <option value="">-- Chọn loại --</option>
+                <option value="Percent">Phần trăm (%)</option>
+                <option value="Amount">Giá trị tiền</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="Value" class="form-label">Giá trị</label>
+            <input type="number" class="form-control" id="Value" name="Value" required min="0" step="0.01">
+        </div>
+
+        <div class="mb-3">
+            <label for="StartDate" class="form-label">Ngày bắt đầu</label>
+            <input type="date" class="form-control" id="StartDate" name="StartDate" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="EndDate" class="form-label">Ngày kết thúc</label>
+            <input type="date" class="form-control" id="EndDate" name="EndDate" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="UsageLimit" class="form-label">Giới hạn sử dụng</label>
+            <input type="number" class="form-control" id="UsageLimit" name="UsageLimit" min="0">
+        </div>
+
+        <div class="mb-3">
+            <label for="PerUserLimit" class="form-label">Giới hạn trên mỗi người dùng</label>
+            <input type="number" class="form-control" id="PerUserLimit" name="PerUserLimit" min="0">
+        </div>
+
+        <button type="submit" class="btn btn-success">Lưu</button>
+        <a href="@Url.Action("Index", "Promo", new { area = "Admin" })" class="btn btn-secondary ms-2">Hủy</a>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#createPromoForm').on('submit', function (e) {
+                e.preventDefault();
+
+                const formData = {
+                    Code: $('#Code').val().trim(),
+                    Description: $('#Description').val().trim(),
+                    Type: $('#Type').val(),
+                    Value: parseFloat($('#Value').val()),
+                    StartDate: $('#StartDate').val(),
+                    EndDate: $('#EndDate').val(),
+                    UsageLimit: parseInt($('#UsageLimit').val()) || 0,
+                    PerUserLimit: parseInt($('#PerUserLimit').val()) || 0
+                };
+
+                $.ajax({
+                    url: '@Url.Action("CreatePromo", "Promo", new { area = "Admin" })',
+                    type: 'POST',
+                    data: formData,
+                    success: function (res) {
+                        if (res.success) {
+                            alert(res.message);
+                            window.location.href = '@Url.Action("Index", "Promo", new { area = "Admin" })';
+                        } else {
+                            alert(res.message);
+                        }
+                    },
+                    error: function () {
+                        alert('Lỗi server, vui lòng thử lại.');
+                    }
+                });
+            });
+        });
+    </script>
+}
+

@@ -100,7 +100,8 @@ namespace HotelBooking.Areas.Admin.Controllers
                         h.City,
                         h.Country,
                         h.StarRating,
-                        h.Description
+                        h.Description,
+                        h.IsActive
                     })
                     .FirstOrDefault();
 
@@ -125,21 +126,47 @@ namespace HotelBooking.Areas.Admin.Controllers
                     return Json(new { success = false, message = "Dữ liệu không hợp lệ" });
 
                 var hotel = _db.Hotels.FirstOrDefault(h => h.Id == model.Id);
-                if (hotel != null)
+                if (hotel == null)
+                    return Json(new { success = false, message = "Không tìm thấy khách sạn" });
+
+                // =================== KIỂM TRA MỚI THÊM Ở ĐÂY ===================
+                // Nếu người dùng muốn chuyển sang Ngừng hoạt động (IsActive = false)
+                if (!model.IsActive) // tức là đang cố tắt khách sạn
                 {
-                    hotel.Name = model.Name;
-                    hotel.Address = model.Address;
-                    hotel.City = model.City;
-                    hotel.Country = model.Country;
-                    hotel.StarRating = model.StarRating;
-                    hotel.Description = model.Description;
-                    hotel.UpdatedAt = DateTime.Now;
+                    // Kiểm tra xem có booking nào đang "đang diễn ra" hoặc "chưa checkout" không
+                    bool hasActiveBooking = _db.Bookings.Any(b => b.HotelId == model.Id &&
+                        (b.Status == "pending" ||
+                         b.Status == "confirmed" ||
+                         b.Status == "paid" ||
+                         b.Status == "cancelled" ||
+                         b.Status == "draft") &&  // tùy bạn đặt tên trạng thái
+                        (b.CheckOutDate == null || b.CheckOutDate >= DateTime.Today));
+                    // hoặc đơn giản hơn: chưa có CheckoutDate hoặc CheckoutDate > hôm nay
 
-                    _db.SubmitChanges();
-
-                    return Json(new { success = true, message = "Cập nhật thành công!" });
+                    if (hasActiveBooking)
+                    {
+                        return Json(new
+                        {
+                            success = false,
+                            message = "Không thể ngừng hoạt động khách sạn vì vẫn còn phòng đang được đặt hoặc đang có khách lưu trú!"
+                        });
+                    }
                 }
-                return Json(new { success = false, message = "Không tìm thấy khách sạn" });
+                // ================================================================
+
+                // Nếu qua được kiểm tra → cho phép cập nhật bình thường
+                hotel.Name = model.Name;
+                hotel.Address = model.Address;
+                hotel.City = model.City;
+                hotel.Country = model.Country;
+                hotel.StarRating = model.StarRating;
+                hotel.Description = model.Description;
+                hotel.IsActive = model.IsActive;          // đã có dòng này rồi
+                hotel.UpdatedAt = DateTime.Now;
+
+                _db.SubmitChanges();
+
+                return Json(new { success = true, message = "Cập nhật thành công!" });
             }
             catch (Exception ex)
             {
@@ -156,6 +183,36 @@ namespace HotelBooking.Areas.Admin.Controllers
                 if (hotel == null)
                     return HttpNotFound();
 
+                // Ảnh khách sạn
+                var images = _db.HotelImages
+                    .Where(i => i.HotelId == id)
+                    .ToList();
+
+                // Danh sách phòng
+                var rooms = _db.Rooms
+                    .Where(r => r.HotelId == id)
+                    .ToList();
+
+                // Ảnh phòng
+                var roomImages = _db.RoomImages.ToList();
+
+                // Review
+                var reviews = _db.Reviews
+                    .Where(r => r.HotelId == id && r.DeletedAt == null)
+                    .OrderByDescending(r => r.CreatedAt)
+                    .ToList();
+
+                double avgRating = reviews.Count > 0
+                    ? reviews.Average(r => r.Rating)
+                    : 0;
+
+                // Gửi dữ liệu xuống View
+                ViewBag.HotelImages = images;
+                ViewBag.Rooms = rooms;
+                ViewBag.RoomImages = roomImages;
+                ViewBag.Reviews = reviews;
+                ViewBag.AvgRating = avgRating;
+
                 return View(hotel);
             }
             catch
@@ -163,6 +220,7 @@ namespace HotelBooking.Areas.Admin.Controllers
                 return HttpNotFound();
             }
         }
+
 
         // POST: Admin/Hotel/DeleteHotel - AJAX
         [HttpPost]

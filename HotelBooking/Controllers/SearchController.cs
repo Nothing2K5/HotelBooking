@@ -58,5 +58,37 @@ namespace HotelBooking.Controllers
                 return Json(new { success = false, message = "Lỗi: " + ex.Message });
             }
         }
+
+        // GET: Search/GetAllHotels - Load tất cả khách sạn
+        [HttpGet]
+        public ActionResult GetAllHotels()
+        {
+            try
+            {
+                var hotels = _db.Hotels
+                    .Where(h => h.IsActive)
+                    .Select(h => new
+                    {
+                        h.Id,
+                        h.Name,
+                        h.Address,
+                        h.City,
+                        h.Country,
+                        h.StarRating,
+                        h.Description,
+                        ImageUrl = h.HotelImages.Any() ? h.HotelImages.FirstOrDefault().Url : null,
+                        MinPrice = h.Rooms.Any() ? h.Rooms.Min(r => r.PricePerNight) : 0,
+                        AvgRating = h.Reviews.Any() ? h.Reviews.Average(r => (decimal?)r.Rating) : null,
+                        ReviewCount = h.Reviews.Count(r => r.DeletedAt == null)
+                    })
+                    .ToList();
+
+                return Json(new { success = true, hotels = hotels }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
     }
 }

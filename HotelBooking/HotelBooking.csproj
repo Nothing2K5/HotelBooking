@@ -124,12 +124,14 @@
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="Areas\Admin\AdminAreaRegistration.cs" />
     <Compile Include="Areas\Admin\Controllers\BookingController.cs" />
+    <Compile Include="Areas\Admin\Controllers\CustomersController.cs" />
     <Compile Include="Areas\Admin\Controllers\HotelController.cs" />
     <Compile Include="Areas\Admin\Controllers\LoyaltyController.cs" />
     <Compile Include="Areas\Admin\Controllers\PromoController.cs" />
     <Compile Include="Areas\Admin\Controllers\ReportController.cs" />
     <Compile Include="Areas\Admin\Controllers\ReviewController.cs" />
     <Compile Include="Areas\Admin\Controllers\RoomController.cs" />
+    <Compile Include="Areas\Admin\Controllers\UsersController.cs" />
     <Compile Include="Areas\Customer\Controllers\BookingController.cs" />
     <Compile Include="Areas\Customer\Controllers\LoyaltyController.cs" />
     <Compile Include="Areas\Customer\Controllers\ProfileController.cs" />
@@ -143,15 +145,12 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
-    <Compile Include="Models\Booking.cs" />
     <Compile Include="Models\Database.designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Database.dbml</DependentUpon>
     </Compile>
     <Compile Include="Models\DatabaseDataContext.Partial.cs" />
-    <Compile Include="Models\Hotel.cs" />
-    <Compile Include="Models\User.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\Implementations\BookingService.cs" />
     <Compile Include="Services\Implementations\PaymentService.cs" />
@@ -171,9 +170,8 @@
     <Compile Include="Services\Interfaces\IRoomService.cs" />
     <Compile Include="ViewModels\BookingCreateVM.cs" />
     <Compile Include="ViewModels\BookingDetailsVM.cs" />
-    <Compile Include="ViewModels\BookingEditVM.cs" />
+    <Compile Include="ViewModels\CancelBookingVM.cs" />
     <Compile Include="ViewModels\PromoCodeVM.cs" />
-    <Compile Include="ViewModels\HotelDetailsVM.cs" />
     <Compile Include="ViewModels\HotelListVM.cs" />
     <Compile Include="ViewModels\HotelSearchVM.cs" />
     <Compile Include="ViewModels\LoginVM.cs" />
@@ -207,11 +205,6 @@
     <Content Include="Scripts\bootstrap.esm.min.js" />
     <Content Include="Scripts\bootstrap.js" />
     <Content Include="Scripts\bootstrap.min.js" />
-    <Content Include="Models\Database.dbml">
-      <Generator>MSLinqToSQLGenerator</Generator>
-      <LastGenOutput>Database.designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </Content>
     <Content Include="Areas\Customer\Views\Web.config" />
     <Content Include="Areas\Customer\Views\Booking\Create.cshtml" />
     <Content Include="Areas\Customer\Views\Booking\Details.cshtml" />
@@ -227,6 +220,31 @@
     <Content Include="Areas\Admin\Views\Room\Index.cshtml" />
     <Content Include="Areas\Admin\Views\Promo\Index.cshtml" />
     <Content Include="Areas\Admin\Views\Report\Revenue.cshtml" />
+    <Content Include="Areas\Admin\Views\Booking\Index.cshtml" />
+    <Content Include="Areas\Admin\Views\Customers\Index.cshtml" />
+    <Content Include="Areas\Admin\Views\Hotel\Details.cshtml" />
+    <Content Include="Areas\Admin\Views\Review\index.cshtml" />
+    <Content Include="Areas\Admin\Views\Room\Edit.cshtml" />
+    <Content Include="Areas\Admin\Views\Users\Edit.cshtml" />
+    <Content Include="Areas\Admin\Views\Users\Index.cshtml" />
+    <Content Include="Models\Database.dbml">
+      <Generator>MSLinqToSQLGenerator</Generator>
+      <LastGenOutput>Database.designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </Content>
+    <Content Include="Areas\Customer\Views\Booking\Cancel.cshtml" />
+    <Content Include="Areas\Customer\Views\Review\Index.cshtml" />
+    <Content Include="Areas\Customer\Views\Loyalty\Index.cshtml" />
+    <Content Include="Areas\Customer\Views\Profile\ChangePassword.cshtml" />
+    <Content Include="Areas\Customer\Views\Profile\Delete.cshtml" />
+    <Content Include="Areas\Admin\Views\Loyalty\Create.cshtml" />
+    <Content Include="Areas\Admin\Views\Loyalty\Edit.cshtml" />
+    <Content Include="Areas\Admin\Views\Loyalty\Index.cshtml" />
+    <Content Include="Areas\Admin\Views\Promo\Create.cshtml" />
+    <Content Include="Areas\Admin\Views\Promo\Edit.cshtml" />
+    <Content Include="Areas\Admin\Views\Customers\Edit.cshtml" />
+    <Content Include="Areas\Admin\Views\Room\Create.cshtml" />
+    <Content Include="Areas\Admin\Views\Users\Create.cshtml" />
     <None Include="Models\Database.dbml.layout">
       <DependentUpon>Database.dbml</DependentUpon>
     </None>
@@ -255,7 +273,6 @@
     <Content Include="Views\Home\Index.cshtml" />
     <Content Include="Views\Shared\_AdminLayout.cshtml" />
     <Content Include="Views\Shared\_HotelCard.cshtml" />
-    <Content Include="Views\Search\Results.cshtml" />
     <Content Include="Views\Hotel\Details.cshtml" />
     <Content Include="Views\Account\Login.cshtml" />
     <Content Include="Views\Account\Register.cshtml" />
@@ -268,7 +285,6 @@
     <Folder Include="App_Data\" />
     <Folder Include="Areas\Admin\ViewModels\" />
     <Folder Include="Areas\Customer\ViewModels\" />
-    <Folder Include="Repositories\" />
     <Folder Include="Views\Room\" />
   </ItemGroup>
   <ItemGroup>

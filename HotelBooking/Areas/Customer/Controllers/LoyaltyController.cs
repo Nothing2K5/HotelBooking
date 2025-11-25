@@ -77,31 +77,31 @@ namespace HotelBooking.Areas.Customer.Controllers
         }
 
         // GET: Customer/Loyalty/GetPointsHistory - AJAX
-        [HttpGet]
-        public ActionResult GetPointsHistory()
-        {
-            try
-            {
-                var userId = GetCurrentUserId();
-                var history = _db.LoyaltyPoints
-                    .Where(lp => lp.UserId == userId)
-                    .OrderByDescending(lp => lp.CreatedAt)
-                    .Select(lp => new
-                    {
-                        lp.Points,
-                        lp.Reason,
-                        lp.CreatedAt,
-                        BookingCode = lp.Booking != null ? lp.Booking.Code : null
-                    })
-                    .Take(50)
-                    .ToList();
+        //[HttpGet]
+        //public ActionResult GetPointsHistory()
+        //{
+        //    try
+        //    {
+        //        var userId = GetCurrentUserId();
+        //        var history = _db.LoyaltyPoints
+        //            .Where(lp => lp.UserId == userId)
+        //            .OrderByDescending(lp => lp.CreatedAt)
+        //            .Select(lp => new
+        //            {
+        //                lp.Points,
+        //                lp.Reason,
+        //                lp.CreatedAt,
+        //                BookingCode = lp.Booking != null ? lp.Booking.Code : null
+        //            })
+        //            .Take(50)
+        //            .ToList();
 
-                return Json(new { success = true, data = history }, JsonRequestBehavior.AllowGet);
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = "Lỗi: " + ex.Message }, JsonRequestBehavior.AllowGet);
-            }
-        }
+        //        return Json(new { success = true, data = history }, JsonRequestBehavior.AllowGet);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return Json(new { success = false, message = "Lỗi: " + ex.Message }, JsonRequestBehavior.AllowGet);
+        //    }
+        //}
     }
 }

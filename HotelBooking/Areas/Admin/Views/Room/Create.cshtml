@@ -1,0 +1,130 @@
+﻿@{
+    ViewBag.Title = "Thêm phòng mới";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <h2 class="mb-4">Thêm phòng mới</h2>
+
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Thông tin phòng</h5>
+        </div>
+        <div class="card-body">
+            <form id="roomForm">
+                <div id="success-message" class="alert alert-success alert-dismissible fade show" style="display:none;" role="alert">
+                    <span></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                <div id="error-message" class="alert alert-danger alert-dismissible fade show" style="display:none;" role="alert">
+                    <span></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Khách sạn <span class="text-danger">*</span></label>
+                        <select class="form-select" name="HotelId" id="HotelId" required>
+                            <option value="">-- Chọn khách sạn --</option>
+                        </select>
+                        <div id="hotel-error" class="text-danger small mt-1" style="display:none;"></div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Mã phòng (Code) <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="Code" id="Code" placeholder="VD: DLX, STD, SUI" maxlength="10" required />
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Tên loại phòng <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="Name" id="Name" placeholder="Ví dụ: Deluxe King, Suite Ocean View" required />
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Sức chứa (người) <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" name="Capacity" id="Capacity" min="1" max="10" value="2" required />
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Giá mỗi đêm (VND) <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" name="PricePerNight" id="PricePerNight" min="0" step="10000" placeholder="1500000" required />
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Tổng số phòng cùng loại <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" name="TotalRooms" id="TotalRooms" min="1" max="200" value="10" required />
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Mô tả phòng (tùy chọn)</label>
+                    <textarea class="form-control" name="Description" id="Description" rows="4" placeholder="Ví dụ: Phòng hướng biển, có ban công riêng..."></textarea>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-success btn-lg" id="btnSubmit">
+                        <i class="fas fa-save"></i> Thêm phòng
+                    </button>
+                    <a href="@Url.Action("Index")" class="btn btn-secondary btn-lg">Quay lại danh sách</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Load danh sách khách sạn khi trang load
+            $.get('@Url.Action("GetHotelsForDropdown", "Room")', function (res) {
+                if (res.success) {
+                    const select = $('#HotelId');
+                    res.data.forEach(h => {
+                        select.append(`<option value="${h.Id}">${h.Name}</option>`);
+                    });
+                } else {
+                    alert('Không tải được danh sách khách sạn: ' + res.message);
+                }
+            });
+
+            // Submit form
+            $('#roomForm').submit(function (e) {
+                e.preventDefault();
+                const formData = {
+                    HotelId: $('#HotelId').val(),
+                    Code: $('#Code').val().trim(),
+                    Name: $('#Name').val().trim(),
+                    Description: $('#Description').val().trim(),
+                    Capacity: parseInt($('#Capacity').val()),
+                    PricePerNight: parseFloat($('#PricePerNight').val()),
+                    TotalRooms: parseInt($('#TotalRooms').val())
+                };
+
+                $.ajax({
+                    url: '@Url.Action("CreateRoom", "Room")',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(formData),
+                    success: function (res) {
+                        if (res.success) {
+                            $('#success-message span').text(res.message || 'Thêm phòng thành công!');
+                            $('#success-message').show();
+                            setTimeout(() => { location.href = '@Url.Action("Index")'; }, 1500);
+                        } else {
+                            $('#error-message span').text(res.message);
+                            $('#error-message').show();
+                        }
+                    },
+                    error: function () {
+                        $('#error-message span').text('Lỗi kết nối server');
+                        $('#error-message').show();
+                    }
+                });
+            });
+        });
+    </script>
+}

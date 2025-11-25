@@ -6,24 +6,67 @@
 <div class="app-content-header">
     <div class="container-fluid">
         <div class="row">
-            <div class="col-sm-6">
-                <h3 class="mb-0">Quản lý Khuyến mãi</h3>
-            </div>
-            <div class="col-sm-6">
-                <ol class="breadcrumb float-sm-end">
-                    <li class="breadcrumb-item"><a href="/Admin/Hotel">Admin</a></li>
-                    <li class="breadcrumb-item active">Khuyến mãi</li>
-                </ol>
+            <div class="col-sm-6"><h3 class="mb-0">Quản lý Khuyến mãi</h3></div>
+            <div class="col-sm-6 text-end">
+                <a href="/Admin/Promo/Create" class="btn btn-success">+ Thêm khuyến mãi</a>
             </div>
         </div>
 
-        <div class="row mt-3">
-            <div class="col-sm-12">
-                <a href="/Admin/Promo/Create" class="btn btn-success" style="float:right">+ Thêm khuyến mãi</a>
+        <!-- Filter -->
+        <div class="row g-3 align-items-end mt-4">
+            <div class="col-md-4">
+                <label class="form-label">Tìm mã / mô tả</label>
+                <input type="text" id="searchInput" class="form-control" placeholder="Nhập từ khóa...">
             </div>
+            <div class="col-md-3">
+                <label class="form-label">Loại khuyến mãi</label>
+                <select id="typeFilter" class="form-select">
+                    <option value="">Tất cả loại</option>
+                    <option value="amount">Giảm tiền (VNĐ)</option>
+                    <option value="percentage">Giảm theo %</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Trạng thái</label>
+                <select id="statusFilter" class="form-select">
+                    <option value="">Tất cả</option>
+                    <option value="true">Đang hoạt động</option>
+                    <option value="false">Tạm dừng</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button onclick="applyFilters()" class="btn btn-primary flex-grow-1">Lọc</button>
+                <button onclick="resetFilters()" class="btn btn-outline-secondary">Reset</button>
+            </div>
+        </div>
 
-            <div class="col-sm-12 mt-3" id="div_ShowData">
-                <table id="tbl_promos" class="table table-bordered table-striped">
+        <div class="d-flex justify-content-between align-items-center my-4">
+            <small class="text-muted">
+                Hiển thị <strong id="resultCount">0</strong> / <strong id="totalCount">0</strong> khuyến mãi
+            </small>
+            <nav><ul class="pagination pagination-sm mb-0" id="pagination"></ul></nav>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>STT</th>
+                            <th>Mã</th>
+                            <th>Mô tả</th>
+                            <th>Loại</th>
+                            <th>Giá trị</th>
+                            <th>Bắt đầu</th>
+                            <th>Kết thúc</th>
+                            <th>Đã dùng</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="promoTableBody">
+                        <tr><td colspan="10" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr>
+                    </tbody>
                 </table>
             </div>
         </div>
@@ -31,83 +74,180 @@
 </div>
 
 @section scripts {
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
     <script>
-        var url_domain = window.location.origin;
+        const url = window.location.origin;
+        let allPromos = [];
+        let filtered = [];
+        const pageSize = 10;
+        let currentPage = 1;
 
         $(document).ready(function () {
             loadPromos();
         });
 
         function loadPromos() {
-            $.ajax({
-                type: "GET",
-                url: url_domain + '/Admin/Promo/GetAllPromos',
-                success: function (response) {
-                    if (response.success) {
-                        var promos = response.data;
-                        var tbl = $("#tbl_promos");
-                        var html = "<thead><tr>";
-                        html += "<th>STT</th><th>Mã</th><th>Mô tả</th><th>Loại</th>";
-                        html += "<th>Giá trị</th><th>Ngày bắt đầu</th><th>Ngày kết thúc</th>";
-                        html += "<th>Đã dùng/Giới hạn</th><th>Trạng thái</th><th>Thao tác</th>";
-                        html += "</tr></thead><tbody>";
+            $('#promoTableBody').html('<tr><td colspan="10" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr>');
 
-                        for (var i = 0; i < promos.length; i++) {
-                            var promo = promos[i];
-                            var statusBadge = promo.IsActive
-                                ? '<span class="badge bg-success">Active</span>'
-                                : '<span class="badge bg-secondary">Inactive</span>';
+            $.get(url + '/Admin/Promo/GetAllPromos')
+                .done(res => {
+                    if (res.success && Array.isArray(res.data)) {
+                        allPromos = res.data;
 
-                            var typeText = promo.Type === 'amount' ? 'Giảm tiền' : 'Giảm %';
-                            var valueText = promo.Type === 'amount'
-                                ? promo.Value.toLocaleString() + ' VNĐ'
-                                : promo.Value + '%';
+                        // IN RA CONSOLE ĐỂ XEM CHÍNH XÁC TYPE LÀ GÌ (rất quan trọng!)
+                        console.log("Dữ liệu promo gốc:", allPromos.map(p => ({ Code: p.Code, Type: p.Type, RawType: p.Type })));
 
-                            html += "<tr>";
-                            html += "<td>" + (i + 1) + "</td>";
-                            html += "<td><strong>" + promo.Code + "</strong></td>";
-                            html += "<td>" + (promo.Description || '') + "</td>";
-                            html += "<td>" + typeText + "</td>";
-                            html += "<td>" + valueText + "</td>";
-                            html += "<td>" + (promo.StartDate ? formatDate(promo.StartDate) : '-') + "</td>";
-                            html += "<td>" + (promo.EndDate ? formatDate(promo.EndDate) : '-') + "</td>";
-                            html += "<td>" + promo.UsedCount + " / " + (promo.UsageLimit || '∞') + "</td>";
-                            html += "<td>" + statusBadge + "</td>";
-                            html += "<td>";
-                            html += "<a href='" + url_domain + "/Admin/Promo/Edit/" + promo.Id + "' class='btn btn-sm btn-warning'>Sửa</a> ";
-                            html += "<button type='button' class='btn btn-sm btn-danger' onclick='deletePromo(" + promo.Id + ")'>Xóa</button>";
-                            html += "</td></tr>";
-                        }
+                        applyFilters();
+                    } else {
+                        $('#promoTableBody').html('<tr><td colspan="10" class="text-center text-danger py-4">Không có dữ liệu</td></tr>');
+                    }
+                })
+                .fail(() => {
+                    $('#promoTableBody').html('<tr><td colspan="10" class="text-center text-danger py-4">Lỗi server</td></tr>');
+                });
+        }
 
-                        html += "</tbody>";
-                        tbl.html(html);
+        function applyFilters() {
+            const search = $('#searchInput').val().trim().toLowerCase();
+            const typeFilter = $('#typeFilter').val();     // "amount" | "percentage" | ""
+            const statusFilter = $('#statusFilter').val();
+
+            filtered = allPromos.filter(p => {
+                // Tìm kiếm
+                const matchSearch = !search ||
+                    (p.Code && p.Code.toLowerCase().includes(search)) ||
+                    (p.Description && p.Description.toLowerCase().includes(search));
+
+                // LỌC THEO LOẠI
+                let matchType = true;
+                if (typeFilter) {
+                    const rawType = (p.Type || '').toString().toLowerCase().trim();
+                    if (typeFilter === 'amount') {
+                        matchType = rawType.includes('amount') || rawType === 'fixed' || rawType === 'money' || rawType === '1';
+                    } else if (typeFilter === 'percentage') {
+                        matchType = rawType.includes('percent') || rawType.includes('%') || rawType === 'rate' || rawType === '2';
                     }
                 }
+
+                // Trạng thái
+                const matchStatus = statusFilter === "" ||
+                    p.IsActive.toString() === statusFilter;
+
+                return matchSearch && matchType && matchStatus;
+            });
+
+            currentPage = 1;
+            renderTable();
+        }
+
+        function resetFilters() {
+            $('#searchInput').val('');
+            $('#typeFilter').val('');
+            $('#statusFilter').val('');
+            applyFilters();
+        }
+
+        function renderTable() {
+            const total = filtered.length;
+            const pages = Math.max(1, Math.ceil(total / pageSize));
+            const start = (currentPage - 1) * pageSize;
+            const data = filtered.slice(start, start + pageSize);
+
+            $('#resultCount').text(data.length);
+            $('#totalCount').text(total);
+
+            if (total === 0) {
+                $('#promoTableBody').html('<tr><td colspan="10" class="text-center py-5 text-muted">Không tìm thấy khuyến mãi nào</td></tr>');
+                $('#pagination').html('');
+                return;
+            }
+
+            let html = '';
+            data.forEach((p, i) => {
+                const isPercent = ['percentage', 'percent', '%', 'rate', '2'].some(t =>
+                    (p.Type || '').toString().toLowerCase().includes(t)
+                );
+                const typeText = isPercent ? 'Giảm %' : 'Giảm tiền';
+                const valueText = isPercent
+                    ? p.Value + '%'
+                    : new Intl.NumberFormat('vi-VN').format(p.Value) + ' VNĐ';
+
+                const statusBadge = p.IsActive
+                    ? '<span class="badge bg-success">Active</span>'
+                    : '<span class="badge bg-secondary">Inactive</span>';
+
+                const used = p.UsedCount || 0;
+                const limit = p.UsageLimit ?? '∞';
+
+                html += `
+                    <tr>
+                        <td>${start + i + 1}</td>
+                        <td><strong>${p.Code}</strong></td>
+                        <td>${p.Description || '-'}</td>
+                        <td>${typeText}</td>
+                        <td class="fw-bold text-primary">${valueText}</td>
+                        <td>${formatDate(p.StartDate)}</td>
+                        <td>${formatDate(p.EndDate)}</td>
+                        <td>${used} / ${limit}</td>
+                        <td>${statusBadge}</td>
+                        <td>
+                            <a href="/Admin/Promo/Edit/${p.Id}" class="btn btn-warning btn-sm">Sửa</a>
+                            <button type="button" class="btn btn-danger btn-sm ms-1" onclick="deletePromo(${p.Id})">Xóa</button>
+                        </td>
+                    </tr>`;
+            });
+
+            $('#promoTableBody').html(html);
+
+            // Phân trang
+            let pag = '';
+            for (let i = 1; i <= pages; i++) {
+                pag += `<li class="page-item ${i === currentPage ? 'active' : ''}">
+                            <a class="page-link" href="#" onclick="currentPage=${i}; renderTable(); return false;">${i}</a>
+                        </li>`;
+            }
+            $('#pagination').html(pag);
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+
+            let date;
+            if (typeof dateStr === 'string' && dateStr.includes('/Date(')) {
+                const ms = dateStr.match(/\/Date\((-?\d+)\)\//);
+                date = ms ? new Date(parseInt(ms[1])) : new Date(dateStr);
+            } else {
+                date = new Date(dateStr);
+            }
+
+            if (isNaN(date.getTime())) return '-';
+
+            return date.toLocaleDateString('vi-VN', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
             });
         }
 
-        function formatDate(dateString) {
-            if (!dateString) return '-';
-            return new Date(dateString).toLocaleDateString('vi-VN');
-        }
-
         function deletePromo(id) {
-            if (confirm("Bạn có chắc chắn muốn xóa khuyến mãi này không?")) {
-                $.ajax({
-                    type: "POST",
-                    url: url_domain + '/Admin/Promo/DeletePromo',
-                    data: JSON.stringify({ id: id }),
-                    contentType: "application/json; charset=utf-8",
-                    success: function (response) {
-                        if (response.success) {
-                            alert(response.message);
-                            loadPromos();
-                        } else {
-                            alert(response.message);
-                        }
-                    }
-                });
+            if (confirm('Xóa khuyến mãi này?')) {
+                $.post(url + '/Admin/Promo/DeletePromo', { id })
+                    .done(r => { if (r.success) { alert('Xóa thành công!'); loadPromos(); } else alert(r.message || 'Lỗi'); });
             }
         }
+
+        // Events
+        $('#searchInput').on('keypress', function (e) {
+            if (e.key === 'Enter') {
+                applyFilters();
+            }
+        });
+
+        $('#typeFilter, #statusFilter').on('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                applyFilters();
+            }
+        });
     </script>
 }

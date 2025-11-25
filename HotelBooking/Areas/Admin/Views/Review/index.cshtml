@@ -1,0 +1,130 @@
+﻿@{
+    ViewBag.Title = "Quản lý Review";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h2>Quản lý Review</h2>
+
+<div class="form-group">
+    <label>Nhập ID khách sạn:</label>
+    <input type="number" id="hotelId" class="form-control" placeholder="Nhập HotelId..." />
+
+    <!-- KHÔNG HIỂN THỊ NÚT TẢI REVIEW NỮA -->
+    <!-- Khi nhập ID và nhấn Enter sẽ tự load -->
+</div>
+
+<hr />
+
+<table class="table table-bordered table-striped mt-3">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Khách sạn</th>
+            <th>Email người dùng</th>
+            <th>Rating</th>
+            <th>Tiêu đề</th>
+            <th>Nội dung</th>
+            <th>Ngày tạo</th>
+            <th>Hành động</th>
+        </tr>
+    </thead>
+    <tbody id="reviewTable">
+        <tr><td colspan="8" class="text-center">Đang tải dữ liệu...</td></tr>
+    </tbody>
+</table>
+
+@section Scripts {
+    <script>
+        // Parse kiểu /Date(12345)/ của .NET
+        function parseDotNetDate(dotNetDate) {
+            var timestamp = parseInt(dotNetDate.replace(/\/Date\((\d+)\)\//, "$1"));
+            return new Date(timestamp);
+        }
+
+        // Tự động load review khi vào trang
+        $(document).ready(function () {
+            loadReviews();
+        });
+
+        // Enter để lọc review theo HotelId
+        $("#hotelId").on("keyup", function (e) {
+            if (e.key === "Enter") {
+                loadReviews();
+            }
+        });
+
+        // Load toàn bộ review hoặc theo hotelId
+        function loadReviews() {
+            var hotelId = document.getElementById("hotelId").value;
+
+            var url = '@Url.Action("GetAllReviews", "Review", new { area = "Admin" })';
+
+            $.ajax({
+                url: url,
+                type: "GET",
+                data: { hotelId: hotelId },
+                success: function (response) {
+                    if (response.success) {
+                        var rows = "";
+
+                        if (response.data.length > 0) {
+                            response.data.forEach(function (r) {
+                                var createdAt = parseDotNetDate(r.CreatedAt).toLocaleDateString();
+
+                                rows += `
+                                    <tr id="reviewRow_${r.Id}">
+                                        <td>${r.Id}</td>
+                                        <td>${r.HotelName}</td>
+                                        <td>${r.UserEmail}</td>
+                                        <td>${r.Rating} ⭐</td>
+                                        <td>${r.Title || ""}</td>
+                                        <td>${r.Content}</td>
+                                        <td>${createdAt}</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-danger" onclick="deleteReview(${r.Id})">Xóa</button>
+                                        </td>
+                                    </tr>
+                                `;
+                            });
+                        } else {
+                            rows = `<tr><td colspan="8" class="text-center">Không có dữ liệu</td></tr>`;
+                        }
+
+                        $("#reviewTable").html(rows);
+                    } else {
+                        alert(response.message);
+                    }
+                },
+                error: function (xhr) {
+                    console.log(xhr.responseText);
+                    alert("Không thể tải dữ liệu. Lỗi: " + xhr.status);
+                }
+            });
+        }
+
+        // Xóa review
+        function deleteReview(id) {
+            if (!confirm("Bạn có chắc muốn xóa đánh giá này không?")) return;
+
+            var url = '@Url.Action("DeleteReview", "Review", new { area = "Admin" })';
+
+            $.ajax({
+                url: url,
+                type: "POST",
+                data: { id: id },
+                success: function (response) {
+                    if (response.success) {
+                        alert(response.message);
+                        $("#reviewRow_" + id).remove();
+                    } else {
+                        alert(response.message);
+                    }
+                },
+                error: function (xhr) {
+                    console.log(xhr.responseText);
+                    alert("Xóa thất bại. Lỗi: " + xhr.status);
+                }
+            });
+        }
+    </script>
+}

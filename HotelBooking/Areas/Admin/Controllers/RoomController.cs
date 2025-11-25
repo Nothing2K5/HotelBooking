@@ -1,7 +1,8 @@
 ﻿using HotelBooking.Models;
-using System;
+using System;       
 using System.Linq;
 using System.Web.Mvc;
+
 
 namespace HotelBooking.Areas.Admin.Controllers
 {
@@ -18,35 +19,40 @@ namespace HotelBooking.Areas.Admin.Controllers
         // GET: Admin/Room/Index
         public ActionResult Index()
         {
-            return View();
+            return View("");
         }
 
         // GET: Admin/Room/GetAllRooms - AJAX
+        // GET: Admin/Room/GetAllRooms - AJAX (đã sửa đúng với LINQ to SQL)
         [HttpGet]
-        public ActionResult GetAllRooms(int? hotelId)
+        public ActionResult GetAllRooms(string keyword = null)
         {
             try
             {
-                var query = _db.Rooms.AsQueryable();
+                var query = from r in _db.Rooms
+                            join h in _db.Hotels on r.HotelId equals h.Id
+                            where r.IsActive == true  // chỉ lấy phòng còn hoạt động
+                            select new
+                            {
+                                r.Id,
+                                HotelName = h.Name,
+                                r.Name,
+                                r.Capacity,
+                                r.PricePerNight,
+                                r.TotalRooms,
+                                r.IsActive
+                            };
 
-                if (hotelId.HasValue)
-                    query = query.Where(r => r.HotelId == hotelId.Value);
+                // Nếu có từ khóa tìm kiếm
+                if (!string.IsNullOrEmpty(keyword))
+                {
+                    keyword = keyword.Trim().ToLower();
+                    query = query.Where(x => x.HotelName.ToLower().Contains(keyword));
+                }
 
-                var rooms = query
-                    .Select(r => new
-                    {
-                        r.Id,
-                        HotelName = r.Hotel.Name,
-                        r.HotelId,
-                        r.Name,
-                        r.Capacity,
-                        r.PricePerNight,
-                        r.TotalRooms,
-                        r.IsActive
-                    })
-                    .ToList();
+                var result = query.OrderBy(x => x.HotelName).ThenBy(x => x.Name).ToList();
 
-                return Json(new { success = true, data = rooms }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = true, data = result }, JsonRequestBehavior.AllowGet);
             }
             catch (Exception ex)
             {
@@ -89,9 +95,24 @@ namespace HotelBooking.Areas.Admin.Controllers
         {
             try
             {
-                if (!ModelState.IsValid)
-                    return Json(new { success = false, message = "Dữ liệu không hợp lệ" });
+                // Nếu dùng JSON, ModelState có thể không bind được → bind thủ công nếu cần
+                if (Request.ContentType.Contains("application/json"))
+                {
+                    // Nếu bạn gửi JSON, có thể đọc và bind thủ công ở đây nếu cần
+                    // Hiện tại vẫn dùng ModelState nếu gửi form, hoặc bind từ JSON
+                }
 
+                if (model.HotelId <= 0 || string.IsNullOrEmpty(model.Code) || string.IsNullOrEmpty(model.Name))
+                    return Json(new { success = false, message = "Vui lòng điền đầy đủ thông tin bắt buộc" });
+
+                // Kiểm tra mã phòng đã tồn tại trong khách sạn chưa
+                bool codeExists = _db.Rooms.Any(r => r.HotelId == model.HotelId && r.Code == model.Code.Trim().ToUpper());
+                if (codeExists)
+                    return Json(new { success = false, message = "Mã phòng đã tồn tại trong khách sạn này!" });
+
+                model.Code = model.Code.Trim().ToUpper();
+                model.Name = model.Name.Trim();
+                model.Description = string.IsNullOrEmpty(model.Description) ? null : model.Description.Trim();
                 model.IsActive = true;
                 model.CreatedAt = DateTime.Now;
                 model.UpdatedAt = DateTime.Now;
@@ -132,7 +153,7 @@ namespace HotelBooking.Areas.Admin.Controllers
                         r.Capacity,
                         r.PricePerNight,
                         r.TotalRooms,
-                        r.TaxIncluded
+                        
                     })
                     .FirstOrDefault();
 
@@ -166,7 +187,7 @@ namespace HotelBooking.Areas.Admin.Controllers
                     room.Capacity = model.Capacity;
                     room.PricePerNight = model.PricePerNight;
                     room.TotalRooms = model.TotalRooms;
-                    room.TaxIncluded = model.TaxIncluded;
+                    //room.TaxIncluded = model.TaxIncluded;
                     room.UpdatedAt = DateTime.Now;
 
                     _db.SubmitChanges();

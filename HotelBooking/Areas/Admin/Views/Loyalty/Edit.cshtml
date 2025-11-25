@@ -1,0 +1,94 @@
+﻿@{
+    ViewBag.Title = "Sửa Loyalty Tier";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h2 class="mb-4">Sửa Loyalty Tier</h2>
+
+<div class="card shadow-sm p-4" style="max-width: 2000px;">
+    <form id="editTierForm">
+        <input type="hidden" id="Id" />
+
+        <div class="mb-3">
+            <label class="form-label">Tên tier</label>
+            <input type="text" id="Name" class="form-control" required />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Giảm giá (%)</label>
+            <input type="number" id="DiscountPercent" class="form-control" min="0" max="100" required />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Multiplier tích điểm</label>
+            <input type="number" id="Multiplier" class="form-control" min="1" step="0.1" required />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">MinPoints lên cấp</label>
+            <input type="number" id="MinPoints" class="form-control" min="1" step="0.1" required />
+        </div>
+
+        <button type="submit" class="btn btn-success">Lưu</button>
+        <a href="@Url.Action("Index", "Loyalty", new { area = "Admin" })" class="btn btn-secondary">Hủy</a>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            var tierId = @ViewBag.TierId;
+
+            // 1️⃣ Lấy dữ liệu tier hiện tại
+            $.ajax({
+                url: '/Admin/Loyalty/GetTierById/' + tierId,
+                type: 'GET',
+                success: function(res) {
+                    if(res.success && res.data) {
+                        $("#Id").val(res.data.Id);
+                        $("#Name").val(res.data.Name);
+                        $("#DiscountPercent").val(res.data.DiscountPercent);
+                        $("#Multiplier").val(res.data.Multiplier);
+                        $("#MinPoints").val(res.data.MinPoints);
+                    } else {
+                        alert(res.message || "Không tìm thấy loyalty tier!");
+                    }
+                },
+                error: function() {
+                    alert("Lỗi khi lấy dữ liệu tier!");
+                }
+            });
+
+            // 2️⃣ Submit form
+            $("#editTierForm").on("submit", function(e) {
+                e.preventDefault();
+
+                var formData = {
+                    Id: parseInt($("#Id").val()),
+                    Name: $("#Name").val(),
+                    DiscountPercent: parseInt($("#DiscountPercent").val()),
+                    Multiplier: parseFloat($("#Multiplier").val()),
+                    MinPoints: parseInt($("#MinPoints")).val() || 0
+                };
+
+                $.ajax({
+                    url: '/Admin/Loyalty/UpdateTier',
+                    type: 'POST',
+                    contentType: 'application/json; charset=utf-8',
+                    data: JSON.stringify(formData),
+                    success: function(res) {
+                        if(res.success) {
+                            alert(res.message);
+                            window.location.href = '@Url.Action("Index", "Loyalty", new { area = "Admin" })';
+                        } else {
+                            alert(res.message);
+                        }
+                    },
+                    error: function() {
+                        alert("Lỗi kết nối đến server!");
+                    }
+                });
+            });
+        });
+    </script>
+}

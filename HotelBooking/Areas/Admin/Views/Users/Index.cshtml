@@ -1,0 +1,140 @@
+﻿@{
+    ViewBag.Title = "Quản lý Tài Khoản";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="app-content-header">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-6">
+                <h3 class="mb-0">Quản lý Tài Khoản</h3>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-end">
+                    <li class="breadcrumb-item"><a href="/Admin/Hotel">Admin</a></li>
+                    <li class="breadcrumb-item active">Tài Khoản</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- PHẦN MỚI: Tìm kiếm + Lọc vai trò -->
+        <div class="row mt-3">
+            <div class="col-md-4 mb-3">
+                <label for="searchUser">Tìm kiếm tài khoản:</label>
+                <input type="text" class="form-control" id="searchUser" placeholder="Nhập email, tên, số điện thoại...">
+            </div>
+            <div class="col-md-3 mb-3">
+                <label for="filterRole">Lọc theo vai trò:</label>
+                <select class="form-control" id="filterRole">
+                    <option value="">-- Tất cả --</option>
+                    <option value="admin">Quản trị</option>
+                    <option value="customer">Khách hàng</option>
+                </select>
+            </div>
+            <div class="col-md-5 mb-3 text-end">
+                <a href="/Admin/Users/Create" class="btn btn-primary">Thêm tài khoản mới</a>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <table id="tbl_users" class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>STT</th>
+                            <th>ID</th>
+                            <th>Email</th>
+                            <th>Mật Khẩu</th>
+                            <th>Vai trò</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        var url_domain = window.location.origin;
+        var searchTimeout;
+
+        $(document).ready(function () {
+            loadUsers(); // Load lần đầu
+
+            // Tìm kiếm khi gõ (debounce 300ms)
+            $("#searchUser").on("keyup", function () {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(loadUsers, 300);
+            });
+
+            // Lọc khi thay đổi dropdown
+            $("#filterRole").on("change", function () {
+                loadUsers();
+            });
+        });
+
+        function loadUsers() {
+            var keyword = $("#searchUser").val().trim();
+            var role = $("#filterRole").val();
+
+            var url = url_domain + '/Admin/Users/GetAllUsers';
+            var hasParam = false;
+
+            if (keyword !== "") {
+                url += '?keyword=' + encodeURIComponent(keyword);
+                hasParam = true;
+            }
+            if (role !== "") {
+                url += (hasParam ? '&' : '?') + 'role=' + encodeURIComponent(role);
+            }
+
+            // Hiển thị loading nhẹ
+            $("#tbl_users tbody").html('<tr><td colspan="7" class="text-center py-4"><i class="fa fa-spinner fa-spin"></i> Đang tải...</td></tr>');
+
+            $.ajax({
+                type: "GET",
+                url: url,
+                success: function (response) {
+                    if (response.success) {
+                        var users = response.data;
+                        var html = "";
+
+                        if (users.length === 0) {
+                            html = '<tr><td colspan="7" class="text-center text-muted">Không tìm thấy tài khoản nào.</td></tr>';
+                        } else {
+                            for (var i = 0; i < users.length; i++) {
+                                var u = users[i];
+                                var status = u.isActive
+                                    ? '<span class="badge bg-success">Hoạt động</span>'
+                                    : '<span class="badge bg-secondary">Khóa</span>';
+                                var roleText = u.role === "admin" ? "Quản trị" : "Khách hàng";
+
+                                html += "<tr>";
+                                html += "<td>" + (i + 1) + "</td>";
+                                html += "<td>" + u.id + "</td>";
+                                html += "<td>" + u.email + "</td>";
+                                html += "<td>" + u.password + "</td>";
+                                html += "<td>" + roleText + "</td>";
+                                html += "<td>" + status + "</td>";
+                                html += "<td>";
+                                html += "<a href='/Admin/Users/Edit/" + u.id + "' class='btn btn-sm btn-warning'>Sửa</a> ";
+                                html += "</td>";
+                                html += "</tr>";
+                            }
+                        }
+                        $("#tbl_users tbody").html(html);
+                    } else {
+                        $("#tbl_users tbody").html('<tr><td colspan="7" class="text-center text-danger">Lỗi: ' + response.message + '</td></tr>');
+                    }
+                },
+                error: function () {
+                    $("#tbl_users tbody").html('<tr><td colspan="7" class="text-center text-danger">Lỗi kết nối server</td></tr>');
+                }
+            });
+        }
+    </script>
+}

@@ -1,0 +1,105 @@
+﻿@{
+    ViewBag.Title = "Đánh giá của tôi";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-sm-6">
+            <h3 class="mb-0"><i class="fas fa-star"></i> Đánh giá của tôi</h3>
+        </div>
+        <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-end">
+                <li class="breadcrumb-item"><a href="/">Trang chủ</a></li>
+                <li class="breadcrumb-item active">Đánh giá</li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-sm-12" id="reviewsList"></div>
+    </div>
+</div>
+@section scripts {
+    <script>
+        $(document).ready(function () {
+            loadMyReviews();
+        });
+
+        function loadMyReviews() {
+            $.ajax({
+                type: "GET",
+                url: window.location.origin + '/Customer/Review/GetMyReviews',
+                success: function (response) {
+                    if (response.success) {
+                        displayReviews(response.data);
+                    } else {
+                        $("#reviewsList").html('<div class="alert alert-danger">' + response.message + '</div>');
+                    }
+                },
+                error: function () {
+                    $("#reviewsList").html('<div class="alert alert-danger">Đã xảy ra lỗi khi tải đánh giá</div>');
+                }
+            });
+        }
+
+        function displayReviews(reviews) {
+            if (reviews.length === 0) {
+                $("#reviewsList").html('<div class="alert alert-info">Bạn chưa có đánh giá nào. Hãy hoàn thành booking để có thể đánh giá!</div>');
+                return;
+            }
+
+            var html = '';
+            reviews.forEach(function (review) {
+                html += '<div class="card mb-3">';
+                html += '<div class="card-body">';
+                html += '<div class="row">';
+                html += '<div class="col-md-8">';
+                html += '<h5><i class="fas fa-hotel"></i> ' + review.HotelName + '</h5>';
+                html += '<p class="mb-1">' + '⭐'.repeat(review.Rating) + '</p>';
+                if (review.Title) {
+                    html += '<p class="fw-bold mb-1">' + review.Title + '</p>';
+                }
+                html += '<p class="text-muted">' + review.Content + '</p>';
+                html += '<small class="text-muted"><i class="far fa-calendar"></i> ' + new Date(review.CreatedAt).toLocaleDateString('vi-VN') + '</small>';
+                html += '</div>';
+                html += '<div class="col-md-4 text-end">';
+
+                if (review.CanEdit) {
+                    html += '<a href="/Customer/Review/Edit/' + review.Id + '" class="btn btn-warning btn-sm mb-2 w-100"><i class="fas fa-edit"></i> Chỉnh sửa</a>';
+                    html += '<button class="btn btn-danger btn-sm w-100" onclick="deleteReview(' + review.Id + ')"><i class="fas fa-trash"></i> Xóa</button>';
+                } else {
+                    html += '<small class="text-muted">Không thể chỉnh sửa sau 30 ngày</small>';
+                }
+
+                html += '</div></div></div></div>';
+            });
+
+            $("#reviewsList").html(html);
+        }
+
+        function deleteReview(reviewId) {
+            if (!confirm("Bạn có chắc chắn muốn xóa đánh giá này?")) {
+                return;
+            }
+
+            $.ajax({
+                type: "POST",
+                url: window.location.origin + '/Customer/Review/DeleteReview',
+                data: JSON.stringify({ id: reviewId }),
+                contentType: "application/json; charset=utf-8",
+                success: function (response) {
+                    if (response.success) {
+                        alert(response.message);
+                        loadMyReviews();
+                    } else {
+                        alert(response.message);
+                    }
+                },
+                error: function () {
+                    alert("Đã xảy ra lỗi khi xóa đánh giá");
+                }
+            });
+        }
+    </script>
+}

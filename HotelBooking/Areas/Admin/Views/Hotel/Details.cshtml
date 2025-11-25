@@ -1,0 +1,191 @@
+﻿@model HotelBooking.Models.Hotel
+@{
+    ViewBag.Title = "Chi tiết khách sạn";
+
+    var hotelImages = ViewBag.HotelImages as List<HotelBooking.Models.HotelImage>;
+    var rooms = ViewBag.Rooms as List<HotelBooking.Models.Room>;
+    var roomImages = ViewBag.RoomImages as List<HotelBooking.Models.RoomImage>;
+    var reviews = ViewBag.Reviews as List<HotelBooking.Models.Review>;
+    double avg = ViewBag.AvgRating;
+}
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+<style>
+    .room-card img {
+        height: 180px;
+        object-fit: cover;
+    }
+
+    .review-box {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 10px;
+        border-left: 4px solid #007bff;
+        margin-bottom: 15px;
+    }
+
+    .rating-star {
+        color: #ffc107;
+        font-size: 18px;
+    }
+
+    .hotel-title {
+        font-weight: bold;
+        font-size: 28px;
+    }
+
+    /* Gallery */
+    .gallery-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill,minmax(200px,1fr));
+        gap: 12px;
+    }
+
+        .gallery-container img {
+            width: 100%;
+            height: 180px;
+            border-radius: 10px;
+            object-fit: cover;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+
+            .gallery-container img:hover {
+                transform: scale(1.05);
+            }
+</style>
+
+<div class="container mt-4 mb-5">
+
+    <!-- Header -->
+    <h2 class="hotel-title">@Model.Name</h2>
+    <p class="text-muted">@Model.Address – @Model.City</p>
+
+    <!-- ────────────────────────────
+          HOTEL IMAGE SLIDER
+    ─────────────────────────────── -->
+    <div id="hotelSlider" class="carousel slide mb-4" data-bs-ride="carousel">
+        <div class="carousel-inner">
+
+            @if (hotelImages != null && hotelImages.Any())
+            {
+                int index = 0;
+                foreach (var img in hotelImages)
+                {
+                    <div class="carousel-item @(index == 0 ? "active" : "")">
+                        <img src="@img.Url" class="d-block w-100" style="height:400px; object-fit:cover;">
+                    </div>
+                    index++;
+                }
+            }
+            else
+            {
+                <div class="carousel-item active">
+                    <img src="/Content/no-image.png" class="d-block w-100" style="height:400px;">
+                </div>
+            }
+        </div>
+
+        <button class="carousel-control-prev" type="button" data-bs-target="#hotelSlider" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon"></span>
+        </button>
+
+        <button class="carousel-control-next" type="button" data-bs-target="#hotelSlider" data-bs-slide="next">
+            <span class="carousel-control-next-icon"></span>
+        </button>
+    </div>
+
+    <!-- ⭐⭐⭐ GALLERY THÊM MỚI Ở ĐÂY ⭐⭐⭐ -->
+    <h3 class="mt-4">Thư viện ảnh</h3>
+    <div class="gallery-container mt-3">
+
+        @if (hotelImages != null && hotelImages.Any())
+        {
+            foreach (var img in hotelImages)
+            {
+                <img src="@img.Url" alt="Hotel Image" />
+            }
+        }
+        else
+        {
+            <p>Khách sạn chưa có ảnh.</p>
+        }
+
+    </div>
+
+    <hr />
+
+    <!-- Rating -->
+    <h4>⭐ @avg.ToString("0.0") / 5.0</h4>
+
+    <hr />
+
+    <!-- ────────────────────────────
+            HOTEL INFORMATION
+    ─────────────────────────────── -->
+    <h3 class="mt-4">Thông tin khách sạn</h3>
+
+    <p class="mt-2">@Model.Description</p>
+
+    <hr />
+
+    <!-- ────────────────────────────
+            ROOM LIST
+    ─────────────────────────────── -->
+    <h3 class="mt-4">Danh sách phòng</h3>
+
+    @if (!rooms.Any())
+    {
+        <p>Chưa có phòng nào.</p>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var r in rooms)
+            {
+                var img = roomImages.FirstOrDefault(i => i.RoomId == r.Id);
+
+                <div class="col-md-4 mb-4">
+                    <div class="card room-card shadow-sm">
+                        <img src="@(img != null ? img.Url : "/Content/no-image.png")" class="card-img-top" />
+
+                        <div class="card-body">
+                            <h5 class="card-title">@r.Name</h5>
+                            <p class="card-text">
+                                <b>Giá:</b> @string.Format("{0:N0}", r.PricePerNight) VNĐ<br />
+                                <b>Sức chứa:</b> @r.Capacity người
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    <hr />
+
+    <!-- ────────────────────────────
+            REVIEW SECTION
+    ─────────────────────────────── -->
+    <h3 class="mt-4">Đánh giá của khách hàng</h3>
+
+    @if (!reviews.Any())
+    {
+        <p>Chưa có đánh giá nào.</p>
+    }
+    else
+    {
+        foreach (var rv in reviews)
+        {
+            <div class="review-box">
+                <span class="rating-star">@rv.Rating ⭐</span>
+                <p class="mt-2">@rv.Content</p>
+                <small class="text-muted">@rv.CreatedAt.ToString("dd/MM/yyyy")</small>
+            </div>
+        }
+    }
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

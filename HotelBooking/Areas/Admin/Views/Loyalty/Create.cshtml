@@ -1,0 +1,60 @@
+﻿@{
+    ViewBag.Title = "Thêm Loyalty Tier";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h2 class="mb-4">Thêm Loyalty Tier</h2>
+
+<div class="card shadow-sm p-4" style="max-width: 2000px;">
+    <form id="createTierForm">
+        <div class="mb-3">
+            <label class="form-label">Tên tier</label>
+            <input type="text" name="Name" id="Name" class="form-control" placeholder="Ví dụ: Gold, Silver..." required />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Giảm giá (%)</label>
+            <input type="number" name="DiscountPercent" id="DiscountPercent" class="form-control" min="0" max="100" required />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Multiplier tích điểm</label>
+            <input type="number" name="Multiplier" id="Multiplier" class="form-control" min="1" step="0.1" required />
+        </div>
+
+        <button type="submit" class="btn btn-success">Lưu</button>
+        <a href="@Url.Action("Index", "Loyalty", new { area = "Admin" })" class="btn btn-secondary">Hủy</a>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        $("#createTierForm").on("submit", function (e) {
+            e.preventDefault();
+
+            var formData = {
+                Name: $("#Name").val(),
+                DiscountPercent: parseInt($("#DiscountPercent").val()),
+                Multiplier: parseFloat($("#Multiplier").val())
+            };
+
+            $.ajax({
+                url: '@Url.Action("CreateTier", "Loyalty", new { area = "Admin" })',
+                type: "POST",
+                contentType: "application/json; charset=utf-8",
+                data: JSON.stringify(formData),
+                success: function(res) {
+                    if (res.success) {
+                        alert(res.message);
+                        window.location.href = '@Url.Action("Index", "Loyalty", new { area = "Admin" })';
+                    } else {
+                        alert(res.message);
+                    }
+                },
+                error: function() {
+                    alert("Lỗi kết nối đến server!");
+                }
+            });
+        });
+    </script>
+}

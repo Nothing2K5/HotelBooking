@@ -211,15 +211,33 @@ namespace HotelBooking.Areas.Customer.Controllers
         {
             try
             {
+                // Lấy đầy đủ thông tin cần thiết cho View
                 var booking = _db.Bookings
                     .Where(b => b.Id == id && b.UserId == GetCurrentUserId())
                     .Select(b => new
                     {
+                        b.Id,
                         b.Code,
-                        HotelName = b.Hotel.Name,
+                        b.Status,
                         b.CheckInDate,
                         b.CheckOutDate,
-                        b.TotalAmount
+                        b.Guests,
+                        b.TotalAmount,
+                        b.Note,
+                        b.FreeCancellationDeadline,
+                        b.PenaltyAmount,
+                        // Thông tin khách sạn phẳng hóa
+                        HotelName = b.Hotel.Name,
+                        HotelAddress = b.Hotel.Address + ", " + b.Hotel.City,
+                        // Lấy danh sách phòng (quan trọng)
+                        BookingItems = b.BookingItems.Select(bi => new
+                        {
+                            RoomName = bi.Room.Name,
+                            Price = bi.PricePerNight,
+                            Nights = bi.Nights,
+                            Quantity = bi.Quantity,
+                            SubTotal = bi.SubTotal
+                        }).ToList()
                     })
                     .FirstOrDefault();
 
@@ -293,6 +311,55 @@ namespace HotelBooking.Areas.Customer.Controllers
             catch
             {
                 return HttpNotFound();
+            }
+        }
+
+        // POST: Customer/Booking/CancelBooking - AJAX
+        [HttpPost]
+        public ActionResult CancelBooking(CancelBookingVM model)
+        {
+            try
+            {
+                var userId = GetCurrentUserId();
+                var booking = _db.Bookings.FirstOrDefault(b => b.Id == model.BookingId && b.UserId == userId);
+
+                if (booking == null)
+                    return Json(new { success = false, message = "Không tìm thấy booking" });
+
+                if (booking.Status == "cancelled")
+                    return Json(new { success = false, message = "Booking đã được hủy trước đó" });
+
+                if (booking.Status == "completed")
+                    return Json(new { success = false, message = "Không thể hủy booking đã hoàn thành" });
+
+                // Calculate penalty
+                decimal penaltyAmount = 0;
+                if (!model.IsFreeCancellation)
+                {
+                    penaltyAmount = booking.TotalAmount * 0.5m; // 50% penalty
+                }
+
+                booking.Status = "cancelled";
+                booking.CancelledAt = DateTime.Now;
+                booking.PenaltyAmount = penaltyAmount;
+                booking.UpdatedAt = DateTime.Now;
+
+                if (!string.IsNullOrEmpty(model.Reason))
+                {
+                    booking.Note = (booking.Note ?? "") + "\n[Lý do hủy: " + model.Reason + "]";
+                }
+
+                _db.SubmitChanges();
+
+                var message = model.IsFreeCancellation
+                    ? "Hủy booking thành công! Toàn bộ số tiền sẽ được hoàn lại."
+                    : $"Hủy booking thành công! Phí hủy: {penaltyAmount:N0} VNĐ. Số tiền hoàn lại: {(booking.TotalAmount - penaltyAmount):N0} VNĐ";
+
+                return Json(new { success = true, message = message });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
             }
         }
     }

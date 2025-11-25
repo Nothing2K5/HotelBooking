@@ -1,0 +1,192 @@
+﻿@{
+    ViewBag.Title = "Thêm người dùng mới";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <h2 class="mb-4">Thêm người dùng mới</h2>
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Thông tin tài khoản</h5>
+        </div>
+        <div class="card-body">
+            <form id="userForm">
+                <div id="success-message" class="alert alert-success alert-dismissible fade show" style="display:none;" role="alert">
+                    <span></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                <div id="error-message" class="alert alert-danger alert-dismissible fade show" style="display:none;" role="alert">
+                    <span></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Mã người dùng (Id) <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" name="Id" id="Id" min="1" placeholder="Ví dụ: 15" required />
+                        <div id="id-error" class="text-danger small mt-1" style="display:none;"></div>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Họ và tên <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="FullName" id="FullName" placeholder="Nguyễn Văn A" required />
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Email (đăng nhập) <span class="text-danger">*</span></label>
+                        <input type="email" class="form-control" name="Email" id="Email" placeholder="admin@hotel.com" required />
+                        <div id="email-error" class="text-danger small mt-1" style="display:none;"></div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Vai trò <span class="text-danger">*</span></label>
+                        <select class="form-select" name="Role" id="Role" required>
+                            <option value="">-- Chọn vai trò --</option>
+                            <option value="admin">Quản trị viên (Admin)</option>
+                            <option value="customer">Khách hàng (Customer)</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6 mb-3" id="phoneField" style="display:none;">
+                        <label class="form-label">Số điện thoại <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="Phone" id="Phone" placeholder="0901234567" />
+                        <div id="phone-error" class="text-danger small mt-1" style="display:none;"></div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Mật khẩu <span class="text-danger">*</span></label>
+                        <input type="password" class="form-control" name="Password" id="Password" placeholder="Nhập mật khẩu" required />
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-success btn-lg" id="btnSubmit">
+                        Thêm người dùng
+                    </button>
+                    <a href="@Url.Action("Index")" class="btn btn-secondary btn-lg">Quay lại</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script type="text/javascript">
+        // <![CDATA[
+        let isIdValid = false;
+        let isEmailValid = false;
+        let isPhoneValid = true;
+
+        $(document).ready(function () {
+
+            // Hiển thị/ẩn số điện thoại khi chọn vai trò
+            $("#Role").change(function () {
+                if ($(this).val() === "customer") {
+                    $("#phoneField").slideDown();
+                    $("#Phone").prop("required", true);
+                } else {
+                    $("#phoneField").slideUp();
+                    $("#Phone").prop("required", false).val("");
+                    $("#phone-error").hide();
+                    isPhoneValid = true;
+                }
+                validateForm();
+            });
+
+            // Kiểm tra khi rời khỏi ô
+            $("#Id").blur(function () { if ($(this).val()) checkIdExists($(this).val()); });
+            $("#Email").blur(function () { if ($(this).val()) checkEmailExists($(this).val()); });
+
+            $("#Phone").on("input blur", function () {
+                const phone = $(this).val();
+                if (!phone) return;
+                if (!/^0[3-9]\d{8}$/.test(phone)) {
+                    $("#phone-error").text("Số điện thoại không hợp lệ!").show();
+                    isPhoneValid = false;
+                } else {
+                    $("#phone-error").hide();
+                    checkPhoneExists(phone);
+                }
+                validateForm();
+            });
+
+            $("#userForm").submit(function (e) {
+                e.preventDefault();
+                if ($("#btnSubmit").prop("disabled")) return;
+                createUser();
+            });
+
+            validateForm();
+        });
+
+        function checkIdExists(id) {
+            $.get("/Admin/Users/CheckIdExists", { id: id }, function (res) {
+                $("#id-error").text(res.exists ? "Mã người dùng đã tồn tại!" : "").toggle(res.exists);
+                isIdValid = !res.exists;
+                validateForm();
+            });
+        }
+
+        function checkEmailExists(email) {
+            $.get("/Admin/Users/CheckEmailExists", { email: email }, function (res) {
+                $("#email-error").text(res.exists ? "Email đã được sử dụng!" : "").toggle(res.exists);
+                isEmailValid = !res.exists;
+                validateForm();
+            });
+        }
+
+        function checkPhoneExists(phone) {
+            $.get("/Admin/Users/CheckPhoneExists", { phone: phone }, function (res) {
+                $("#phone-error").text(res.exists ? "Số điện thoại đã tồn tại!" : "").toggle(res.exists);
+                isPhoneValid = !res.exists;
+                validateForm();
+            });
+        }
+
+        function validateForm() {
+            const role = $("#Role").val();
+            const ok = $("#Id").val() && isIdValid &&
+                $("#Email").val() && isEmailValid &&
+                $("#FullName").val().trim() &&
+                $("#Password").val().trim() &&
+                role &&
+                (role !== "customer" || ($("#Phone").val() && isPhoneValid));
+
+            $("#btnSubmit").prop("disabled", !ok);
+        }
+
+        function createUser() {
+            $.ajax({
+                url: '/Admin/Users/CreateUser',
+                type: 'POST',
+                data: {
+                    Id: $("#Id").val(),
+                    Email: $("#Email").val().trim(),
+                    Password: $("#Password").val(),
+                    Role: $("#Role").val(),
+                    FullName: $("#FullName").val().trim(),
+                    Phone: $("#Phone").val() || ""
+                },
+                success: function (res) {
+                    if (res.success) {
+                        $("#success-message span").html("Thêm người dùng thành công!");
+                        $("#success-message").show();
+                        setTimeout(function () { location.href = '/Admin/Users'; }, 2000);
+                    } else {
+                        $("#error-message span").text(res.message || "Thêm thất bại!");
+                        $("#error-message").show();
+                    }
+                },
+                error: function () {
+                    $("#error-message span").text("Lỗi kết nối server!");
+                    $("#error-message").show();
+                }
+            });
+        }
+        // ]]>
+    </script>
+}

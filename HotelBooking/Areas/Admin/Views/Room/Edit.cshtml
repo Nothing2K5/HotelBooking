@@ -1,0 +1,171 @@
+﻿
+@{
+    ViewBag.Title = "Chỉnh sửa Phòng";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <h2 class="mb-4">Chỉnh sửa Phòng</h2>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form id="roomForm">
+                <input type="hidden" id="roomId" value="@ViewBag.RoomId" />
+
+                <div id="success-message" class="alert alert-success alert-dismissible fade show" style="display:none;">
+                    <span></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                <div id="error-message" class="alert alert-danger alert-dismissible fade show" style="display:none;">
+                    <span></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="hotelId" class="form-label">Khách sạn <span class="text-danger">*</span></label>
+                        <select class="form-select" id="hotelId" required></select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="code" class="form-label">Mã phòng</label>
+                        <input type="text" class="form-control" id="code" />
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="name" class="form-label">Tên phòng <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="name" required />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="capacity" class="form-label">Sức chứa (người) <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="capacity" min="1" required />
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="pricePerNight" class="form-label">Giá/đêm (VNĐ) <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="pricePerNight" min="0" step="1000" required />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="totalRooms" class="form-label">Số lượng phòng <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="totalRooms" min="1" required />
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="description" class="form-label">Mô tả</label>
+                    <textarea class="form-control" id="description" rows="4"></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="taxIncluded">
+                        <label class="form-check-label" for="taxIncluded">
+                            Đã bao gồm thuế & phí
+                        </label>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-warning btn-lg">
+                        Cập nhật Phòng
+                    </button>
+                    <a href="/Admin/Room/Index" class="btn btn-secondary btn-lg">
+                        Quay lại
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        var roomId = parseInt($("#roomId").val());
+
+        $(document).ready(function () {
+            loadHotelsDropdown();
+            loadRoomData();
+
+            $("#roomForm").submit(function (e) {
+                e.preventDefault();
+                updateRoom();
+            });
+        });
+
+        // Load danh sách khách sạn vào dropdown
+        function loadHotelsDropdown() {
+            $.get(window.location.origin + '/Admin/Room/GetHotelsForDropdown')
+                .done(function (res) {
+                    if (res.success) {
+                        var options = '<option value="">-- Chọn khách sạn --</option>';
+                        res.data.forEach(function (h) {
+                            options += `<option value="${h.Id}">${h.Name}</option>`;
+                        });
+                        $("#hotelId").html(options);
+                    }
+                });
+        }
+
+        // Load thông tin phòng hiện tại
+        function loadRoomData() {
+            $.get(window.location.origin + '/Admin/Room/GetRoomById/' + roomId)
+                .done(function (res) {
+                    if (res.success) {
+                        var r = res.data;
+                        $("#hotelId").val(r.HotelId);
+                        $("#code").val(r.Code);
+                        $("#name").val(r.Name);
+                        $("#capacity").val(r.Capacity);
+                        $("#pricePerNight").val(r.PricePerNight);
+                        $("#totalRooms").val(r.TotalRooms);
+                        $("#description").val(r.Description);
+                        $("#taxIncluded").prop("checked", r.TaxIncluded);
+                    } else {
+                        alert("Không tìm thấy phòng!");
+                        window.location.href = '/Admin/Room/Index';
+                    }
+                });
+        }
+
+        // Cập nhật phòng
+        function updateRoom() {
+            var formData = {
+                Id: roomId,
+                HotelId: $("#hotelId").val(),
+                Code: $("#code").val().trim(),
+                Name: $("#name").val().trim(),
+                Description: $("#description").val().trim(),
+                Capacity: parseInt($("#capacity").val()),
+                PricePerNight: parseFloat($("#pricePerNight").val()),
+                TotalRooms: parseInt($("#totalRooms").val()),
+                TaxIncluded: $("#taxIncluded").is(":checked")
+            };
+
+            $.ajax({
+                type: "POST",
+                url: window.location.origin + '/Admin/Room/UpdateRoom',
+                data: JSON.stringify(formData),
+                contentType: "application/json; charset=utf-8",
+                success: function (res) {
+                    if (res.success) {
+                        $("#success-message span").text(res.message);
+                        $("#success-message").show();
+                        $("#error-message").hide();
+                        setTimeout(() => location.href = '/Admin/Room/Index', 1500);
+                    } else {
+                        $("#error-message span").text(res.message);
+                        $("#error-message").show();
+                    }
+                },
+                error: function () {
+                    $("#error-message span").text("Lỗi hệ thống!");
+                    $("#error-message").show();
+                }
+            });
+        }
+    </script>
+}

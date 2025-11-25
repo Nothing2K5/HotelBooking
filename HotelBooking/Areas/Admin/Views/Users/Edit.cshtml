@@ -1,0 +1,161 @@
+﻿@{
+    ViewBag.Title = "Chỉnh sửa Tài khoản";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <h2 class="mb-4">Chỉnh sửa Tài khoản</h2>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form id="userForm">
+                @* ID người dùng hiện tại *@
+                <input type="hidden" id="userId" value="@ViewBag.UserId" />
+
+                <div id="success-message" class="alert alert-success alert-dismissible fade show" style="display:none;">
+                    <span></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                <div id="error-message" class="alert alert-danger alert-dismissible fade show" style="display:none;">
+                    <span></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="email" class="form-label">Email (tên đăng nhập) <span class="text-danger">*</span></label>
+                        <input type="email" class="form-control" id="email" required />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="password" class="form-label">Mật khẩu mới</label>
+                        <input type="text" class="form-control" id="password" placeholder="Để trống nếu không đổi mật khẩu" />
+                        <div class="form-text">Chỉ nhập khi muốn thay đổi mật khẩu</div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="role" class="form-label">Vai trò <span class="text-danger">*</span></label>
+                        <select class="form-select" id="role">
+                            <option value="admin">Quản trị (Admin)</option>
+                            <option value="staff">Nhân viên</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Trạng thái tài khoản</label>
+                        <div class="mt-2">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="isActive" id="activeYes" value="true">
+                                <label class="form-check-label" for="activeYes">
+                                    <span class="text-success fw-bold">Hoạt động</span>
+                                </label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="isActive" id="activeNo" value="false">
+                                <label class="form-check-label" for="activeNo">
+                                    <span class="text-danger fw-bold">Khóa</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-warning btn-lg">
+                        <i class="fas fa-save"></i> Cập nhật Tài khoản
+                    </button>
+                    <a href="/Admin/Users/Index" class="btn btn-secondary btn-lg">
+                        <i class="fas fa-arrow-left"></i> Quay lại
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        var userId = parseInt($("#userId").val());
+
+        $(document).ready(function () {
+            loadUserData();
+
+            $("#userForm").submit(function (e) {
+                e.preventDefault();
+                updateUser();
+            });
+        });
+
+        function loadUserData() {
+            $.ajax({
+                type: "GET",
+                url: window.location.origin + '/Admin/Users/GetUserById/' + userId,
+                success: function (response) {
+                    if (response.success) {
+                        var u = response.data;
+
+                        // Tự động điền đầy đủ thông tin hiện tại
+                        $("#email").val(u.email);
+                        $("#role").val(u.role);
+
+                        if (u.isActive === true) {
+                            $("#activeYes").prop("checked", true);
+                        } else {
+                            $("#activeNo").prop("checked", true);
+                        }
+
+                    } else {
+                        alert("Không tải được thông tin tài khoản!");
+                        window.location.href = '/Admin/Users/Index';
+                    }
+                },
+                error: function () {
+                    alert("Lỗi kết nối server!");
+                }
+            });
+        }
+
+        function updateUser() {
+            var password = $("#password").val().trim();
+
+            var formData = {
+                Id: userId,
+                Email: $("#email").val().trim(),
+                Role: $("#role").val(),
+                IsActive: $("input[name='isActive']:checked").val() === "true"
+            };
+
+            // Chỉ thêm password nếu người dùng nhập
+            if (password !== "") {
+                formData.Password = password;
+            }
+
+            $.ajax({
+                type: "POST",
+                url: window.location.origin + '/Admin/Users/UpdateUser',
+                data: JSON.stringify(formData),
+                contentType: "application/json; charset=utf-8",
+                success: function (res) {
+                    if (res.success) {
+                        $("#success-message span").text(res.message);
+                        $("#success-message").show();
+                        $("#error-message").hide();
+
+                        setTimeout(function () {
+                            window.location.href = '/Admin/Users/Index';
+                        }, 1500);
+                    } else {
+                        $("#error-message span").text(res.message);
+                        $("#error-message").show();
+                        $("#success-message").hide();
+                    }
+                },
+                error: function () {
+                    $("#error-message span").text("Lỗi hệ thống!");
+                    $("#error-message").show();
+                }
+            });
+        }
+    </script>
+}

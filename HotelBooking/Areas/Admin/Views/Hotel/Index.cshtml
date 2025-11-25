@@ -9,21 +9,76 @@
             <div class="col-sm-6">
                 <h3 class="mb-0">Quản lý Khách sạn</h3>
             </div>
-            <div class="col-sm-6">
-                <ol class="breadcrumb float-sm-end">
-                    <li class="breadcrumb-item"><a href="/Admin/Hotel">Admin</a></li>
-                    <li class="breadcrumb-item active">Khách sạn</li>
-                </ol>
+            <div class="col-sm-6 text-end">
+                <a href="/Admin/Hotel/Create" class="btn btn-success">
+                    + Thêm khách sạn
+                </a>
             </div>
         </div>
-
-        <div class="row mt-3">
-            <div class="col-sm-12">
-                <a href="/Admin/Hotel/Create" class="btn btn-success" style="float:right">+ Thêm khách sạn</a>
-            </div>
-
-            <div class="col-sm-12 mt-3" id="div_ShowData">
-                <table id="tbl_hotels" class="table table-bordered table-striped">
+ @*Search + Filter (đã sửa gọn + đúng)*@
+<div class="row g-3 align-items-end mt-4">
+ @*Tìm kiếm tên *@
+<div class="col-md-4">
+    <label class="form-label">Tìm tên khách sạn</label>
+    <input type="text" id="searchInput" class="form-control" placeholder="Nhập tên khách sạn...">
+</div>
+ @*Tỉnh / Thành phố - ĐÃ LẤY TỪ DATABASE*@ 
+<div class="col-md-3">
+    <label class="form-label">Tỉnh / Thành phố</label>
+    <select id="provinceFilter" class="form-select">
+        <option value="">Tất cả tỉnh/thành</option>
+    </select>
+</div>
+ @*Trạng thái*@
+<div class="col-md-2">
+    <label class="form-label">Trạng thái</label>
+    <select id="statusFilter" class="form-select">
+        <option value="">Tất cả</option>
+        <option value="true">Đang hoạt động</option>
+        <option value="false">Tạm dừng</option>
+    </select>
+</div>
+ @*Nút Lọc + Reset*@ 
+<div class="col-md-3 d-flex gap-2">
+        <button onclick="applyFilters()" class="btn btn-primary flex-grow-1">
+            Lọc
+        </button>
+        <button onclick="resetFilters()" class="btn btn-outline-secondary">
+            Reset
+        </button>
+    </div>
+</div>
+ @*Kết quả & phân trang*@ 
+<div class="mb-3 d-flex justify-content-between align-items-center mt-4">
+    <small class="text-muted">
+        Hiển thị <strong id="resultCount">0</strong> / <strong id="totalCount">0</strong> khách sạn
+    </small>
+    <nav>
+        <ul class="pagination pagination-sm mb-0" id="pagination"></ul>
+    </nav>
+</div>
+ @*Bảng giống hệt trang Phòng*@ 
+<div class="card shadow-sm">
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>STT</th>
+                            <th>Tên khách sạn</th>
+                            <th>Thành phố</th>
+                            <th>Quốc gia</th>
+                            <th>Rating</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="hotelTableBody">
+                        <tr>
+                            <td colspan="7" class="text-center py-5">
+                                <div class="spinner-border text-primary" role="status"></div>
+                            </td>
+                        </tr>
+                    </tbody>
                 </table>
             </div>
         </div>
@@ -31,79 +86,162 @@
 </div>
 
 @section scripts {
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+
     <script>
-        var url_domain = window.location.origin;
+        const url = window.location.origin;
+        let allHotels = [];
+        let filtered = [];
+        const pageSize = 10;
+        let currentPage = 1;
 
         $(document).ready(function () {
-            loadHotels();
+            loadHotels(); // Load data + tự động fill tỉnh/thành
         });
 
+        // Load tất cả khách sạn + tự động đổ dữ liệu tỉnh/thành
         function loadHotels() {
-            $.ajax({
-                type: "GET",
-                url: url_domain + '/Admin/Hotel/GetAllHotels',
-                success: function (response) {
-                    console.log(response);
+            const $tbody = $('#hotelTableBody');
+            $tbody.html('<tr><td colspan="7" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr>');
 
-                    if (response.success) {
-                        var hotels = response.data;
-                        var tbl = $("#tbl_hotels");
-                        var html = "<thead><tr>";
-                        html += "<th>STT</th><th>Tên khách sạn</th><th>Thành phố</th>";
-                        html += "<th>Quốc gia</th><th>Sao</th><th>Trạng thái</th><th>Thao tác</th>";
-                        html += "</tr></thead><tbody>";
+            $.get(url + '/Admin/Hotel/GetAllHotels')
+                .done(res => {
+                    if (res.success && Array.isArray(res.data)) {
+                        allHotels = res.data;
 
-                        for (var i = 0; i < hotels.length; i++) {
-                            var hotel = hotels[i];
-                            var statusBadge = hotel.IsActive
-                                ? '<span class="badge bg-success">Active</span>'
-                                : '<span class="badge bg-secondary">Inactive</span>';
+                        // TỰ ĐỘNG FILL TỈNH/THÀNH PHỐ TỪ DATABASE
+                        const provinces = [...new Set(
+                            allHotels
+                                .map(h => h.City)
+                                .filter(city => city && city.trim() !== '')
+                        )].sort((a, b) => a.localeCompare(b, 'vi'));
 
-                            html += "<tr>";
-                            html += "<td>" + (i + 1) + "</td>";
-                            html += "<td>" + hotel.Name + "</td>";
-                            html += "<td>" + hotel.City + "</td>";
-                            html += "<td>" + hotel.Country + "</td>";
-                            html += "<td>" + hotel.StarRating + " ⭐</td>";
-                            html += "<td>" + statusBadge + "</td>";
-                            html += "<td>";
-                            html += "<a href='" + url_domain + "/Admin/Hotel/Details/" + hotel.Id + "' class='btn btn-sm btn-info'>Chi tiết</a> ";
-                            html += "<a href='" + url_domain + "/Admin/Hotel/Edit/" + hotel.Id + "' class='btn btn-sm btn-warning'>Sửa</a> ";
-                            html += "<button type='button' class='btn btn-sm btn-danger' onclick='deleteHotel(" + hotel.Id + ")'>Xóa</button>";
-                            html += "</td></tr>";
-                        }
+                        const $provinceSelect = $('#provinceFilter');
+                        $provinceSelect.empty().append('<option value="">Tất cả tỉnh/thành</option>');
+                        provinces.forEach(p => $provinceSelect.append(`<option value="${p}">${p}</option>`));
 
-                        html += "</tbody>";
-                        tbl.html(html);
+                        applyFilters(); // Render bảng lần đầu
                     } else {
-                        $("#div_ShowData").html("<p style='color: red;'>" + response.message + "</p>");
+                        $tbody.html('<tr><td colspan="7" class="text-center text-danger py-4">Không có dữ liệu</td></tr>');
                     }
-                },
-                error: function (xhr) {
-                    console.log(xhr);
-                    $("#div_ShowData").html("<p style='color: red;'>Đã xảy ra lỗi khi tải dữ liệu</p>");
-                }
-            });
+                })
+                .fail(() => {
+                    $tbody.html('<tr><td colspan="7" class="text-center text-danger py-4">Lỗi kết nối server</td></tr>');
+                });
         }
 
+        function applyFilters() {
+            const search = $('#searchInput').val().trim().toLowerCase();
+            const province = $('#provinceFilter').val();
+            const status = $('#statusFilter').val();
+
+            filtered = allHotels.filter(h => {
+                if (search && !h.Name?.toLowerCase().includes(search)) return false;
+                if (province && h.City !== province) return false;
+                if (status !== "" && h.IsActive.toString() !== status) return false;
+                return true;
+            });
+
+            currentPage = 1;
+            renderTable();
+        }
+
+        function resetFilters() {
+            $('#searchInput').val('');
+            $('#provinceFilter').val('');
+            $('#statusFilter').val('');
+            applyFilters();
+        }
+
+        function renderTable() {
+            const $tbody = $('#hotelTableBody');
+            const total = filtered.length;
+            const pages = Math.max(1, Math.ceil(total / pageSize));
+            const start = (currentPage - 1) * pageSize;
+            const data = filtered.slice(start, start + pageSize);
+
+            $('#resultCount').text(data.length);
+            $('#totalCount').text(total);
+
+            if (total === 0) {
+                $tbody.html('<tr><td colspan="7" class="text-center py-5 text-muted">Không tìm thấy khách sạn nào</td></tr>');
+                $('#pagination').html('');
+                return;
+            }
+
+            let html = '';
+            data.forEach((h, i) => {
+                const statusBadge = h.IsActive
+                    ? '<span class="badge bg-success">Active</span>'
+                    : '<span class="badge bg-secondary">Inactive</span>';
+
+                html += `
+                        <tr>
+                            <td>${start + i + 1}</td>
+                            <td>${h.Name || 'N/A'}</td>
+                            <td>${h.City || 'N/A'}</td>
+                            <td>${h.Country || 'N/A'}</td>
+                            <td>${h.StarRating || 'N/A'}</td>
+                            <td>${statusBadge}</td>
+                            <td>
+                                <a href="/Admin/Hotel/Details/${h.Id}" class = "btn btn-info btn-sm">Chi tiết</a>
+                                <a href="/Admin/Hotel/Edit/${h.Id}" class="btn btn-warning btn-sm">Sửa</a>
+                                <button type="button" class="btn btn-danger btn-sm ms-1" onclick="deleteHotel(${h.Id})">Xóa</button>
+                            </td>
+                        </tr>`;
+            });
+
+            $tbody.html(html);
+
+            // Phân trang
+            let pag = '';
+            for (let i = 1; i <= pages; i++) {
+                pag += `<li class="page-item ${i === currentPage ? 'active' : ''}">
+                                <a class="page-link" href="#" onclick="currentPage=${i}; renderTable(); return false;">${i}</a>
+                            </li>`;
+            }
+            $('#pagination').html(pag);
+        }
+
+        // Live search + filter change
+        /*let timeout;
+        $('#searchInput').on('input', () => {
+            clearTimeout(timeout);
+            timeout = setTimeout(applyFilters, 400);
+        });
+
+        $('#provinceFilter, #statusFilter').on('change', applyFilters);*/
+
+        $('#searchInput').on('keypress', function (e) {
+            if (e.key === 'Enter') {
+                applyFilters();
+            }
+        });
+
+        $('#provinceFilter, #statusFilter').on('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                applyFilters();
+            }
+        });
+
+        // Xóa khách sạn
         function deleteHotel(id) {
-            if (confirm("Bạn có chắc chắn muốn xóa khách sạn này không?")) {
+            if (confirm('Bạn có chắc chắn muốn xóa khách sạn này?')) {
                 $.ajax({
-                    type: "POST",
-                    url: url_domain + '/Admin/Hotel/DeleteHotel',
+                    url: url + '/Admin/Hotel/DeleteHotel',
+                    type: 'POST',
+                    contentType: 'application/json',
                     data: JSON.stringify({ id: id }),
-                    contentType: "application/json; charset=utf-8",
-                    success: function (response) {
-                        if (response.success) {
-                            alert(response.message);
-                            loadHotels(); // Refresh
+                    success: function (res) {
+                        if (res.success) {
+                            alert('Xóa thành công!');
+                            loadHotels();
                         } else {
-                            alert(response.message);
+                            alert(res.message || 'Xóa thất bại');
                         }
                     },
-                    error: function () {
-                        alert("Đã xảy ra lỗi khi xóa");
-                    }
+                    error: () => alert('Lỗi khi xóa')
                 });
             }
         }

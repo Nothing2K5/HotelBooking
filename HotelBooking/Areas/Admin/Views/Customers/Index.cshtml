@@ -1,0 +1,150 @@
+﻿@{
+    ViewBag.Title = "Khách hàng";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+<div class="app-content-header">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-6">
+                <h3 class="mb-0">Quản lý khách hàng</h3>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-end">
+                    <li class="breadcrumb-item"><a href="/Admin/Hotel">Admin</a></li>
+                    <li class="breadcrumb-item active">QL Khách Hàng</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- PHẦN MỚI: Tìm kiếm + Lọc Rank -->
+        <div class="row mt-3">
+            <div class="col-md-4 mb-3">
+                <label for="searchCustomer">Tìm kiếm khách hàng:</label>
+                <input type="text" class="form-control" id="searchCustomer" placeholder="Nhập tên hoặc số điện thoại...">
+            </div>
+            <div class="col-md-3 mb-3">
+                <label for="filterRank">Lọc theo hạng thành viên:</label>
+                <select class="form-control" id="filterRank">
+                    <option value="">-- Tất cả --</option>
+                    <option value="1">Bronze (1)</option>
+                    <option value="2">Silver (2)</option>
+                    <option value="3">Gold (3)</option>
+                    <option value="4">Platinum (4)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            @*<div class="col-sm-12">
+                    <a href="/Admin/Customers/Create" class="btn btn-success" style="float:right">+ Thêm</a>
+                </div>*@
+            <div class="col-sm-12 mt-3" id="div_ShowData">
+                <table id="tbl_showdata" class="table table-bordered table-striped">
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        var url_domain = window.location.origin;
+        var searchTimeout;
+
+        $(document).ready(function () {
+            loadCustomers(); // Load lần đầu
+
+            // Tìm kiếm khi gõ (debounce 300ms)
+            $("#searchCustomer").on("keyup", function () {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(loadCustomers, 300);
+            });
+
+            // Lọc khi thay đổi Rank
+            $("#filterRank").on("change", function () {
+                loadCustomers();
+            });
+        });
+
+        function loadCustomers() {
+            var keyword = $("#searchCustomer").val().trim();
+            var rank = $("#filterRank").val();
+
+            var url = url_domain + '/Admin/Customers/GetAllCustomers';
+            var hasParam = false;
+
+            if (keyword !== "") {
+                url += '?keyword=' + encodeURIComponent(keyword);
+                hasParam = true;
+            }
+            if (rank !== "") {
+                url += (hasParam ? '&' : '?') + 'tier=' + encodeURIComponent(rank);
+            }
+
+            // Loading nhẹ
+            $("#tbl_showdata").html('<tbody><tr><td colspan="6" class="text-center py-4"><i class="fa fa-spinner fa-spin"></i> Đang tải...</td></tr></tbody>');
+
+            $.ajax({
+                type: "GET",
+                url: url,
+                success: function (response) {
+                    console.log(response);
+                    if (response.success) {
+                        var customers = response.data;
+                        var tbl = $("#tbl_showdata");
+                        var html = "<thead><tr>";
+                        html += "<th>STT</th><th>UserId</th><th>Họ tên</th><th>Số điện thoại</th><th>Rank</th><th>Thao tác</th>";
+                        html += "</tr></thead><tbody>";
+
+                        if (customers.length === 0) {
+                            html += '<tr><td colspan="6" class="text-center text-muted">Không tìm thấy khách hàng nào.</td></tr>';
+                        } else {
+                            for (var i = 0; i < customers.length; i++) {
+                                var customer = customers[i];
+                                var rankText = customer.LoyaltyTierId ?? "Chưa xếp hạng";
+                                if (customer.LoyaltyTierId == 1) rankText = "Bronze";
+                                else if (customer.LoyaltyTierId == 2) rankText = "Silver";
+                                else if (customer.LoyaltyTierId == 3) rankText = "Gold";
+                                else if (customer.LoyaltyTierId == 4) rankText = "Platinum";
+
+                                html += "<tr>";
+                                html += "<td>" + (i + 1) + "</td>";
+                                html += "<td>" + customer.UserId + "</td>";
+                                html += "<td>" + customer.FullName + "</td>";
+                                html += "<td>" + customer.Phone + "</td>";
+                                html += "<td>" + rankText + "</td>";
+                                html += "<td><a href='" + url_domain + "/Admin/Customers/Edit/" + customer.UserId + "' class='btn btn-primary btn-sm'>Sửa</a> <button type='button' class='btn btn-sm btn-danger' onclick='deleteCustomer(" + customer.UserId + ")'>Xóa</button></td>";
+                                html += "</tr>";
+                            }
+                        }
+                        html += "</tbody>";
+                        tbl.html(html);
+                    } else {
+                        $("#tbl_showdata").html('<tbody><tr><td colspan="6" class="text-center text-danger">Lỗi tải dữ liệu</td></tr></tbody>');
+                    }
+                },
+                error: function () {
+                    $("#tbl_showdata").html('<tbody><tr><td colspan="6" class="text-center text-danger">Lỗi kết nối server</td></tr></tbody>');
+                }
+            });
+        }
+
+        //function deleteCustomer(userId) {
+        // if (confirm("Bạn có chắc chắn muốn xóa khách hàng này?")) {
+        // $.ajax({
+        // type: "POST",
+        // url: url_domain + '/Admin/Customers/Delete',
+        // data: { id: userId },
+        // success: function (response) {
+        // if (response.success) {
+        // alert("Xóa khách hàng thành công.");
+        // loadCustomers();
+        // } else {
+        // alert("Lỗi xóa khách hàng: " + response.message);
+        // }
+        // }
+        // });
+        // }
+        //}
+    </script>
+}

@@ -51,9 +51,6 @@ namespace HotelBooking.Models
     partial void InsertHotel(Hotel instance);
     partial void UpdateHotel(Hotel instance);
     partial void DeleteHotel(Hotel instance);
-    partial void InsertLoyaltyPoint(LoyaltyPoint instance);
-    partial void UpdateLoyaltyPoint(LoyaltyPoint instance);
-    partial void DeleteLoyaltyPoint(LoyaltyPoint instance);
     partial void InsertLoyaltyTier(LoyaltyTier instance);
     partial void UpdateLoyaltyTier(LoyaltyTier instance);
     partial void DeleteLoyaltyTier(LoyaltyTier instance);
@@ -154,14 +151,6 @@ namespace HotelBooking.Models
 			get
 			{
 				return this.GetTable<Hotel>();
-			}
-		}
-		
-		public System.Data.Linq.Table<LoyaltyPoint> LoyaltyPoints
-		{
-			get
-			{
-				return this.GetTable<LoyaltyPoint>();
 			}
 		}
 		
@@ -365,6 +354,8 @@ namespace HotelBooking.Models
 		
 		private System.Nullable<bool> _IsActive;
 		
+		private System.Nullable<System.DateTime> _DeletedAt;
+		
 		private System.Nullable<System.DateTime> _CreatedAt;
 		
 		private EntityRef<Admin> _Admin;
@@ -372,8 +363,6 @@ namespace HotelBooking.Models
 		private EntitySet<Booking> _Bookings;
 		
 		private EntityRef<Customer> _Customer;
-		
-		private EntitySet<LoyaltyPoint> _LoyaltyPoints;
 		
 		private EntitySet<Review> _Reviews;
 		
@@ -391,6 +380,8 @@ namespace HotelBooking.Models
     partial void OnRoleChanged();
     partial void OnIsActiveChanging(System.Nullable<bool> value);
     partial void OnIsActiveChanged();
+    partial void OnDeletedAtChanging(System.Nullable<System.DateTime> value);
+    partial void OnDeletedAtChanged();
     partial void OnCreatedAtChanging(System.Nullable<System.DateTime> value);
     partial void OnCreatedAtChanged();
     #endregion
@@ -400,7 +391,6 @@ namespace HotelBooking.Models
 			this._Admin = default(EntityRef<Admin>);
 			this._Bookings = new EntitySet<Booking>(new Action<Booking>(this.attach_Bookings), new Action<Booking>(this.detach_Bookings));
 			this._Customer = default(EntityRef<Customer>);
-			this._LoyaltyPoints = new EntitySet<LoyaltyPoint>(new Action<LoyaltyPoint>(this.attach_LoyaltyPoints), new Action<LoyaltyPoint>(this.detach_LoyaltyPoints));
 			this._Reviews = new EntitySet<Review>(new Action<Review>(this.attach_Reviews), new Action<Review>(this.detach_Reviews));
 			OnCreated();
 		}
@@ -505,6 +495,26 @@ namespace HotelBooking.Models
 			}
 		}
 		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_DeletedAt", DbType="DateTime2")]
+		public System.Nullable<System.DateTime> DeletedAt
+		{
+			get
+			{
+				return this._DeletedAt;
+			}
+			set
+			{
+				if ((this._DeletedAt != value))
+				{
+					this.OnDeletedAtChanging(value);
+					this.SendPropertyChanging();
+					this._DeletedAt = value;
+					this.SendPropertyChanged("DeletedAt");
+					this.OnDeletedAtChanged();
+				}
+			}
+		}
+		
 		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_CreatedAt", DbType="DateTime2")]
 		public System.Nullable<System.DateTime> CreatedAt
 		{
@@ -596,19 +606,6 @@ namespace HotelBooking.Models
 			}
 		}
 		
-		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="User_LoyaltyPoint", Storage="_LoyaltyPoints", ThisKey="Id", OtherKey="UserId")]
-		public EntitySet<LoyaltyPoint> LoyaltyPoints
-		{
-			get
-			{
-				return this._LoyaltyPoints;
-			}
-			set
-			{
-				this._LoyaltyPoints.Assign(value);
-			}
-		}
-		
 		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="User_Review", Storage="_Reviews", ThisKey="Id", OtherKey="UserId")]
 		public EntitySet<Review> Reviews
 		{
@@ -649,18 +646,6 @@ namespace HotelBooking.Models
 		}
 		
 		private void detach_Bookings(Booking entity)
-		{
-			this.SendPropertyChanging();
-			entity.User = null;
-		}
-		
-		private void attach_LoyaltyPoints(LoyaltyPoint entity)
-		{
-			this.SendPropertyChanging();
-			entity.User = this;
-		}
-		
-		private void detach_LoyaltyPoints(LoyaltyPoint entity)
 		{
 			this.SendPropertyChanging();
 			entity.User = null;
@@ -993,8 +978,6 @@ namespace HotelBooking.Models
 		
 		private System.Nullable<int> _PromotionId;
 		
-		private System.Nullable<int> _LoyaltyPointsUsed;
-		
 		private System.Nullable<System.DateTime> _FreeCancellationDeadline;
 		
 		private System.Nullable<decimal> _PenaltyAmount;
@@ -1010,8 +993,6 @@ namespace HotelBooking.Models
 		private string _Note;
 		
 		private EntitySet<BookingItem> _BookingItems;
-		
-		private EntitySet<LoyaltyPoint> _LoyaltyPoints;
 		
 		private EntitySet<Payment> _Payments;
 		
@@ -1047,8 +1028,6 @@ namespace HotelBooking.Models
     partial void OnTotalAmountChanged();
     partial void OnPromotionIdChanging(System.Nullable<int> value);
     partial void OnPromotionIdChanged();
-    partial void OnLoyaltyPointsUsedChanging(System.Nullable<int> value);
-    partial void OnLoyaltyPointsUsedChanged();
     partial void OnFreeCancellationDeadlineChanging(System.Nullable<System.DateTime> value);
     partial void OnFreeCancellationDeadlineChanged();
     partial void OnPenaltyAmountChanging(System.Nullable<decimal> value);
@@ -1068,7 +1047,6 @@ namespace HotelBooking.Models
 		public Booking()
 		{
 			this._BookingItems = new EntitySet<BookingItem>(new Action<BookingItem>(this.attach_BookingItems), new Action<BookingItem>(this.detach_BookingItems));
-			this._LoyaltyPoints = new EntitySet<LoyaltyPoint>(new Action<LoyaltyPoint>(this.attach_LoyaltyPoints), new Action<LoyaltyPoint>(this.detach_LoyaltyPoints));
 			this._Payments = new EntitySet<Payment>(new Action<Payment>(this.attach_Payments), new Action<Payment>(this.detach_Payments));
 			this._Reviews = new EntitySet<Review>(new Action<Review>(this.attach_Reviews), new Action<Review>(this.detach_Reviews));
 			this._User = default(EntityRef<User>);
@@ -1289,26 +1267,6 @@ namespace HotelBooking.Models
 			}
 		}
 		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_LoyaltyPointsUsed", DbType="Int")]
-		public System.Nullable<int> LoyaltyPointsUsed
-		{
-			get
-			{
-				return this._LoyaltyPointsUsed;
-			}
-			set
-			{
-				if ((this._LoyaltyPointsUsed != value))
-				{
-					this.OnLoyaltyPointsUsedChanging(value);
-					this.SendPropertyChanging();
-					this._LoyaltyPointsUsed = value;
-					this.SendPropertyChanged("LoyaltyPointsUsed");
-					this.OnLoyaltyPointsUsedChanged();
-				}
-			}
-		}
-		
 		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_FreeCancellationDeadline", DbType="DateTime2")]
 		public System.Nullable<System.DateTime> FreeCancellationDeadline
 		{
@@ -1459,19 +1417,6 @@ namespace HotelBooking.Models
 			set
 			{
 				this._BookingItems.Assign(value);
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="Booking_LoyaltyPoint", Storage="_LoyaltyPoints", ThisKey="Id", OtherKey="BookingId")]
-		public EntitySet<LoyaltyPoint> LoyaltyPoints
-		{
-			get
-			{
-				return this._LoyaltyPoints;
-			}
-			set
-			{
-				this._LoyaltyPoints.Assign(value);
 			}
 		}
 		
@@ -1630,18 +1575,6 @@ namespace HotelBooking.Models
 		}
 		
 		private void detach_BookingItems(BookingItem entity)
-		{
-			this.SendPropertyChanging();
-			entity.Booking = null;
-		}
-		
-		private void attach_LoyaltyPoints(LoyaltyPoint entity)
-		{
-			this.SendPropertyChanging();
-			entity.Booking = this;
-		}
-		
-		private void detach_LoyaltyPoints(LoyaltyPoint entity)
 		{
 			this.SendPropertyChanging();
 			entity.Booking = null;
@@ -2103,7 +2036,7 @@ namespace HotelBooking.Models
 		
 		private string _Country;
 		
-		private System.Nullable<int> _StarRating;
+		private System.Nullable<decimal> _StarRating;
 		
 		private string _Description;
 		
@@ -2137,7 +2070,7 @@ namespace HotelBooking.Models
     partial void OnCityChanged();
     partial void OnCountryChanging(string value);
     partial void OnCountryChanged();
-    partial void OnStarRatingChanging(System.Nullable<int> value);
+    partial void OnStarRatingChanging(System.Nullable<decimal> value);
     partial void OnStarRatingChanged();
     partial void OnDescriptionChanging(string value);
     partial void OnDescriptionChanged();
@@ -2260,8 +2193,8 @@ namespace HotelBooking.Models
 			}
 		}
 		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_StarRating", DbType="Int")]
-		public System.Nullable<int> StarRating
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_StarRating", DbType="Decimal(2,1)")]
+		public System.Nullable<decimal> StarRating
 		{
 			get
 			{
@@ -2501,270 +2434,6 @@ namespace HotelBooking.Models
 		}
 	}
 	
-	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.LoyaltyPoints")]
-	public partial class LoyaltyPoint : INotifyPropertyChanging, INotifyPropertyChanged
-	{
-		
-		private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
-		
-		private int _Id;
-		
-		private int _UserId;
-		
-		private System.Nullable<int> _BookingId;
-		
-		private int _Points;
-		
-		private string _Reason;
-		
-		private System.DateTime _CreatedAt;
-		
-		private EntityRef<Booking> _Booking;
-		
-		private EntityRef<User> _User;
-		
-    #region Extensibility Method Definitions
-    partial void OnLoaded();
-    partial void OnValidate(System.Data.Linq.ChangeAction action);
-    partial void OnCreated();
-    partial void OnIdChanging(int value);
-    partial void OnIdChanged();
-    partial void OnUserIdChanging(int value);
-    partial void OnUserIdChanged();
-    partial void OnBookingIdChanging(System.Nullable<int> value);
-    partial void OnBookingIdChanged();
-    partial void OnPointsChanging(int value);
-    partial void OnPointsChanged();
-    partial void OnReasonChanging(string value);
-    partial void OnReasonChanged();
-    partial void OnCreatedAtChanging(System.DateTime value);
-    partial void OnCreatedAtChanged();
-    #endregion
-		
-		public LoyaltyPoint()
-		{
-			this._Booking = default(EntityRef<Booking>);
-			this._User = default(EntityRef<User>);
-			OnCreated();
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_Id", AutoSync=AutoSync.OnInsert, DbType="Int NOT NULL IDENTITY", IsPrimaryKey=true, IsDbGenerated=true)]
-		public int Id
-		{
-			get
-			{
-				return this._Id;
-			}
-			set
-			{
-				if ((this._Id != value))
-				{
-					this.OnIdChanging(value);
-					this.SendPropertyChanging();
-					this._Id = value;
-					this.SendPropertyChanged("Id");
-					this.OnIdChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_UserId", DbType="Int NOT NULL")]
-		public int UserId
-		{
-			get
-			{
-				return this._UserId;
-			}
-			set
-			{
-				if ((this._UserId != value))
-				{
-					if (this._User.HasLoadedOrAssignedValue)
-					{
-						throw new System.Data.Linq.ForeignKeyReferenceAlreadyHasValueException();
-					}
-					this.OnUserIdChanging(value);
-					this.SendPropertyChanging();
-					this._UserId = value;
-					this.SendPropertyChanged("UserId");
-					this.OnUserIdChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_BookingId", DbType="Int")]
-		public System.Nullable<int> BookingId
-		{
-			get
-			{
-				return this._BookingId;
-			}
-			set
-			{
-				if ((this._BookingId != value))
-				{
-					if (this._Booking.HasLoadedOrAssignedValue)
-					{
-						throw new System.Data.Linq.ForeignKeyReferenceAlreadyHasValueException();
-					}
-					this.OnBookingIdChanging(value);
-					this.SendPropertyChanging();
-					this._BookingId = value;
-					this.SendPropertyChanged("BookingId");
-					this.OnBookingIdChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_Points", DbType="Int NOT NULL")]
-		public int Points
-		{
-			get
-			{
-				return this._Points;
-			}
-			set
-			{
-				if ((this._Points != value))
-				{
-					this.OnPointsChanging(value);
-					this.SendPropertyChanging();
-					this._Points = value;
-					this.SendPropertyChanged("Points");
-					this.OnPointsChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_Reason", DbType="NVarChar(255)")]
-		public string Reason
-		{
-			get
-			{
-				return this._Reason;
-			}
-			set
-			{
-				if ((this._Reason != value))
-				{
-					this.OnReasonChanging(value);
-					this.SendPropertyChanging();
-					this._Reason = value;
-					this.SendPropertyChanged("Reason");
-					this.OnReasonChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_CreatedAt", DbType="DateTime2 NOT NULL")]
-		public System.DateTime CreatedAt
-		{
-			get
-			{
-				return this._CreatedAt;
-			}
-			set
-			{
-				if ((this._CreatedAt != value))
-				{
-					this.OnCreatedAtChanging(value);
-					this.SendPropertyChanging();
-					this._CreatedAt = value;
-					this.SendPropertyChanged("CreatedAt");
-					this.OnCreatedAtChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="Booking_LoyaltyPoint", Storage="_Booking", ThisKey="BookingId", OtherKey="Id", IsForeignKey=true)]
-		public Booking Booking
-		{
-			get
-			{
-				return this._Booking.Entity;
-			}
-			set
-			{
-				Booking previousValue = this._Booking.Entity;
-				if (((previousValue != value) 
-							|| (this._Booking.HasLoadedOrAssignedValue == false)))
-				{
-					this.SendPropertyChanging();
-					if ((previousValue != null))
-					{
-						this._Booking.Entity = null;
-						previousValue.LoyaltyPoints.Remove(this);
-					}
-					this._Booking.Entity = value;
-					if ((value != null))
-					{
-						value.LoyaltyPoints.Add(this);
-						this._BookingId = value.Id;
-					}
-					else
-					{
-						this._BookingId = default(Nullable<int>);
-					}
-					this.SendPropertyChanged("Booking");
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.AssociationAttribute(Name="User_LoyaltyPoint", Storage="_User", ThisKey="UserId", OtherKey="Id", IsForeignKey=true)]
-		public User User
-		{
-			get
-			{
-				return this._User.Entity;
-			}
-			set
-			{
-				User previousValue = this._User.Entity;
-				if (((previousValue != value) 
-							|| (this._User.HasLoadedOrAssignedValue == false)))
-				{
-					this.SendPropertyChanging();
-					if ((previousValue != null))
-					{
-						this._User.Entity = null;
-						previousValue.LoyaltyPoints.Remove(this);
-					}
-					this._User.Entity = value;
-					if ((value != null))
-					{
-						value.LoyaltyPoints.Add(this);
-						this._UserId = value.Id;
-					}
-					else
-					{
-						this._UserId = default(int);
-					}
-					this.SendPropertyChanged("User");
-				}
-			}
-		}
-		
-		public event PropertyChangingEventHandler PropertyChanging;
-		
-		public event PropertyChangedEventHandler PropertyChanged;
-		
-		protected virtual void SendPropertyChanging()
-		{
-			if ((this.PropertyChanging != null))
-			{
-				this.PropertyChanging(this, emptyChangingEventArgs);
-			}
-		}
-		
-		protected virtual void SendPropertyChanged(String propertyName)
-		{
-			if ((this.PropertyChanged != null))
-			{
-				this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-			}
-		}
-	}
-	
 	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.LoyaltyTiers")]
 	public partial class LoyaltyTier : INotifyPropertyChanging, INotifyPropertyChanged
 	{
@@ -2778,6 +2447,8 @@ namespace HotelBooking.Models
 		private System.Nullable<decimal> _DiscountPercent;
 		
 		private System.Nullable<decimal> _Multiplier;
+		
+		private int _MinPoints;
 		
 		private System.DateTime _CreatedAt;
 		
@@ -2795,6 +2466,8 @@ namespace HotelBooking.Models
     partial void OnDiscountPercentChanged();
     partial void OnMultiplierChanging(System.Nullable<decimal> value);
     partial void OnMultiplierChanged();
+    partial void OnMinPointsChanging(int value);
+    partial void OnMinPointsChanged();
     partial void OnCreatedAtChanging(System.DateTime value);
     partial void OnCreatedAtChanged();
     #endregion
@@ -2881,6 +2554,26 @@ namespace HotelBooking.Models
 					this._Multiplier = value;
 					this.SendPropertyChanged("Multiplier");
 					this.OnMultiplierChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_MinPoints", DbType="Int NOT NULL")]
+		public int MinPoints
+		{
+			get
+			{
+				return this._MinPoints;
+			}
+			set
+			{
+				if ((this._MinPoints != value))
+				{
+					this.OnMinPointsChanging(value);
+					this.SendPropertyChanging();
+					this._MinPoints = value;
+					this.SendPropertyChanged("MinPoints");
+					this.OnMinPointsChanged();
 				}
 			}
 		}
@@ -4469,8 +4162,6 @@ namespace HotelBooking.Models
 		
 		private int _TotalRooms;
 		
-		private System.Nullable<bool> _TaxIncluded;
-		
 		private System.Nullable<bool> _IsActive;
 		
 		private System.Nullable<System.DateTime> _DeletedAt;
@@ -4507,8 +4198,6 @@ namespace HotelBooking.Models
     partial void OnPricePerNightChanged();
     partial void OnTotalRoomsChanging(int value);
     partial void OnTotalRoomsChanged();
-    partial void OnTaxIncludedChanging(System.Nullable<bool> value);
-    partial void OnTaxIncludedChanged();
     partial void OnIsActiveChanging(System.Nullable<bool> value);
     partial void OnIsActiveChanged();
     partial void OnDeletedAtChanging(System.Nullable<System.DateTime> value);
@@ -4688,26 +4377,6 @@ namespace HotelBooking.Models
 					this._TotalRooms = value;
 					this.SendPropertyChanged("TotalRooms");
 					this.OnTotalRoomsChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_TaxIncluded", DbType="Bit")]
-		public System.Nullable<bool> TaxIncluded
-		{
-			get
-			{
-				return this._TaxIncluded;
-			}
-			set
-			{
-				if ((this._TaxIncluded != value))
-				{
-					this.OnTaxIncludedChanging(value);
-					this.SendPropertyChanging();
-					this._TaxIncluded = value;
-					this.SendPropertyChanged("TaxIncluded");
-					this.OnTaxIncludedChanged();
 				}
 			}
 		}

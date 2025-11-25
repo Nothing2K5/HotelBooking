@@ -99,30 +99,37 @@ namespace HotelBooking.Areas.Admin.Controllers
         {
             try
             {
-                var promo = _db.Promotions
-                    .Where(p => p.Id == id)
-                    .Select(p => new
-                    {
-                        p.Id,
-                        p.Code,
-                        p.Description,
-                        p.Type,
-                        p.Value,
-                        p.StartDate,
-                        p.EndDate,
-                        p.UsageLimit,
-                        p.PerUserLimit
-                    })
-                    .FirstOrDefault();
+                var promoEntity = _db.Promotions.FirstOrDefault(p => p.Id == id);
+                if (promoEntity == null)
+                    return Json(new { success = false, message = "Không tìm thấy" }, JsonRequestBehavior.AllowGet);
 
-                if (promo == null)
-                    return Json(new { success = false, message = "Không tìm thấy khuyến mãi" }, JsonRequestBehavior.AllowGet);
+                // Format ngày SAU KHI lấy ra khỏi database → LINQ-to-SQL không kêu nữa
+                var promo = new
+                {
+                    promoEntity.Id,
+                    promoEntity.Code,
+                    promoEntity.Description,
+                    promoEntity.Type,
+                    promoEntity.Value,
+
+                    StartDate = promoEntity.StartDate.HasValue
+                        ? promoEntity.StartDate.Value.ToString("yyyy-MM-dd")
+                        : null,
+
+                    EndDate = promoEntity.EndDate.HasValue
+                        ? promoEntity.EndDate.Value.ToString("yyyy-MM-dd")
+                        : null,
+
+                    UsageLimit = promoEntity.UsageLimit ?? 0,
+                    PerUserLimit = promoEntity.PerUserLimit ?? 0,
+                    promoEntity.IsActive
+                };
 
                 return Json(new { success = true, data = promo }, JsonRequestBehavior.AllowGet);
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = "Lỗi: " + ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
             }
         }
 
@@ -136,31 +143,48 @@ namespace HotelBooking.Areas.Admin.Controllers
                     return Json(new { success = false, message = "Dữ liệu không hợp lệ" });
 
                 var promo = _db.Promotions.FirstOrDefault(p => p.Id == model.Id);
-                if (promo != null)
+                if (promo == null)
+                    return Json(new { success = false, message = "Không tìm thấy khuyến mãi" });
+
+                // Kiểm tra trùng mã nếu thay đổi
+                if (promo.Code != model.Code && _db.Promotions.Any(p => p.Code == model.Code && p.Id != model.Id))
+                    return Json(new { success = false, message = "Mã khuyến mãi đã tồn tại" });
+
+                // === RÀNG BUỘC QUAN TRỌNG: Không cho Tạm dừng nếu đang có hiệu lực và đã được dùng ===
+                if ((bool)!model.IsActive) // đang cố tắt
                 {
-                    // Check if code changed and is duplicate
-                    if (promo.Code != model.Code && _db.Promotions.Any(p => p.Code == model.Code))
-                        return Json(new { success = false, message = "Mã khuyến mãi đã tồn tại" });
+                    bool isCurrentlyActive = promo.StartDate <= DateTime.Today &&
+                                           (!promo.EndDate.HasValue || promo.EndDate >= DateTime.Today);
 
-                    promo.Code = model.Code;
-                    promo.Description = model.Description;
-                    promo.Type = model.Type;
-                    promo.Value = model.Value;
-                    promo.StartDate = model.StartDate;
-                    promo.EndDate = model.EndDate;
-                    promo.UsageLimit = model.UsageLimit;
-                    promo.PerUserLimit = model.PerUserLimit;
-                    promo.UpdatedAt = DateTime.Now;
-
-                    _db.SubmitChanges();
-
-                    return Json(new { success = true, message = "Cập nhật thành công!" });
+                    if (isCurrentlyActive && promo.UsedCount > 0)
+                    {
+                        return Json(new
+                        {
+                            success = false,
+                            message = "Không thể tạm dừng khuyến mãi vì đang trong thời gian áp dụng và đã có khách hàng sử dụng!"
+                        });
+                    }
                 }
-                return Json(new { success = false, message = "Không tìm thấy khuyến mãi" });
+
+                // === Cập nhật các trường ===
+                promo.Code = model.Code.Trim().ToUpper();
+                promo.Description = model.Description?.Trim();
+                promo.Type = model.Type;
+                promo.Value = model.Value;
+                promo.StartDate = model.StartDate;
+                promo.EndDate = model.EndDate;
+                promo.UsageLimit = model.UsageLimit;
+                promo.PerUserLimit = model.PerUserLimit;
+                promo.IsActive = model.IsActive;           // ĐÃ THÊM: lưu trạng thái
+                promo.UpdatedAt = DateTime.Now;
+
+                _db.SubmitChanges();
+
+                return Json(new { success = true, message = "Cập nhật khuyến mãi thành công!" });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+                return Json(new { success = false, message = "Lỗi hệ thống: " + ex.Message });
             }
         }
 
