@@ -169,14 +169,10 @@
     <Compile Include="Services\Interfaces\IReviewService.cs" />
     <Compile Include="Services\Interfaces\IRoomService.cs" />
     <Compile Include="ViewModels\BookingCreateVM.cs" />
-    <Compile Include="ViewModels\BookingDetailsVM.cs" />
     <Compile Include="ViewModels\CancelBookingVM.cs" />
-    <Compile Include="ViewModels\PromoCodeVM.cs" />
-    <Compile Include="ViewModels\HotelListVM.cs" />
     <Compile Include="ViewModels\HotelSearchVM.cs" />
     <Compile Include="ViewModels\LoginVM.cs" />
     <Compile Include="ViewModels\PaymentVM.cs" />
-    <Compile Include="ViewModels\ProfileEditVM.cs" />
     <Compile Include="ViewModels\RegisterVM.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -210,8 +206,6 @@
     <Content Include="Areas\Customer\Views\Booking\Details.cshtml" />
     <Content Include="Areas\Customer\Views\Booking\Index.cshtml" />
     <Content Include="Areas\Customer\Views\Booking\Payment.cshtml" />
-    <Content Include="Areas\Customer\Views\Hotel\Create.cshtml" />
-    <Content Include="Areas\Customer\Views\Hotel\Index.cshtml" />
     <Content Include="Areas\Customer\Views\Profile\Index.cshtml" />
     <Content Include="Areas\Admin\Views\Hotel\Create.cshtml" />
     <Content Include="Areas\Admin\Views\Hotel\Index.cshtml" />
@@ -272,19 +266,14 @@
     <Content Include="Views\Shared\_Layout.cshtml" />
     <Content Include="Views\Home\Index.cshtml" />
     <Content Include="Views\Shared\_AdminLayout.cshtml" />
-    <Content Include="Views\Shared\_HotelCard.cshtml" />
     <Content Include="Views\Hotel\Details.cshtml" />
     <Content Include="Views\Account\Login.cshtml" />
     <Content Include="Views\Account\Register.cshtml" />
-    <Content Include="Views\Shared\_LoginPartial.cshtml" />
-    <Content Include="Views\Shared\_RoomCard.cshtml" />
     <Content Include="Views\Search\Index.cshtml" />
     <Content Include="Views\Account\ForgotPassword.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
-    <Folder Include="Areas\Admin\ViewModels\" />
-    <Folder Include="Areas\Customer\ViewModels\" />
     <Folder Include="Views\Room\" />
   </ItemGroup>
   <ItemGroup>

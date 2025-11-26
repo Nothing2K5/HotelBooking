@@ -40,7 +40,7 @@ namespace HotelBooking.Controllers
                 var user = new User
                 {
                     Email = model.Email,
-                    Password = model.Password, // KHÔNG HASH (theo giả định)
+                    Password = model.Password,
                     Role = "customer",
                     IsActive = true,
                     CreatedAt = DateTime.Now
@@ -61,8 +61,12 @@ namespace HotelBooking.Controllers
 
                 // Auto login
                 FormsAuthenticationTicket ticket = new FormsAuthenticationTicket(
-                    1, user.Email, DateTime.Now, DateTime.Now.AddMinutes(30),
-                    false, user.Role, FormsAuthentication.FormsCookiePath
+                    1, user.Email,
+                    DateTime.Now,
+                    DateTime.Now.AddMinutes(30),
+                    false,
+                    user.Role,
+                    FormsAuthentication.FormsCookiePath
                 );
                 string encryptedTicket = FormsAuthentication.Encrypt(ticket);
                 HttpCookie authCookie = new HttpCookie(FormsAuthentication.FormsCookieName, encryptedTicket);
@@ -96,8 +100,8 @@ namespace HotelBooking.Controllers
                 if (user == null)
                     return Json(new { success = false, message = "Email hoặc mật khẩu không đúng" });
 
-                //if (!user.IsActive)
-                //    return Json(new { success = false, message = "Tài khoản đã bị khóa" });
+                if (!(user.IsActive == true))
+                    return Json(new { success = false, message = "Tài khoản đã bị khóa" });
 
                 // Tạo authentication ticket với Role
                 FormsAuthenticationTicket ticket = new FormsAuthenticationTicket(

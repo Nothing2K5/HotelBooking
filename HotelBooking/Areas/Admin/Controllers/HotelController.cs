@@ -129,19 +129,15 @@ namespace HotelBooking.Areas.Admin.Controllers
                 if (hotel == null)
                     return Json(new { success = false, message = "Không tìm thấy khách sạn" });
 
-                // =================== KIỂM TRA MỚI THÊM Ở ĐÂY ===================
-                // Nếu người dùng muốn chuyển sang Ngừng hoạt động (IsActive = false)
-                if (!model.IsActive) // tức là đang cố tắt khách sạn
+                if (!model.IsActive)
                 {
-                    // Kiểm tra xem có booking nào đang "đang diễn ra" hoặc "chưa checkout" không
                     bool hasActiveBooking = _db.Bookings.Any(b => b.HotelId == model.Id &&
                         (b.Status == "pending" ||
                          b.Status == "confirmed" ||
                          b.Status == "paid" ||
                          b.Status == "cancelled" ||
-                         b.Status == "draft") &&  // tùy bạn đặt tên trạng thái
+                         b.Status == "draft") &&
                         (b.CheckOutDate == null || b.CheckOutDate >= DateTime.Today));
-                    // hoặc đơn giản hơn: chưa có CheckoutDate hoặc CheckoutDate > hôm nay
 
                     if (hasActiveBooking)
                     {
@@ -152,16 +148,14 @@ namespace HotelBooking.Areas.Admin.Controllers
                         });
                     }
                 }
-                // ================================================================
 
-                // Nếu qua được kiểm tra → cho phép cập nhật bình thường
                 hotel.Name = model.Name;
                 hotel.Address = model.Address;
                 hotel.City = model.City;
                 hotel.Country = model.Country;
                 hotel.StarRating = model.StarRating;
                 hotel.Description = model.Description;
-                hotel.IsActive = model.IsActive;          // đã có dòng này rồi
+                hotel.IsActive = model.IsActive;
                 hotel.UpdatedAt = DateTime.Now;
 
                 _db.SubmitChanges();
@@ -183,20 +177,16 @@ namespace HotelBooking.Areas.Admin.Controllers
                 if (hotel == null)
                     return HttpNotFound();
 
-                // Ảnh khách sạn
                 var images = _db.HotelImages
                     .Where(i => i.HotelId == id)
                     .ToList();
 
-                // Danh sách phòng
                 var rooms = _db.Rooms
                     .Where(r => r.HotelId == id)
                     .ToList();
 
-                // Ảnh phòng
                 var roomImages = _db.RoomImages.ToList();
 
-                // Review
                 var reviews = _db.Reviews
                     .Where(r => r.HotelId == id && r.DeletedAt == null)
                     .OrderByDescending(r => r.CreatedAt)
@@ -206,7 +196,6 @@ namespace HotelBooking.Areas.Admin.Controllers
                     ? reviews.Average(r => r.Rating)
                     : 0;
 
-                // Gửi dữ liệu xuống View
                 ViewBag.HotelImages = images;
                 ViewBag.Rooms = rooms;
                 ViewBag.RoomImages = roomImages;

@@ -1,5 +1,5 @@
 ﻿using HotelBooking.Models;
-using System;       
+using System;
 using System.Linq;
 using System.Web.Mvc;
 
@@ -22,8 +22,7 @@ namespace HotelBooking.Areas.Admin.Controllers
             return View("");
         }
 
-        // GET: Admin/Room/GetAllRooms - AJAX
-        // GET: Admin/Room/GetAllRooms - AJAX (đã sửa đúng với LINQ to SQL)
+        // GET: Admin/Room/GetAllRooms - AJAX     
         [HttpGet]
         public ActionResult GetAllRooms(string keyword = null)
         {
@@ -31,7 +30,7 @@ namespace HotelBooking.Areas.Admin.Controllers
             {
                 var query = from r in _db.Rooms
                             join h in _db.Hotels on r.HotelId equals h.Id
-                            where r.IsActive == true  // chỉ lấy phòng còn hoạt động
+                            where r.IsActive == true
                             select new
                             {
                                 r.Id,
@@ -43,7 +42,6 @@ namespace HotelBooking.Areas.Admin.Controllers
                                 r.IsActive
                             };
 
-                // Nếu có từ khóa tìm kiếm
                 if (!string.IsNullOrEmpty(keyword))
                 {
                     keyword = keyword.Trim().ToLower();
@@ -95,17 +93,14 @@ namespace HotelBooking.Areas.Admin.Controllers
         {
             try
             {
-                // Nếu dùng JSON, ModelState có thể không bind được → bind thủ công nếu cần
                 if (Request.ContentType.Contains("application/json"))
                 {
-                    // Nếu bạn gửi JSON, có thể đọc và bind thủ công ở đây nếu cần
-                    // Hiện tại vẫn dùng ModelState nếu gửi form, hoặc bind từ JSON
+
                 }
 
                 if (model.HotelId <= 0 || string.IsNullOrEmpty(model.Code) || string.IsNullOrEmpty(model.Name))
                     return Json(new { success = false, message = "Vui lòng điền đầy đủ thông tin bắt buộc" });
 
-                // Kiểm tra mã phòng đã tồn tại trong khách sạn chưa
                 bool codeExists = _db.Rooms.Any(r => r.HotelId == model.HotelId && r.Code == model.Code.Trim().ToUpper());
                 if (codeExists)
                     return Json(new { success = false, message = "Mã phòng đã tồn tại trong khách sạn này!" });
@@ -153,7 +148,7 @@ namespace HotelBooking.Areas.Admin.Controllers
                         r.Capacity,
                         r.PricePerNight,
                         r.TotalRooms,
-                        
+
                     })
                     .FirstOrDefault();
 
@@ -187,7 +182,6 @@ namespace HotelBooking.Areas.Admin.Controllers
                     room.Capacity = model.Capacity;
                     room.PricePerNight = model.PricePerNight;
                     room.TotalRooms = model.TotalRooms;
-                    //room.TaxIncluded = model.TaxIncluded;
                     room.UpdatedAt = DateTime.Now;
 
                     _db.SubmitChanges();

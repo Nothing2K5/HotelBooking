@@ -77,38 +77,38 @@
     <div class="container-fluid">
         <div class="chen"></div>
 
-        <!-- Header -->
+     
         <div class="page-header">
             <h1 class="mb-2">Quản lý Booking</h1>
             <p class="text-muted">Xem và quản lý tất cả các đặt phòng</p>
         </div>
 
-        <!-- Search + Filter -->
+      
         <div class="filter-card">
             <div class="row g-3 align-items-end">
-                <!-- Tìm kiếm mã booking -->
+              
                 <div class="col-md-3">
                     <label class="form-label"><i class="bi bi-search"></i> Tìm mã booking</label>
                     <input type="text" id="searchInput" class="form-control search-input" placeholder="Nhập mã...">
                 </div>
-                <!-- Khách sạn -->
+            
                 <div class="col-md-3">
                     <label class="form-label"><i class="bi bi-building"></i> Khách sạn</label>
                     <select id="hotelFilter" class="form-select">
                         <option value="">Tất cả khách sạn</option>
                     </select>
                 </div>
-                <!-- Check-in -->
+              
                 <div class="col-md-2">
                     <label class="form-label"><i class="bi bi-calendar-check"></i> Check-in từ</label>
                     <input type="date" id="checkInFilter" class="form-control">
                 </div>
-                <!-- Check-out -->
+              
                 <div class="col-md-2">
                     <label class="form-label"><i class="bi bi-calendar-x"></i> Check-out đến</label>
                     <input type="date" id="checkOutFilter" class="form-control">
                 </div>
-                <!-- Nút -->
+                
                 <div class="col-md-2 d-flex gap-2">
                     <button onclick="applyFilters()" class="btn btn-primary flex-grow-1">
                         <i class="bi bi-funnel"></i> Lọc
@@ -118,7 +118,7 @@
             </div>
         </div>
 
-        <!-- Results Summary -->
+        
         <div class="mb-3 d-flex justify-content-between align-items-center">
             <small class="text-muted">
                 Hiển thị <strong id="resultCount">0</strong> / <strong id="totalCount">0</strong> booking(s)
@@ -128,7 +128,7 @@
             </nav>
         </div>
 
-        <!-- Bookings Table -->
+      
         <div class="table-card">
             <div class="table-responsive">
                 <table class="table table-hover mb-0">
@@ -165,34 +165,34 @@
         const pageSize = 10;
         let currentPage = 1;
 
-        // An toàn với null
+    
         const safe = (val, fallback = 'N/A') => val ?? fallback;
 
-        // Format tiền
+       
         function formatCurrency(amount) {
             return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
         }
 
-        // Badge trạng thái
+      
         function getStatusBadge(status) {
             const s = (status || '').trim().toLowerCase();
             const map = {
-                'confirmed': 'bg-success text-white',      // chữ trắng trên nền xanh
-                'paid': 'bg-success text-white',      // xanh lá = đã thanh toán
-                'pending': 'bg-warning text-dark',       // vàng + chữ đen (rõ nhất)
-                'cancelled': 'bg-danger text-white',       // đỏ + chữ trắng
-                'draft': 'bg-secondary text-white'    // xám + chữ trắng
+                'confirmed': 'bg-success text-white',     
+                'paid': 'bg-success text-white',      
+                'pending': 'bg-warning text-dark',      
+                'cancelled': 'bg-danger text-white',     
+                'draft': 'bg-secondary text-white'   
             };
             return map[s] || 'bg-secondary text-white';
         }
-        // Chuyển MM/dd/yy → YYYY-MM-DD
+   
         function formatToDateInput(dateStr) {
             if (!dateStr || dateStr === 'N/A') return null;
             const [m, d, y] = dateStr.split('/');
             return `20${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
         }
 
-        // LẤY KHÁCH SẠN TỪ DB
+  
         function loadHotels() {
             const select = document.getElementById('hotelFilter');
             select.innerHTML = '<option value="">Tất cả khách sạn</option>';
@@ -221,7 +221,7 @@
                 });
         }
 
-        // LẤY BOOKING
+   
         function loadBookings() {
             const tbody = document.getElementById('bookingsTable');
             tbody.innerHTML = `<tr><td colspan="8" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr>`;
@@ -254,7 +254,7 @@
                 });
         }
 
-        // ÁP DỤNG FILTER + TÌM KIẾM
+     
         function applyFilters() {
             const search = document.getElementById('searchInput').value.trim().toLowerCase();
             const hotel = document.getElementById('hotelFilter').value;
@@ -286,7 +286,7 @@
             applyFilters();
         }
 
-        // RENDER BẢNG + PHÂN TRANG
+    
         function renderTableAndPagination() {
             const tbody = document.getElementById('bookingsTable');
             const resultCount = document.getElementById('resultCount');
@@ -329,25 +329,25 @@
                 </tr>
             `).join('');
 
-            // Phân trang
-            pagination.innerHTML = '';
-            for (let i = 1; i <= pages; i++) {
-                const active = i === currentPage ? 'active' : '';
-                const li = document.createElement('li');
-                li.className = `page-item ${active}`;
-                li.innerHTML = `<a class="page-link" href="#" onclick="currentPage=${i}; renderTableAndPagination(); return false;">${i}</a>`;
-                pagination.appendChild(li);
-            }
+         
+            //pagination.innerHTML = '';
+            //for (let i = 1; i <= pages; i++) {
+            //    const active = i === currentPage ? 'active' : '';
+            //    const li = document.createElement('li');
+            //    li.className = `page-item ${active}`;
+            //    li.innerHTML = `<a class="page-link" href="#" onclick="currentPage=${i}; renderTableAndPagination(); return false;">${i}</a>`;
+            //    pagination.appendChild(li);
+            //}
         }
 
-        // Live search
+      
         let searchTimeout;
         document.getElementById('searchInput').addEventListener('input', () => {
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(applyFilters, 300);
         });
 
-        // Khởi chạy
+        
         document.addEventListener('DOMContentLoaded', () => {
             loadHotels();
             loadBookings();

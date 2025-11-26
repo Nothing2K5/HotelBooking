@@ -16,7 +16,7 @@
             </div>
         </div>
 
-        <!-- PHẦN MỚI: Tìm kiếm + Lọc Rank -->
+      
         <div class="row mt-3">
             <div class="col-md-4 mb-3">
                 <label for="searchCustomer">Tìm kiếm khách hàng:</label>
@@ -52,15 +52,15 @@
         var searchTimeout;
 
         $(document).ready(function () {
-            loadCustomers(); // Load lần đầu
+            loadCustomers();
 
-            // Tìm kiếm khi gõ (debounce 300ms)
+          
             $("#searchCustomer").on("keyup", function () {
                 clearTimeout(searchTimeout);
                 searchTimeout = setTimeout(loadCustomers, 300);
             });
 
-            // Lọc khi thay đổi Rank
+            
             $("#filterRank").on("change", function () {
                 loadCustomers();
             });
@@ -81,7 +81,6 @@
                 url += (hasParam ? '&' : '?') + 'tier=' + encodeURIComponent(rank);
             }
 
-            // Loading nhẹ
             $("#tbl_showdata").html('<tbody><tr><td colspan="6" class="text-center py-4"><i class="fa fa-spinner fa-spin"></i> Đang tải...</td></tr></tbody>');
 
             $.ajax({

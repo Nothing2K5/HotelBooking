@@ -1,8 +1,6 @@
 ﻿using HotelBooking.Models;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Web;
 using System.Web.Mvc;
 
 
@@ -27,7 +25,7 @@ namespace HotelBooking.Areas.Admin.Controllers
             try
             {
                 var customers = _db.Customers
-                    .Select(c => new 
+                    .Select(c => new
                     {
                         UserId = c.UserId,
                         FullName = c.FullName ?? "Chua Dat Ten",
@@ -83,7 +81,7 @@ namespace HotelBooking.Areas.Admin.Controllers
                 return Json(new { success = true, data = customer }, JsonRequestBehavior.AllowGet);
 
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return Json(new { success = false, message = "Lỗi" + ex.Message }, JsonRequestBehavior.AllowGet);
             }
@@ -122,7 +120,6 @@ namespace HotelBooking.Areas.Admin.Controllers
             {
                 var query = _db.Customers.AsQueryable();
 
-                // === TÌM KIẾM THEO TÊN HOẶC SỐ ĐIỆN THOẠI ===
                 if (!string.IsNullOrWhiteSpace(keyword))
                 {
                     keyword = keyword.Trim().ToLower();
@@ -132,7 +129,6 @@ namespace HotelBooking.Areas.Admin.Controllers
                     );
                 }
 
-                // === LỌC THEO HẠNG THÀNH VIÊN (LoyaltyTierId) ===
                 if (!string.IsNullOrWhiteSpace(tier) && int.TryParse(tier, out int tierId) && tierId > 0)
                 {
                     query = query.Where(c => c.LoyaltyTierId == tierId);

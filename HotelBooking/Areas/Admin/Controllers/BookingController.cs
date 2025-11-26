@@ -24,33 +24,32 @@ namespace HotelBooking.Areas.Admin.Controllers
         {
             try
             {
-                // Bước 1: Lấy dữ liệu thô (không format)
-                var rawBookings = _db.Bookings
-                .Join(_db.Customers,
-                b => b.UserId,
-                c => c.UserId,
-                (b, c) => new { b, c })
-                .Join(_db.Users,
-                bc => bc.c.UserId,
-                u => u.Id,
-                (bc, u) => new
-                {
-                    bc.b.Id,
-                    bc.b.Code,
-                    CustomerName = bc.c.FullName,
-                    CustomerEmail = u.Email,
-                    HotelName = bc.b.Hotel.Name,
-                    bc.b.CheckInDate,
-                    bc.b.CheckOutDate,  
-                    bc.b.TotalAmount,
-                    bc.b.Guests,
-                    bc.b.Status,
-                    bc.b.CreatedAt
-                })
-                .OrderByDescending(x => x.CreatedAt)
-                .ToList(); // ← DỪNG LINQ TẠI ĐÂY
-                // Bước 2: Format ngày ở C# (ngoài SQL)
-                var bookings = rawBookings.Select(b => new
+                var rawBookings = _db.Bookings
+                                .Join(_db.Customers,
+                                b => b.UserId,
+                                c => c.UserId,
+                                (b, c) => new { b, c })
+                                .Join(_db.Users,
+                                bc => bc.c.UserId,
+                                u => u.Id,
+                                (bc, u) => new
+                                {
+                                    bc.b.Id,
+                                    bc.b.Code,
+                                    CustomerName = bc.c.FullName,
+                                    CustomerEmail = u.Email,
+                                    HotelName = bc.b.Hotel.Name,
+                                    bc.b.CheckInDate,
+                                    bc.b.CheckOutDate,
+                                    bc.b.TotalAmount,
+                                    bc.b.Guests,
+                                    bc.b.Status,
+                                    bc.b.CreatedAt
+                                })
+                                .OrderByDescending(x => x.CreatedAt)
+                                .ToList();
+
+                var bookings = rawBookings.Select(b => new
                 {
                     b.Id,
                     b.Code,
@@ -127,7 +126,7 @@ namespace HotelBooking.Areas.Admin.Controllers
             try
             {
                 var hotels = _db.Hotels
-                .Where(h => h.IsActive == true) // Tùy chọn: chỉ lấy khách sạn đang hoạt động
+                .Where(h => h.IsActive == true) // Chỉ lấy khách sạn đang hoạt động
                                     .Select(h => new
                                     {
                                         h.Id,

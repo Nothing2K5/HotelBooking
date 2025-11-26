@@ -103,7 +103,6 @@ namespace HotelBooking.Areas.Admin.Controllers
                 if (promoEntity == null)
                     return Json(new { success = false, message = "Không tìm thấy" }, JsonRequestBehavior.AllowGet);
 
-                // Format ngày SAU KHI lấy ra khỏi database → LINQ-to-SQL không kêu nữa
                 var promo = new
                 {
                     promoEntity.Id,
@@ -146,12 +145,10 @@ namespace HotelBooking.Areas.Admin.Controllers
                 if (promo == null)
                     return Json(new { success = false, message = "Không tìm thấy khuyến mãi" });
 
-                // Kiểm tra trùng mã nếu thay đổi
                 if (promo.Code != model.Code && _db.Promotions.Any(p => p.Code == model.Code && p.Id != model.Id))
                     return Json(new { success = false, message = "Mã khuyến mãi đã tồn tại" });
 
-                // === RÀNG BUỘC QUAN TRỌNG: Không cho Tạm dừng nếu đang có hiệu lực và đã được dùng ===
-                if ((bool)!model.IsActive) // đang cố tắt
+                if ((bool)!model.IsActive)
                 {
                     bool isCurrentlyActive = promo.StartDate <= DateTime.Today &&
                                            (!promo.EndDate.HasValue || promo.EndDate >= DateTime.Today);
@@ -166,7 +163,6 @@ namespace HotelBooking.Areas.Admin.Controllers
                     }
                 }
 
-                // === Cập nhật các trường ===
                 promo.Code = model.Code.Trim().ToUpper();
                 promo.Description = model.Description?.Trim();
                 promo.Type = model.Type;
@@ -175,7 +171,7 @@ namespace HotelBooking.Areas.Admin.Controllers
                 promo.EndDate = model.EndDate;
                 promo.UsageLimit = model.UsageLimit;
                 promo.PerUserLimit = model.PerUserLimit;
-                promo.IsActive = model.IsActive;           // ĐÃ THÊM: lưu trạng thái
+                promo.IsActive = model.IsActive;
                 promo.UpdatedAt = DateTime.Now;
 
                 _db.SubmitChanges();

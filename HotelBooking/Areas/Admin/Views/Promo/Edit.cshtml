@@ -71,7 +71,6 @@
         $(document).ready(function () {
         const promoId = '@ViewBag.PromoId';
 
-        // Load dữ liệu
         $.get('/Admin/Promo/GetPromoById/' + promoId)
             .done(function (res) {
                 if (res.success && res.data) {
@@ -83,17 +82,15 @@
                     $('#Type').val(p.Type || '');
                     $('#Value').val(p.Value || 0);
 
-                    // Ngày đã được format sẵn ở server → gán thẳng
                     $('#StartDate').val(p.StartDate || '');
                     $('#EndDate').val(p.EndDate || '');
 
                     $('#UsageLimit').val(p.UsageLimit ?? 0);
                     $('#PerUserLimit').val(p.PerUserLimit ?? 0);
-
-                    // Trạng thái
+              
                     $('#IsActive').val(p.IsActive === true ? "true" : "false");
 
-                    console.log("Đã load đầy đủ dữ liệu:", p); // để bạn kiểm tra
+                    console.log("Đã load đầy đủ dữ liệu:", p); 
                 } else {
                     alert(res.message || "Không tìm thấy khuyến mãi");
                     window.location.href = '/Admin/Promo';
@@ -103,7 +100,6 @@
                 alert("Lỗi kết nối server");
             });
 
-        // Submit (giữ nguyên như cũ, chỉ thêm validate ngày)
         $('#editPromoForm').on('submit', function (e) {
             e.preventDefault();
 
@@ -135,13 +131,10 @@
                     }
                 });
         });
-   
 
-            // Submit form
             $('#editPromoForm').on('submit', function (e) {
                 e.preventDefault();
 
-                // Validate ngày
                 if (new Date($('#StartDate').val()) > new Date($('#EndDate').val())) {
                     alert("Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu!");
                     return;
@@ -179,7 +172,6 @@
             });
         });
 
-        // Hiển thị thông báo đẹp
         function showAlert(message, type = "info") {
             const alertHtml = `
                 <div class="alert alert-${type} alert-dismissible fade show mt-3" role="alert">

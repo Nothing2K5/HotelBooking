@@ -35,7 +35,6 @@
         font-size: 28px;
     }
 
-    /* Gallery */
     .gallery-container {
         display: grid;
         grid-template-columns: repeat(auto-fill,minmax(200px,1fr));
@@ -62,9 +61,7 @@
     <h2 class="hotel-title">@Model.Name</h2>
     <p class="text-muted">@Model.Address – @Model.City</p>
 
-    <!-- ────────────────────────────
-          HOTEL IMAGE SLIDER
-    ─────────────────────────────── -->
+
     <div id="hotelSlider" class="carousel slide mb-4" data-bs-ride="carousel">
         <div class="carousel-inner">
 
@@ -96,7 +93,7 @@
         </button>
     </div>
 
-    <!-- ⭐⭐⭐ GALLERY THÊM MỚI Ở ĐÂY ⭐⭐⭐ -->
+
     <h3 class="mt-4">Thư viện ảnh</h3>
     <div class="gallery-container mt-3">
 
@@ -116,23 +113,18 @@
 
     <hr />
 
-    <!-- Rating -->
+
     <h4>⭐ @avg.ToString("0.0") / 5.0</h4>
 
     <hr />
 
-    <!-- ────────────────────────────
-            HOTEL INFORMATION
-    ─────────────────────────────── -->
     <h3 class="mt-4">Thông tin khách sạn</h3>
 
     <p class="mt-2">@Model.Description</p>
 
     <hr />
 
-    <!-- ────────────────────────────
-            ROOM LIST
-    ─────────────────────────────── -->
+
     <h3 class="mt-4">Danh sách phòng</h3>
 
     @if (!rooms.Any())
@@ -165,9 +157,7 @@
 
     <hr />
 
-    <!-- ────────────────────────────
-            REVIEW SECTION
-    ─────────────────────────────── -->
+
     <h3 class="mt-4">Đánh giá của khách hàng</h3>
 
     @if (!reviews.Any())

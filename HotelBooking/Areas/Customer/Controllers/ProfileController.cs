@@ -76,7 +76,7 @@ namespace HotelBooking.Areas.Customer.Controllers
         }
 
         // POST: Customer/Profile/UpdateProfile - AJAX
-        [HttpPost]
+        //[HttpPost]
         //public ActionResult UpdateProfile(ProfileEditVM model)
         //{
         //    try

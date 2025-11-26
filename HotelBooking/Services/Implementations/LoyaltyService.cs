@@ -59,26 +59,5 @@ namespace HotelBooking.Services.Implementations
             var customer = _db.Customers.FirstOrDefault(c => c.UserId == userId);
             return customer?.TotalPoints ?? 0;
         }
-
-        //public void AddPoints(int userId, int points, int? bookingId, string reason)
-        //{
-        //    var loyaltyPoint = new LoyaltyPoint
-        //    {
-        //        UserId = userId,
-        //        BookingId = bookingId,
-        //        Points = points,
-        //        Reason = reason,
-        //        CreatedAt = DateTime.Now
-        //    };
-        //    _db.LoyaltyPoints.InsertOnSubmit(loyaltyPoint);
-
-        //    var customer = _db.Customers.FirstOrDefault(c => c.UserId == userId);
-        //    if (customer != null)
-        //    {
-        //        customer.TotalPoints += points;
-        //    }
-
-        //    _db.SubmitChanges();
-        //}
     }
 }

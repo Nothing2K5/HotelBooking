@@ -9,8 +9,6 @@
     <label>Nhập ID khách sạn:</label>
     <input type="number" id="hotelId" class="form-control" placeholder="Nhập HotelId..." />
 
-    <!-- KHÔNG HIỂN THỊ NÚT TẢI REVIEW NỮA -->
-    <!-- Khi nhập ID và nhấn Enter sẽ tự load -->
 </div>
 
 <hr />
@@ -35,25 +33,25 @@
 
 @section Scripts {
     <script>
-        // Parse kiểu /Date(12345)/ của .NET
+
         function parseDotNetDate(dotNetDate) {
             var timestamp = parseInt(dotNetDate.replace(/\/Date\((\d+)\)\//, "$1"));
             return new Date(timestamp);
         }
 
-        // Tự động load review khi vào trang
+
         $(document).ready(function () {
             loadReviews();
         });
 
-        // Enter để lọc review theo HotelId
+      
         $("#hotelId").on("keyup", function (e) {
             if (e.key === "Enter") {
                 loadReviews();
             }
         });
 
-        // Load toàn bộ review hoặc theo hotelId
+
         function loadReviews() {
             var hotelId = document.getElementById("hotelId").value;
 
@@ -102,7 +100,7 @@
             });
         }
 
-        // Xóa review
+  
         function deleteReview(id) {
             if (!confirm("Bạn có chắc muốn xóa đánh giá này không?")) return;
 
