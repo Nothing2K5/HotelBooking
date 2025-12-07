@@ -5,7 +5,6 @@
 
 <div class="container-fluid">
     <h2 class="mb-4">Thêm phòng mới</h2>
-
     <div class="card">
         <div class="card-header bg-primary text-white">
             <h5 class="mb-0">Thông tin phòng</h5>
@@ -27,9 +26,7 @@
                         <select class="form-select" name="HotelId" id="HotelId" required>
                             <option value="">-- Chọn khách sạn --</option>
                         </select>
-                        <div id="hotel-error" class="text-danger small mt-1" style="display:none;"></div>
                     </div>
-
                     <div class="col-md-6 mb-3">
                         <label class="form-label">Mã phòng (Code) <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" name="Code" id="Code" placeholder="VD: DLX, STD, SUI" maxlength="10" required />
@@ -41,7 +38,6 @@
                         <label class="form-label">Tên loại phòng <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" name="Name" id="Name" placeholder="Ví dụ: Deluxe King, Suite Ocean View" required />
                     </div>
-
                     <div class="col-md-6 mb-3">
                         <label class="form-label">Sức chứa (người) <span class="text-danger">*</span></label>
                         <input type="number" class="form-control" name="Capacity" id="Capacity" min="1" max="10" value="2" required />
@@ -53,7 +49,6 @@
                         <label class="form-label">Giá mỗi đêm (VND) <span class="text-danger">*</span></label>
                         <input type="number" class="form-control" name="PricePerNight" id="PricePerNight" min="0" step="10000" placeholder="1500000" required />
                     </div>
-
                     <div class="col-md-6 mb-3">
                         <label class="form-label">Tổng số phòng cùng loại <span class="text-danger">*</span></label>
                         <input type="number" class="form-control" name="TotalRooms" id="TotalRooms" min="1" max="200" value="10" required />
@@ -63,6 +58,20 @@
                 <div class="mb-3">
                     <label class="form-label">Mô tả phòng (tùy chọn)</label>
                     <textarea class="form-control" name="Description" id="Description" rows="4" placeholder="Ví dụ: Phòng hướng biển, có ban công riêng..."></textarea>
+                </div>
+
+                <!-- PHẦN THÊM NHIỀU URL ẢNH -->
+                <div class="mb-4">
+                    <label class="form-label d-flex justify-content-between align-items-center">
+                        <span>Hình ảnh phòng <small class="text-muted">(tùy chọn, nhập link ảnh trực tiếp)</small></span>
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="addImageUrl">
+                            <i class="fas fa-plus"></i> Thêm ảnh
+                        </button>
+                    </label>
+                    <div id="imageUrlContainer">
+                        <!-- Các ô nhập link sẽ được thêm động ở đây -->
+                    </div>
+                    <small class="text-muted">Bạn có thể dán link từ ImgBB, PostImage, Cloudinary, v.v.</small>
                 </div>
 
                 <div class="mt-4">
@@ -79,30 +88,60 @@
 @section Scripts {
     <script>
         $(document).ready(function () {
-            // Load danh sách khách sạn khi trang load
+            // Load danh sách khách sạn
             $.get('@Url.Action("GetHotelsForDropdown", "Room")', function (res) {
                 if (res.success) {
                     const select = $('#HotelId');
                     res.data.forEach(h => {
                         select.append(`<option value="${h.Id}">${h.Name}</option>`);
                     });
-                } else {
-                    alert('Không tải được danh sách khách sạn: ' + res.message);
                 }
+            });
+
+            // Thêm ô nhập URL ảnh
+            let imageIndex = 0;
+            $('#addImageUrl').click(function () {
+                imageIndex++;
+                const html = `
+                    <div class="input-group mb-2 image-url-item">
+                        <input type="url" class="form-control" placeholder="https://example.com/image.jpg" name="imageUrls" />
+                        <button type="button" class="btn btn-outline-danger remove-image-url">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>`;
+                $('#imageUrlContainer').append(html);
+            });
+
+            // Xóa ô nhập ảnh
+            $(document).on('click', '.remove-image-url', function () {
+                $(this).closest('.image-url-item').remove();
             });
 
             // Submit form
             $('#roomForm').submit(function (e) {
                 e.preventDefault();
+
+                // Thu thập danh sách URL ảnh (chỉ lấy những ô có giá trị)
+                const imageUrls = [];
+                $('#imageUrlContainer input[name="imageUrls"]').each(function () {
+                    const val = $(this).val().trim();
+                    if (val && val.startsWith('http')) {
+                        imageUrls.push(val);
+                    }
+                });
+
                 const formData = {
                     HotelId: $('#HotelId').val(),
                     Code: $('#Code').val().trim(),
                     Name: $('#Name').val().trim(),
-                    Description: $('#Description').val().trim(),
+                    Description: $('#Description').val().trim() || null,
                     Capacity: parseInt($('#Capacity').val()),
                     PricePerNight: parseFloat($('#PricePerNight').val()),
-                    TotalRooms: parseInt($('#TotalRooms').val())
+                    TotalRooms: parseInt($('#TotalRooms').val()),
+                    ImageUrls: imageUrls.length > 0 ? imageUrls : null   // gửi mảng URL
                 };
+
+                $('#btnSubmit').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Đang lưu...');
 
                 $.ajax({
                     url: '@Url.Action("CreateRoom", "Room")',
@@ -111,7 +150,7 @@
                     data: JSON.stringify(formData),
                     success: function (res) {
                         if (res.success) {
-                            $('#success-message span').text(res.message || 'Thêm phòng thành công!');
+                            $('#success-message span').text(res.message || 'Thêm phòng và hình ảnh thành công!');
                             $('#success-message').show();
                             setTimeout(() => { location.href = '@Url.Action("Index")'; }, 1500);
                         } else {
@@ -122,6 +161,9 @@
                     error: function () {
                         $('#error-message span').text('Lỗi kết nối server');
                         $('#error-message').show();
+                    },
+                    complete: function () {
+                        $('#btnSubmit').prop('disabled', false).html('<i class="fas fa-save"></i> Thêm phòng');
                     }
                 });
             });

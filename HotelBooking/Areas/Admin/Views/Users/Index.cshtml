@@ -25,7 +25,7 @@
             </div>
             <div class="col-md-3 mb-3">
                 <label for="filterRole">Lọc theo vai trò:</label>
-                <select class="form-control" id="filterRole">
+                <select class="form-select" id="filterRole">
                     <option value="">-- Tất cả --</option>
                     <option value="admin">Quản trị</option>
                     <option value="customer">Khách hàng</option>
@@ -36,9 +36,10 @@
             </div>
         </div>
 
-        <div class="row">
-            <div class="col-12">
-                <table id="tbl_users" class="table table-bordered table-striped">
+        <!-- BẢNG + PHÂN TRANG DƯỚI BẢNG (đồng bộ với tất cả trang admin) -->
+        <div class="card shadow-sm mt-4">
+            <div class="table-responsive">
+                <table id="tbl_users" class="table table-bordered table-striped table-hover align-middle mb-0">
                     <thead>
                         <tr>
                             <th>STT</th>
@@ -50,17 +51,43 @@
                             <th>Thao tác</th>
                         </tr>
                     </thead>
-                    <tbody></tbody>
+                    <tbody>
+                        <tr>
+                            <td colspan="7" class="text-center py-5">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Đang tải...</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
                 </table>
+            </div>
+
+            <!-- Footer: thông tin + phân trang -->
+            <div class="card-footer bg-white border-top-0">
+                <div class="d-flex justify-content-between align-items-center py-2">
+                    <small class="text-muted">
+                        Hiển thị <strong id="resultCount">0</strong> / <strong id="totalCount">0</strong> tài khoản
+                    </small>
+                    <nav>
+                        <ul class="pagination pagination-sm mb-0" id="pagination"></ul>
+                    </nav>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 @section scripts {
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
     <script>
         var url_domain = window.location.origin;
         var searchTimeout;
+
+        let allUsers = [];           // ← dữ liệu gốc từ server
+        let filteredUsers = [];      // ← dùng để phân trang
+        const pageSize = 10;
+        let currentPage = 1;
 
         $(document).ready(function () {
             loadUsers(); // Load lần đầu
@@ -80,7 +107,6 @@
         function loadUsers() {
             var keyword = $("#searchUser").val().trim();
             var role = $("#filterRole").val();
-
             var url = url_domain + '/Admin/Users/GetAllUsers';
             var hasParam = false;
 
@@ -93,7 +119,7 @@
             }
 
             // Hiển thị loading nhẹ
-            $("#tbl_users tbody").html('<tr><td colspan="7" class="text-center py-4"><i class="fa fa-spinner fa-spin"></i> Đang tải...</td></tr>');
+            $("#tbl_users tbody").html('<tr><td colspan="7" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr>');
 
             $.ajax({
                 type: "GET",
@@ -101,40 +127,72 @@
                 success: function (response) {
                     if (response.success) {
                         var users = response.data;
-                        var html = "";
-
-                        if (users.length === 0) {
-                            html = '<tr><td colspan="7" class="text-center text-muted">Không tìm thấy tài khoản nào.</td></tr>';
-                        } else {
-                            for (var i = 0; i < users.length; i++) {
-                                var u = users[i];
-                                var status = u.isActive
-                                    ? '<span class="badge bg-success">Hoạt động</span>'
-                                    : '<span class="badge bg-secondary">Khóa</span>';
-                                var roleText = u.role === "admin" ? "Quản trị" : "Khách hàng";
-
-                                html += "<tr>";
-                                html += "<td>" + (i + 1) + "</td>";
-                                html += "<td>" + u.id + "</td>";
-                                html += "<td>" + u.email + "</td>";
-                                html += "<td>" + u.password + "</td>";
-                                html += "<td>" + roleText + "</td>";
-                                html += "<td>" + status + "</td>";
-                                html += "<td>";
-                                html += "<a href='/Admin/Users/Edit/" + u.id + "' class='btn btn-sm btn-warning'>Sửa</a> ";
-                                html += "</td>";
-                                html += "</tr>";
-                            }
-                        }
-                        $("#tbl_users tbody").html(html);
+                        allUsers = users;
+                        filteredUsers = users;
+                        currentPage = 1;
+                        renderTable();
                     } else {
-                        $("#tbl_users tbody").html('<tr><td colspan="7" class="text-center text-danger">Lỗi: ' + response.message + '</td></tr>');
+                        $("#tbl_users tbody").html('<tr><td colspan="7" class="text-center text-danger py-4">Lỗi: ' + response.message + '</td></tr>');
+                        $("#resultCount").text('0');
+                        $("#totalCount").text('0');
+                        $("#pagination").html('');
                     }
                 },
                 error: function () {
-                    $("#tbl_users tbody").html('<tr><td colspan="7" class="text-center text-danger">Lỗi kết nối server</td></tr>');
+                    $("#tbl_users tbody").html('<tr><td colspan="7" class="text-center text-danger py-4">Lỗi kết nối server</td></tr>');
+                    $("#resultCount").text('0');
+                    $("#totalCount").text('0');
+                    $("#pagination").html('');
                 }
             });
+        }
+
+        // Hàm render bảng + phân trang (mới thêm)
+        function renderTable() {
+            const start = (currentPage - 1) * pageSize;
+            const end = start + pageSize;
+            const data = filteredUsers.slice(start, end);
+
+            let html = '';
+            if (data.length === 0) {
+                html = '<tr><td colspan="7" class="text-center py-5 text-muted">Không tìm thấy tài khoản nào.</td></tr>';
+            } else {
+                for (var i = 0; i < data.length; i++) {
+                    var u = data[i];
+                    var status = u.isActive
+                        ? '<span class="badge bg-success">Hoạt động</span>'
+                        : '<span class="badge bg-secondary">Khóa</span>';
+                    var roleText = u.role === "admin" ? "Quản trị" : "Khách hàng";
+
+                    html += "<tr>";
+                    html += "<td>" + (start + i + 1) + "</td>";
+                    html += "<td>" + u.id + "</td>";
+                    html += "<td>" + u.email + "</td>";
+                    html += "<td>" + u.password + "</td>";
+                    html += "<td>" + roleText + "</td>";
+                    html += "<td>" + status + "</td>";
+                    html += "<td>";
+                    // ĐÃ ĐỔI THÀNH MÀU VÀNG WARNING NHƯ YÊU CẦU
+                    html += "<a href='/Admin/Users/Edit/" + u.id + "' class='btn btn-sm btn-warning me-1'>Sửa</a> ";
+                    html += "</td>";
+                    html += "</tr>";
+                }
+            }
+            $("#tbl_users tbody").html(html);
+
+            // Cập nhật số lượng
+            $("#resultCount").text(data.length);
+            $("#totalCount").text(filteredUsers.length);
+
+            // Phân trang
+            const pages = Math.max(1, Math.ceil(filteredUsers.length / pageSize));
+            let pag = '';
+            for (let i = 1; i <= pages; i++) {
+                pag += `<li class="page-item ${i === currentPage ? 'active' : ''}">
+                                <a class="page-link" href="#" onclick="currentPage=${i}; renderTable(); return false;">${i}</a>
+                            </li>`;
+            }
+            $("#pagination").html(pag);
         }
     </script>
 }

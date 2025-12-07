@@ -5,14 +5,15 @@
 
 <div class="app-content-header">
     <div class="container-fluid">
-        <div class="row">
-            <div class="col-sm-6"><h3 class="mb-0">Quản lý Khuyến mãi</h3></div>
-            <div class="col-sm-6 text-end">
-                <a href="/Admin/Promo/Create" class="btn btn-success">+ Thêm khuyến mãi</a>
+        <!-- Tiêu đề -->
+        <div class="row mb-4">
+            <div class="col-sm-6">
+                <h3 class="mb-0">Quản lý Khuyến mãi</h3>
             </div>
         </div>
 
-        <div class="row g-3 align-items-end mt-4">
+        <!-- Bộ lọc + tìm kiếm -->
+        <div class="row g-3 align-items-end mb-3">
             <div class="col-md-4">
                 <label class="form-label">Tìm mã / mô tả</label>
                 <input type="text" id="searchInput" class="form-control" placeholder="Nhập từ khóa...">
@@ -39,17 +40,18 @@
             </div>
         </div>
 
-        <div class="d-flex justify-content-between align-items-center my-4">
-            <small class="text-muted">
-                Hiển thị <strong id="resultCount">0</strong> / <strong id="totalCount">0</strong> khuyến mãi
-            </small>
-            <nav><ul class="pagination pagination-sm mb-0" id="pagination"></ul></nav>
+        <!-- NÚT THÊM – ĐÚNG VỊ TRÍ BẠN MUỐN: DƯỚI BỘ LỌC, CĂN PHẢI -->
+        <div class="mb-3 text-end">
+            <a href="/Admin/Promo/Create" class="btn btn-success">
+                <i class="bi bi-plus-lg"></i> Thêm khuyến mãi
+            </a>
         </div>
 
+        <!-- BẢNG + PHÂN TRANG ĐƯA XUỐNG DƯỚI CÙNG -->
         <div class="card shadow-sm">
             <div class="table-responsive">
                 <table class="table table-bordered table-striped table-hover align-middle mb-0">
-                    <thead>
+                    <thead class="table-light">
                         <tr>
                             <th>STT</th>
                             <th>Mã</th>
@@ -64,9 +66,25 @@
                         </tr>
                     </thead>
                     <tbody id="promoTableBody">
-                        <tr><td colspan="10" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr>
+                        <tr>
+                            <td colspan="10" class="text-center py-5">
+                                <div class="spinner-border text-primary" role="status"></div>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
+            </div>
+
+            <!-- PHÂN TRANG + THÔNG TIN KẾT QUẢ – ĐƯA XUỐNG DƯỚI BẢNG -->
+            <div class="card-footer bg-transparent border-top-0">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <small class="text-muted">
+                        Hiển thị <strong id="resultCount">0</strong> / <strong id="totalCount">0</strong> khuyến mãi
+                    </small>
+                    <nav>
+                        <ul class="pagination pagination-sm mb-0" id="pagination"></ul>
+                    </nav>
+                </div>
             </div>
         </div>
     </div>
@@ -87,15 +105,10 @@
 
         function loadPromos() {
             $('#promoTableBody').html('<tr><td colspan="10" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr>');
-
             $.get(url + '/Admin/Promo/GetAllPromos')
                 .done(res => {
                     if (res.success && Array.isArray(res.data)) {
                         allPromos = res.data;
-
-                        // IN RA CONSOLE ĐỂ XEM CHÍNH XÁC TYPE LÀ GÌ (rất quan trọng!)
-                        console.log("Dữ liệu promo gốc:", allPromos.map(p => ({ Code: p.Code, Type: p.Type, RawType: p.Type })));
-
                         applyFilters();
                     } else {
                         $('#promoTableBody').html('<tr><td colspan="10" class="text-center text-danger py-4">Không có dữ liệu</td></tr>');
@@ -108,16 +121,14 @@
 
         function applyFilters() {
             const search = $('#searchInput').val().trim().toLowerCase();
-            const typeFilter = $('#typeFilter').val();     // "amount" | "percentage" | ""
+            const typeFilter = $('#typeFilter').val();
             const statusFilter = $('#statusFilter').val();
 
             filtered = allPromos.filter(p => {
-                // Tìm kiếm
                 const matchSearch = !search ||
                     (p.Code && p.Code.toLowerCase().includes(search)) ||
                     (p.Description && p.Description.toLowerCase().includes(search));
 
-                // LỌC THEO LOẠI
                 let matchType = true;
                 if (typeFilter) {
                     const rawType = (p.Type || '').toString().toLowerCase().trim();
@@ -128,10 +139,7 @@
                     }
                 }
 
-                // Trạng thái
-                const matchStatus = statusFilter === "" ||
-                    p.IsActive.toString() === statusFilter;
-
+                const matchStatus = statusFilter === "" || p.IsActive.toString() === statusFilter;
                 return matchSearch && matchType && matchStatus;
             });
 
@@ -170,47 +178,43 @@
                 const valueText = isPercent
                     ? p.Value + '%'
                     : new Intl.NumberFormat('vi-VN').format(p.Value) + ' VNĐ';
-
                 const statusBadge = p.IsActive
-                    ? '<span class="badge bg-success">Active</span>'
-                    : '<span class="badge bg-secondary">Inactive</span>';
-
+                    ? '<span class="badge bg-success">Đang hoạt động</span>'
+                    : '<span class="badge bg-secondary">Tạm dừng</span>';
                 const used = p.UsedCount || 0;
                 const limit = p.UsageLimit ?? '∞';
 
                 html += `
-                    <tr>
-                        <td>${start + i + 1}</td>
-                        <td><strong>${p.Code}</strong></td>
-                        <td>${p.Description || '-'}</td>
-                        <td>${typeText}</td>
-                        <td class="fw-bold text-primary">${valueText}</td>
-                        <td>${formatDate(p.StartDate)}</td>
-                        <td>${formatDate(p.EndDate)}</td>
-                        <td>${used} / ${limit}</td>
-                        <td>${statusBadge}</td>
-                        <td>
-                            <a href="/Admin/Promo/Edit/${p.Id}" class="btn btn-warning btn-sm">Sửa</a>
-                            <button type="button" class="btn btn-danger btn-sm ms-1" onclick="deletePromo(${p.Id})">Xóa</button>
-                        </td>
-                    </tr>`;
+                        <tr>
+                            <td>${start + i + 1}</td>
+                            <td><strong>${p.Code}</strong></td>
+                            <td>${p.Description || '-'}</td>
+                            <td>${typeText}</td>
+                            <td class="fw-bold text-primary">${valueText}</td>
+                            <td>${formatDate(p.StartDate)}</td>
+                            <td>${formatDate(p.EndDate)}</td>
+                            <td>${used} / ${limit}</td>
+                            <td>${statusBadge}</td>
+                            <td>
+                                <a href="/Admin/Promo/Edit/${p.Id}" class="btn btn-warning btn-sm">Sửa</a>
+                                <button type="button" class="btn btn-danger btn-sm ms-1" onclick="deletePromo(${p.Id})">Xóa</button>
+                            </td>
+                        </tr>`;
             });
-
             $('#promoTableBody').html(html);
 
             // Phân trang
             let pag = '';
             for (let i = 1; i <= pages; i++) {
                 pag += `<li class="page-item ${i === currentPage ? 'active' : ''}">
-                            <a class="page-link" href="#" onclick="currentPage=${i}; renderTable(); return false;">${i}</a>
-                        </li>`;
+                                <a class="page-link" href="#" onclick="currentPage=${i}; renderTable(); return false;">${i}</a>
+                            </li>`;
             }
             $('#pagination').html(pag);
         }
 
         function formatDate(dateStr) {
             if (!dateStr) return '-';
-
             let date;
             if (typeof dateStr === 'string' && dateStr.includes('/Date(')) {
                 const ms = dateStr.match(/\/Date\((-?\d+)\)\//);
@@ -218,9 +222,7 @@
             } else {
                 date = new Date(dateStr);
             }
-
             if (isNaN(date.getTime())) return '-';
-
             return date.toLocaleDateString('vi-VN', {
                 day: '2-digit',
                 month: '2-digit',
@@ -231,22 +233,17 @@
         function deletePromo(id) {
             if (confirm('Xóa khuyến mãi này?')) {
                 $.post(url + '/Admin/Promo/DeletePromo', { id })
-                    .done(r => { if (r.success) { alert('Xóa thành công!'); loadPromos(); } else alert(r.message || 'Lỗi'); });
+                    .done(r => {
+                        if (r.success) {
+                            alert('Xóa thành công!');
+                            loadPromos();
+                        } else alert(r.message || 'Lỗi');
+                    });
             }
         }
 
-        // Events
-        $('#searchInput').on('keypress', function (e) {
-            if (e.key === 'Enter') {
-                applyFilters();
-            }
-        });
-
-        $('#typeFilter, #statusFilter').on('keydown', function (e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                applyFilters();
-            }
-        });
+        // Enter để lọc
+        $('#searchInput').on('keypress', e => { if (e.key === 'Enter') applyFilters(); });
+        $('#typeFilter, #statusFilter').on('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); applyFilters(); } });
     </script>
 }

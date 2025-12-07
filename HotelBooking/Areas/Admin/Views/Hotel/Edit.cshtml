@@ -4,56 +4,109 @@
 }
 
 <div class="container-fluid">
-    <h2>Chỉnh sửa Khách sạn</h2>
+    <h2 class="mb-4">Chỉnh sửa Khách sạn</h2>
 
-    <div class="card">
+    <div class="card shadow-sm">
         <div class="card-body">
             <form id="hotelForm">
                 <input type="hidden" id="hotelId" value="@ViewBag.HotelId" />
 
-                <div id="success-message" class="alert alert-success" style="display:none;"></div>
-                <div id="error-message" class="alert alert-danger" style="display:none;"></div>
+                <!-- SUCCESS -->
+                <div id="success-message" class="alert alert-success" style="display:none;">
+                    <span></span>
+                </div>
 
-                <div class="form-group mb-3">
-                    <label for="name">Tên khách sạn <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" id="name" required />
+                <!-- ERROR -->
+                <div id="error-message" class="alert alert-danger" style="display:none;">
+                    <span></span>
                 </div>
 
                 <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="address">Địa chỉ</label>
-                        <input type="text" class="form-control" id="address" />
+
+                    <!-- Form -->
+                    <div class="col-lg-8">
+
+                        <div class="mb-3">
+                            <label class="form-label">Tên khách sạn</label>
+                            <input type="text" class="form-control" id="name" required />
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Địa chỉ</label>
+                                <input type="text" class="form-control" id="address" />
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Thành phố</label>
+                                <input type="text" class="form-control" id="city" />
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Quốc gia</label>
+                                <input type="text" class="form-control" id="country" value="Việt Nam" readonly />
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Hạng sao</label>
+                                <select class="form-select" id="starRating">
+                                    <option value="1">1 sao</option>
+                                    <option value="2">2 sao</option>
+                                    <option value="3">3 sao</option>
+                                    <option value="4">4 sao</option>
+                                    <option value="5">5 sao</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Trạng thái</label>
+                                <select class="form-select" id="isActive">
+                                    <option value="true">Đang hoạt động</option>
+                                    <option value="false">Tạm dừng</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Mô tả</label>
+                            <textarea class="form-control" id="description" rows="5"></textarea>
+                        </div>
+
+                        <!-- Link ảnh -->
+                        <div class="mb-4">
+                            <label class="form-label">Link ảnh đại diện</label>
+                            <input type="url" class="form-control" id="imageUrl" required />
+                        </div>
+
                     </div>
-                    <div class="col-md-3 mb-3">
-                        <label for="city">Thành phố</label>
-                        <input type="text" class="form-control" id="city" />
+
+                    <!-- Preview -->
+                    <div class="col-lg-4">
+                        <div class="sticky-top" style="top:20px;">
+                            <label class="form-label d-block text-center fw-bold">Ảnh đại diện</label>
+
+                            <div class="border rounded shadow-sm overflow-hidden" style="height:350px;">
+                                <img id="imagePreview"
+                                     src="https://placehold.co/600x400?text=Dang+tai..."
+                                     class="w-100 h-100 object-fit-cover" />
+                            </div>
+
+                            <small class="text-muted d-block text-center mt-2">
+                                Link hiện tại: <span id="currentLinkDisplay" class="text-primary fw-bold"></span>
+                            </small>
+                        </div>
                     </div>
-                    <div class="col-md-3 mb-3">
-                        <label for="country">Quốc gia</label>
-                        <input type="text" class="form-control" id="country" />
-                    </div>
+
                 </div>
 
-                <div class="form-group mb-3">
-                    <label for="starRating">Hạng sao</label>
-                    <input type="number" class="form-control" id="starRating" min="1" max="5" />
-                </div>
+                <hr />
 
-                <div class="form-group mb-3">
-                    <label for="description">Mô tả</label>
-                    <textarea class="form-control" id="description" rows="5"></textarea>
-                </div>
+                <button type="submit" class="btn btn-warning px-5">
+                    <i class="bi bi-check-lg"></i> Cập nhật
+                </button>
 
-                <div class="form-group mb-3">
-                    <label for="isActive">Trạng thái <span class="text-danger">*</span></label>
-                    <select class="form-control" id="isActive" required>
-                        <option value="true">Đang hoạt động</option>
-                        <option value="false">Tạm dừng</option>
-                    </select>
-                </div>
+                <a href="/Admin/Hotel/Index" class="btn btn-secondary px-4">Hủy</a>
 
-                <button type="submit" class="btn btn-warning">Cập nhật</button>
-                <a href="/Admin/Hotel/Index" class="btn btn-secondary">Hủy</a>
             </form>
         </div>
     </div>
@@ -61,10 +114,19 @@
 
 @section scripts {
     <script>
-        var hotelId = parseInt($("#hotelId").val());
+        const hotelId = parseInt($("#hotelId").val()) || 0;
 
         $(document).ready(function () {
-            loadHotelData();
+
+            loadHotelInfo();
+            loadMainImage();
+
+            // Realtime preview
+            $("#imageUrl").on("input", function () {
+                const url = $(this).val().trim();
+                $("#imagePreview").attr("src", url);
+                $("#currentLinkDisplay").text(url);
+            });
 
             $("#hotelForm").submit(function (e) {
                 e.preventDefault();
@@ -72,65 +134,77 @@
             });
         });
 
-        function loadHotelData() {
-            $.ajax({
-                type: "GET",
-                url: window.location.origin + '/Admin/Hotel/GetHotelById/' + hotelId,
-                success: function (response) {
-                    if (response.success) {
-                        var hotel = response.data;
-                        $("#name").val(hotel.Name);
-                        $("#address").val(hotel.Address);
-                        $("#city").val(hotel.City);
-                        $("#country").val(hotel.Country);
-                        $("#starRating").val(hotel.StarRating);
-                        $("#description").val(hotel.Description);
+        // ================== LOAD HOTEL ==================
+        function loadHotelInfo() {
+            $.get("/Admin/Hotel/GetHotelById/" + hotelId)
+                .done(function (res) {
+                    if (res.success) {
+                        let h = res.data;
 
-                        $("#isActive").val(hotel.IsActive === true || hotel.IsActive === "True" ? "true" : "false");
+                        $("#name").val(h.Name);
+                        $("#address").val(h.Address);
+                        $("#city").val(h.City);
+                        $("#country").val(h.Country);
+                        $("#starRating").val(h.StarRating);
+                        $("#description").val(h.Description);
+                        $("#isActive").val(h.IsActive ? "true" : "false");
+                    }
+                });
+        }
+
+        // ================== LOAD MAIN IMAGE ==================
+        function loadMainImage() {
+            $.get("/Admin/Hotel/GetMainImage/" + hotelId)
+                .done(function (res) {
+                    if (res.success && res.data && res.data.Url) {
+                        const url = res.data.Url.trim();
+                        $("#imageUrl").val(url);
+                        $("#imagePreview").attr("src", url);
+                        $("#currentLinkDisplay").text(url.length > 70 ? url.substring(0, 70) + "..." : url);
+                    } else {
+                        $("#imageUrl").val("");
+                        $("#imagePreview").attr("src", "https://placehold.co/600x400?text=Chưa+có+ảnh");
+                        $("#currentLinkDisplay").text("Chưa có ảnh đại diện");
+                    }
+                })
+                .fail(function () {
+                    console.error("Lỗi gọi GetMainImage");
+                });
+        }
+
+        // ================== UPDATE HOTEL ==================
+        function updateHotel() {
+
+            $.ajax({
+                url: "/Admin/Hotel/UpdateHotel",
+                type: "POST",
+                data: {
+                    "model.Id": hotelId,
+                    "model.Name": $("#name").val(),
+                    "model.Address": $("#address").val(),
+                    "model.City": $("#city").val(),
+                    "model.Country": $("#country").val(),
+                    "model.StarRating": parseInt($("#starRating").val()),
+                    "model.Description": $("#description").val(),
+
+                    // đúng boolean
+                    "model.IsActive": $("#isActive").val() === "true",
+
+                    // TÊN ĐÚNG VỚI CONTROLLER
+                    imageUrl: $("#imageUrl").val().trim()
+                },
+                success: function (res) {
+                    if (res.success) {
+                        $("#success-message").show().find("span").text(res.message);
+                        setTimeout(() => window.location.href = "/Admin/Hotel/Index", 1500);
+                    } else {
+                        $("#error-message").show().find("span").text(res.message);
                     }
                 },
                 error: function () {
-                    alert("Không tải được thông tin khách sạn");
-                }
-            });
-        }
-
-        function updateHotel() {
-            var formData = {
-                Id: hotelId,
-                Name: $("#name").val(),
-                Address: $("#address").val(),
-                City: $("#city").val(),
-                Country: $("#country").val(),
-                StarRating: parseInt($("#starRating").val()),
-                Description: $("#description").val(),
-                IsActive: $("#isActive").val() === "true"
-            };
-
-            // Kiểm tra bắt buộc
-            if (!formData.Name) {
-                $("#error-message").text("Vui lòng nhập tên khách sạn").show();
-                return;
-            }
-
-            $.ajax({
-                type: "POST",
-                url: window.location.origin + '/Admin/Hotel/UpdateHotel',
-                data: JSON.stringify(formData),
-                contentType: "application/json; charset=utf-8",
-                success: function (response) {
-                    if (response.success) {
-                        $("#success-message").text(response.message).show();
-                        $("#error-message").hide();
-                        setTimeout(function () {
-                            window.location.href = '/Admin/Hotel/Index';
-                        }, 1500);
-                    } else {
-                        $("#error-message").text(response.message).show();
-                        $("#success-message").hide();
-                    }
+                    $("#error-message").show().find("span").text("Lỗi server!");
                 }
             });
         }
     </script>
-}   
+}

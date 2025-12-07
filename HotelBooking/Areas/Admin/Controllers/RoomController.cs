@@ -1,5 +1,6 @@
 ﻿using HotelBooking.Models;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Web.Mvc;
 
@@ -89,37 +90,74 @@ namespace HotelBooking.Areas.Admin.Controllers
 
         // POST: Admin/Room/CreateRoom - AJAX
         [HttpPost]
-        public ActionResult CreateRoom(Room model)
+        public ActionResult CreateRoom(Room model, List<string> ImageUrls = null)
         {
             try
             {
-                if (Request.ContentType.Contains("application/json"))
+                // === 1. Validate bắt buộc ===
+                if (model.HotelId <= 0 ||
+                    string.IsNullOrWhiteSpace(model.Code) ||
+                    string.IsNullOrWhiteSpace(model.Name) ||
+                    model.Capacity <= 0 ||
+                    model.PricePerNight <= 0 ||
+                    model.TotalRooms <= 0)
                 {
-
+                    return Json(new { success = false, message = "Vui lòng điền đầy đủ các trường bắt buộc." });
                 }
 
-                if (model.HotelId <= 0 || string.IsNullOrEmpty(model.Code) || string.IsNullOrEmpty(model.Name))
-                    return Json(new { success = false, message = "Vui lòng điền đầy đủ thông tin bắt buộc" });
+                // === 2. Kiểm tra trùng Code trong cùng khách sạn ===
+                bool codeExists = _db.Rooms.Any(r =>
+                    r.HotelId == model.HotelId &&
+                    r.Code == model.Code.Trim().ToUpper());
 
-                bool codeExists = _db.Rooms.Any(r => r.HotelId == model.HotelId && r.Code == model.Code.Trim().ToUpper());
                 if (codeExists)
                     return Json(new { success = false, message = "Mã phòng đã tồn tại trong khách sạn này!" });
 
+                // === 3. Chuẩn hóa dữ liệu ===
                 model.Code = model.Code.Trim().ToUpper();
                 model.Name = model.Name.Trim();
-                model.Description = string.IsNullOrEmpty(model.Description) ? null : model.Description.Trim();
+                model.Description = string.IsNullOrWhiteSpace(model.Description) ? null : model.Description.Trim();
                 model.IsActive = true;
                 model.CreatedAt = DateTime.Now;
                 model.UpdatedAt = DateTime.Now;
 
+                // === 4. Thêm phòng mới ===
                 _db.Rooms.InsertOnSubmit(model);
-                _db.SubmitChanges();
+                _db.SubmitChanges(); // ← Lúc này model.Id đã được sinh tự động
 
-                return Json(new { success = true, message = "Thêm phòng thành công!" });
+                // === 5. Thêm hình ảnh (nếu có) ===
+                if (ImageUrls != null && ImageUrls.Any(u => !string.IsNullOrWhiteSpace(u)))
+                {
+                    var validUrls = ImageUrls
+                        .Where(u => !string.IsNullOrWhiteSpace(u))
+                        .Select(u => u.Trim())
+                        .Distinct()
+                        .ToList();
+
+                    var roomImages = validUrls.Select(url => new RoomImage
+                    {
+                        RoomId = model.Id,
+                        Url = url,
+                        AltText = $"{model.Name} - Hình ảnh phòng" // bạn có thể để null hoặc sinh tự động
+                    }).ToList();
+
+                    _db.RoomImages.InsertAllOnSubmit(roomImages);
+                    _db.SubmitChanges();
+                }
+
+                // === 6. Trả kết quả thành công ===
+                return Json(new
+                {
+                    success = true,
+                    message = ImageUrls != null && ImageUrls.Any()
+                        ? "Thêm phòng và hình ảnh thành công!"
+                        : "Thêm phòng thành công!"
+                });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+                // Có thể ghi log ở đây nếu cần
+                return Json(new { success = false, message = "Lỗi hệ thống: " + ex.Message });
             }
         }
 
@@ -136,63 +174,133 @@ namespace HotelBooking.Areas.Admin.Controllers
         {
             try
             {
-                var room = _db.Rooms
-                    .Where(r => r.Id == id)
-                    .Select(r => new
-                    {
-                        r.Id,
-                        r.HotelId,
-                        r.Code,
-                        r.Name,
-                        r.Description,
-                        r.Capacity,
-                        r.PricePerNight,
-                        r.TotalRooms,
-
-                    })
-                    .FirstOrDefault();
-
+                var room = _db.Rooms.FirstOrDefault(r => r.Id == id && r.IsActive == true);
                 if (room == null)
                     return Json(new { success = false, message = "Không tìm thấy phòng" }, JsonRequestBehavior.AllowGet);
 
-                return Json(new { success = true, data = room }, JsonRequestBehavior.AllowGet);
+                var images = _db.RoomImages
+                    .Where(i => i.RoomId == id)
+                    .Select(i => new
+                    {
+                        i.Id,
+                        i.Url,
+                        AltText = i.AltText ?? "Hình ảnh phòng"
+                    })
+                    .ToList();
+
+                var data = new
+                {
+                    room.Id,
+                    room.HotelId,
+                    room.Code,
+                    room.Name,
+                    room.Description,
+                    room.Capacity,
+                    room.PricePerNight,
+                    room.TotalRooms,
+                    Images = images
+                };
+
+                return Json(new { success = true, data }, JsonRequestBehavior.AllowGet);
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = "Lỗi: " + ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
             }
         }
 
         // POST: Admin/Room/UpdateRoom - AJAX
         [HttpPost]
-        public ActionResult UpdateRoom(Room model)
+        public ActionResult UpdateRoom(Room model, List<string> NewImageUrls = null)
         {
             try
             {
-                if (!ModelState.IsValid)
-                    return Json(new { success = false, message = "Dữ liệu không hợp lệ" });
+                if (model.Id <= 0 || model.HotelId <= 0 ||
+                    string.IsNullOrWhiteSpace(model.Code) ||
+                    string.IsNullOrWhiteSpace(model.Name) ||
+                    model.Capacity <= 0 || model.PricePerNight <= 0 || model.TotalRooms <= 0)
+                {
+                    return Json(new { success = false, message = "Vui lòng điền đầy đủ thông tin bắt buộc." });
+                }
 
                 var room = _db.Rooms.FirstOrDefault(r => r.Id == model.Id);
-                if (room != null)
+                if (room == null)
+                    return Json(new { success = false, message = "Không tìm thấy phòng!" });
+
+                // Kiểm tra trùng Code (trừ chính nó)
+                bool codeExists = _db.Rooms.Any(r =>
+                    r.Id != model.Id &&
+                    r.HotelId == model.HotelId &&
+                    r.Code == model.Code.Trim().ToUpper());
+
+                if (codeExists)
+                    return Json(new { success = false, message = "Mã phòng đã tồn tại trong khách sạn này!" });
+
+                room.HotelId = model.HotelId;
+                room.Code = model.Code.Trim().ToUpper();
+                room.Name = model.Name.Trim();
+                room.Description = string.IsNullOrWhiteSpace(model.Description) ? null : model.Description.Trim();
+                room.Capacity = model.Capacity;
+                room.PricePerNight = model.PricePerNight;
+                room.TotalRooms = model.TotalRooms;
+                room.UpdatedAt = DateTime.Now;
+
+                // Thêm ảnh mới
+                if (NewImageUrls != null && NewImageUrls.Any(u => !string.IsNullOrWhiteSpace(u)))
                 {
-                    room.HotelId = model.HotelId;
-                    room.Code = model.Code;
-                    room.Name = model.Name;
-                    room.Description = model.Description;
-                    room.Capacity = model.Capacity;
-                    room.PricePerNight = model.PricePerNight;
-                    room.TotalRooms = model.TotalRooms;
-                    room.UpdatedAt = DateTime.Now;
+                    var validUrls = NewImageUrls
+                        .Where(u => !string.IsNullOrWhiteSpace(u))
+                        .Select(u => u.Trim())
+                        .Where(u => u.StartsWith("http"))
+                        .Distinct()
+                        .ToList();
 
-                    _db.SubmitChanges();
+                    if (validUrls.Any())
+                    {
+                        var newImages = validUrls.Select(url => new RoomImage
+                        {
+                            RoomId = room.Id,
+                            Url = url,
+                            AltText = $"{room.Name} - Hình ảnh phòng"
+                        }).ToList();
 
-                    return Json(new { success = true, message = "Cập nhật thành công!" });
+                        _db.RoomImages.InsertAllOnSubmit(newImages);
+                    }
                 }
-                return Json(new { success = false, message = "Không tìm thấy phòng" });
+
+                _db.SubmitChanges();
+
+                return Json(new
+                {
+                    success = true,
+                    message = (NewImageUrls != null && NewImageUrls.Any())
+                        ? "Cập nhật phòng và thêm ảnh thành công!"
+                        : "Cập nhật phòng thành công!"
+                });
             }
             catch (Exception ex)
             {
                 return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+        // 3. Action xóa ảnh (thêm mới)
+        [HttpPost]
+        public ActionResult DeleteRoomImage(int id)
+        {
+            try
+            {
+                var image = _db.RoomImages.FirstOrDefault(i => i.Id == id);
+                if (image == null)
+                    return Json(new { success = false, message = "Không tìm thấy ảnh" });
+
+                _db.RoomImages.DeleteOnSubmit(image);
+                _db.SubmitChanges();
+
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
             }
         }
 
@@ -229,17 +337,58 @@ namespace HotelBooking.Areas.Admin.Controllers
         // GET: Admin/Room/Details/5
         public ActionResult Details(int id)
         {
+            ViewBag.RoomId = id;
+            return View();
+        }
+
+        // GET: Admin/Room/GetRoomDetails?id=5
+        [HttpGet]
+        public ActionResult GetRoomDetails(int id)
+        {
             try
             {
-                var room = _db.Rooms.FirstOrDefault(r => r.Id == id);
-                if (room == null)
-                    return HttpNotFound();
+                var room = _db.Rooms
+                    .Where(r => r.Id == id && r.IsActive == true)
+                    .Select(r => new
+                    {
+                        r.Id,
+                        r.Code,
+                        r.Name,
+                        r.Description,
+                        r.Capacity,
+                        r.PricePerNight,
+                        r.TotalRooms,
+                        Hotel = new
+                        {
+                            r.Hotel.Name,
+                            r.Hotel.Address,
+                            r.Hotel.City
+                        }
+                    })
+                    .FirstOrDefault();
 
-                return View(room);
+                if (room == null)
+                    return Json(new { success = false, message = "Không tìm thấy phòng hoặc đã bị xóa." }, JsonRequestBehavior.AllowGet);
+
+                var images = _db.RoomImages
+                    .Where(i => i.RoomId == id)
+                    .Select(i => new
+                    {
+                        i.Url,
+                        AltText = i.AltText ?? "Hình ảnh phòng"
+                    })
+                    .ToList();
+
+                return Json(new
+                {
+                    success = true,
+                    Room = room,
+                    RoomImages = images
+                }, JsonRequestBehavior.AllowGet);
             }
-            catch
+            catch (Exception ex)
             {
-                return HttpNotFound();
+                return Json(new { success = false, message = "Lỗi hệ thống: " + ex.Message }, JsonRequestBehavior.AllowGet);
             }
         }
     }

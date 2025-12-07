@@ -5,63 +5,52 @@
 
 <div class="app-content-header">
     <div class="container-fluid">
-        <div class="row">
+
+        <!-- Tiêu đề -->
+        <div class="row mb-3">
             <div class="col-sm-6">
                 <h3 class="mb-0">Quản lý Khách sạn</h3>
             </div>
-            <div class="col-sm-6 text-end">
-                <a href="/Admin/Hotel/Create" class="btn btn-success">
-                    + Thêm khách sạn
-                </a>
+        </div>
+
+        <!-- Bộ lọc + tìm kiếm -->
+        <div class="row g-3 align-items-end mb-3">
+            <div class="col-md-4">
+                <label class="form-label">Tìm tên khách sạn</label>
+                <input type="text" id="searchInput" class="form-control" placeholder="Nhập tên khách sạn...">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Tỉnh / Thành phố</label>
+                <select id="provinceFilter" class="form-select">
+                    <option value="">Tất cả tỉnh/thành</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Trạng thái</label>
+                <select id="statusFilter" class="form-select">
+                    <option value="">Tất cả</option>
+                    <option value="true">Đang hoạt động</option>
+                    <option value="false">Tạm dừng</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button onclick="applyFilters()" class="btn btn-primary flex-grow-1">Lọc</button>
+                <button onclick="resetFilters()" class="btn btn-outline-secondary">Reset</button>
             </div>
         </div>
 
-<div class="row g-3 align-items-end mt-4">
+        <!-- Nút Thêm khách sạn (dưới bộ lọc, căn phải) -->
+        <div class="mb-3 text-end">
+            <a href="/Admin/Hotel/Create" class="btn btn-success">
+                <i class="bi bi-plus-lg"></i> Thêm khách sạn
+            </a>
+        </div>
 
-<div class="col-md-4">
-    <label class="form-label">Tìm tên khách sạn</label>
-    <input type="text" id="searchInput" class="form-control" placeholder="Nhập tên khách sạn...">
-</div>
-
-<div class="col-md-3">
-    <label class="form-label">Tỉnh / Thành phố</label>
-    <select id="provinceFilter" class="form-select">
-        <option value="">Tất cả tỉnh/thành</option>
-    </select>
-</div>
-
-<div class="col-md-2">
-    <label class="form-label">Trạng thái</label>
-    <select id="statusFilter" class="form-select">
-        <option value="">Tất cả</option>
-        <option value="true">Đang hoạt động</option>
-        <option value="false">Tạm dừng</option>
-    </select>
-</div>
-
-<div class="col-md-3 d-flex gap-2">
-        <button onclick="applyFilters()" class="btn btn-primary flex-grow-1">
-            Lọc
-        </button>
-        <button onclick="resetFilters()" class="btn btn-outline-secondary">
-            Reset
-        </button>
-    </div>
-</div>
-
-<div class="mb-3 d-flex justify-content-between align-items-center mt-4">
-    <small class="text-muted">
-        Hiển thị <strong id="resultCount">0</strong> / <strong id="totalCount">0</strong> khách sạn
-    </small>
-    <nav>
-        <ul class="pagination pagination-sm mb-0" id="pagination"></ul>
-    </nav>
-</div>
-
-<div class="card shadow-sm">
+        <!-- Bảng dữ liệu -->
+        <div class="card shadow-sm">
             <div class="table-responsive">
                 <table class="table table-bordered table-striped table-hover align-middle mb-0">
-                    <thead>
+                    <thead class="table-light">
                         <tr>
                             <th>STT</th>
                             <th>Tên khách sạn</th>
@@ -81,13 +70,25 @@
                     </tbody>
                 </table>
             </div>
+
+            <!-- Footer của card: thông tin kết quả + phân trang (đặt dưới bảng) -->
+            <div class="card-footer bg-transparent border-top-0">
+                <div class="d-flex justify-content-between align-items-center flex-wrap">
+                    <small class="text-muted">
+                        Hiển thị <strong id="resultCount">0</strong> / <strong id="totalCount">0</strong> khách sạn
+                    </small>
+                    <nav>
+                        <ul class="pagination pagination-sm mb-0" id="pagination"></ul>
+                    </nav>
+                </div>
+            </div>
         </div>
+
     </div>
 </div>
 
 @section scripts {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
-
     <script>
         const url = window.location.origin;
         let allHotels = [];
@@ -96,10 +97,9 @@
         let currentPage = 1;
 
         $(document).ready(function () {
-            loadHotels(); // Load data + tự động fill tỉnh/thành
+            loadHotels();
         });
 
-        // Load tất cả khách sạn + tự động đổ dữ liệu tỉnh/thành
         function loadHotels() {
             const $tbody = $('#hotelTableBody');
             $tbody.html('<tr><td colspan="7" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr>');
@@ -109,18 +109,16 @@
                     if (res.success && Array.isArray(res.data)) {
                         allHotels = res.data;
 
-                        // TỰ ĐỘNG FILL TỈNH/THÀNH PHỐ TỪ DATABASE
+                        // Fill tỉnh/thành tự động
                         const provinces = [...new Set(
-                            allHotels
-                                .map(h => h.City)
-                                .filter(city => city && city.trim() !== '')
+                            allHotels.map(h => h.City).filter(c => c && c.trim() !== '')
                         )].sort((a, b) => a.localeCompare(b, 'vi'));
 
                         const $provinceSelect = $('#provinceFilter');
                         $provinceSelect.empty().append('<option value="">Tất cả tỉnh/thành</option>');
                         provinces.forEach(p => $provinceSelect.append(`<option value="${p}">${p}</option>`));
 
-                        applyFilters(); // Render bảng lần đầu
+                        applyFilters();
                     } else {
                         $tbody.html('<tr><td colspan="7" class="text-center text-danger py-4">Không có dữ liệu</td></tr>');
                     }
@@ -136,7 +134,7 @@
             const status = $('#statusFilter').val();
 
             filtered = allHotels.filter(h => {
-                if (search && !h.Name?.toLowerCase().includes(search)) return false;
+                if (search && !(h.Name || '').toLowerCase().includes(search)) return false;
                 if (province && h.City !== province) return false;
                 if (status !== "" && h.IsActive.toString() !== status) return false;
                 return true;
@@ -154,7 +152,6 @@
         }
 
         function renderTable() {
-            const $tbody = $('#hotelTableBody');
             const total = filtered.length;
             const pages = Math.max(1, Math.ceil(total / pageSize));
             const start = (currentPage - 1) * pageSize;
@@ -163,6 +160,7 @@
             $('#resultCount').text(data.length);
             $('#totalCount').text(total);
 
+            const $tbody = $('#hotelTableBody');
             if (total === 0) {
                 $tbody.html('<tr><td colspan="7" class="text-center py-5 text-muted">Không tìm thấy khách sạn nào</td></tr>');
                 $('#pagination').html('');
@@ -172,8 +170,8 @@
             let html = '';
             data.forEach((h, i) => {
                 const statusBadge = h.IsActive
-                    ? '<span class="badge bg-success">Active</span>'
-                    : '<span class="badge bg-secondary">Inactive</span>';
+                    ? '<span class="badge bg-success">Đang hoạt động</span>'
+                    : '<span class="badge bg-secondary">Tạm dừng</span>';
 
                 html += `
                         <tr>
@@ -184,16 +182,15 @@
                             <td>${h.StarRating || 'N/A'}</td>
                             <td>${statusBadge}</td>
                             <td>
-                                <a href="/Admin/Hotel/Details/${h.Id}" class = "btn btn-info btn-sm">Chi tiết</a>
+                                <a href="/Admin/Hotel/Details/${h.Id}" class="btn btn-info btn-sm">Chi tiết</a>
                                 <a href="/Admin/Hotel/Edit/${h.Id}" class="btn btn-warning btn-sm">Sửa</a>
                                 <button type="button" class="btn btn-danger btn-sm ms-1" onclick="deleteHotel(${h.Id})">Xóa</button>
                             </td>
                         </tr>`;
             });
-
             $tbody.html(html);
 
-            // Phân trang
+            // Pagination
             let pag = '';
             for (let i = 1; i <= pages; i++) {
                 pag += `<li class="page-item ${i === currentPage ? 'active' : ''}">
@@ -203,29 +200,10 @@
             $('#pagination').html(pag);
         }
 
-        // Live search + filter change
-        /*let timeout;
-        $('#searchInput').on('input', () => {
-            clearTimeout(timeout);
-            timeout = setTimeout(applyFilters, 400);
-        });
+        // Enter để lọc
+        $('#searchInput').on('keypress', e => { if (e.key === 'Enter') applyFilters(); });
+        $('#provinceFilter, #statusFilter').on('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); applyFilters(); } });
 
-        $('#provinceFilter, #statusFilter').on('change', applyFilters);*/
-
-        $('#searchInput').on('keypress', function (e) {
-            if (e.key === 'Enter') {
-                applyFilters();
-            }
-        });
-
-        $('#provinceFilter, #statusFilter').on('keydown', function (e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                applyFilters();
-            }
-        });
-
-        // Xóa khách sạn
         function deleteHotel(id) {
             if (confirm('Bạn có chắc chắn muốn xóa khách sạn này?')) {
                 $.ajax({

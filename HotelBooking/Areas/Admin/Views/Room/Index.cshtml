@@ -28,16 +28,59 @@
             </div>
         </div>
 
-        <div class="col-sm-12" id="div_ShowData">
-            <table id="tbl_rooms" class="table table-bordered table-striped"></table>
+        <!-- BẢNG + PHÂN TRANG DƯỚI BẢNG (đồng bộ hoàn toàn với các trang khác) -->
+        <div class="card shadow-sm mt-4">
+            <div class="table-responsive">
+                <table id="tbl_rooms" class="table table-bordered table-striped table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>STT</th>
+                            <th>Khách sạn</th>
+                            <th>Tên phòng</th>
+                            <th>Sức chứa</th>
+                            <th>Giá/đêm</th>
+                            <th>Số phòng</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="8" class="text-center py-5">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Đang tải...</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Footer: thông tin + phân trang -->
+            <div class="card-footer bg-white border-top-0">
+                <div class="d-flex justify-content-between align-items-center py-2">
+                    <small class="text-muted">
+                        Hiển thị <strong id="resultCount">0</strong> / <strong id="totalCount">0</strong> phòng
+                    </small>
+                    <nav>
+                        <ul class="pagination pagination-sm mb-0" id="pagination"></ul>
+                    </nav>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
 @section scripts {
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
     <script>
         var url_domain = window.location.origin;
         var searchTimeout;
+
+        let allRooms = [];           // ← giữ nguyên dữ liệu gốc từ server
+        let filteredRooms = [];      // ← dùng cho phân trang
+        const pageSize = 10;
+        let currentPage = 1;
 
         $(document).ready(function () {
             loadRooms(); // Load lần đầu
@@ -54,14 +97,13 @@
         function loadRooms() {
             var keyword = $("#searchHotel").val().trim();
             var url = url_domain + '/Admin/Room/GetAllRooms';
-
             // Nếu có từ khóa thì truyền keyword, không còn dùng hotelId nữa
             if (keyword !== "") {
                 url += '?keyword=' + encodeURIComponent(keyword);
             }
 
             // Hiển thị loading nhẹ (tùy chọn)
-            $("#tbl_rooms").html('<tbody><tr><td colspan="8" class="text-center py-4"><i class="fa fa-spinner fa-spin"></i> Đang tải...</td></tr></tbody>');
+            $("#tbl_rooms tbody").html('<tr><td colspan="8" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr>');
 
             $.ajax({
                 type: "GET",
@@ -69,46 +111,76 @@
                 success: function (response) {
                     if (response.success) {
                         var rooms = response.data;
-                        var tbl = $("#tbl_rooms");
-                        var html = "<thead><tr>";
-                        html += "<th>STT</th><th>Khách sạn</th><th>Tên phòng</th>";
-                        html += "<th>Sức chứa</th><th>Giá/đêm</th><th>Số phòng</th><th>Trạng thái</th><th>Thao tác</th>";
-                        html += "</tr></thead><tbody>";
-
-                        if (rooms.length === 0) {
-                            html += '<tr><td colspan="8" class="text-center text-muted">Không tìm thấy phòng nào.</td></tr>';
-                        } else {
-                            for (var i = 0; i < rooms.length; i++) {
-                                var room = rooms[i];
-                                var statusBadge = room.IsActive
-                                    ? '<span class="badge bg-success">Active</span>'
-                                    : '<span class="badge bg-secondary">Inactive</span>';
-
-                                html += "<tr>";
-                                html += "<td>" + (i + 1) + "</td>";
-                                html += "<td>" + room.HotelName + "</td>";
-                                html += "<td>" + room.Name + "</td>";
-                                html += "<td>" + room.Capacity + " người</td>";
-                                html += "<td>" + room.PricePerNight.toLocaleString() + " VNĐ</td>";
-                                html += "<td>" + room.TotalRooms + "</td>";
-                                html += "<td>" + statusBadge + "</td>";
-                                html += "<td>";
-                                html += "<a href='" + url_domain + "/Admin/Room/Edit/" + room.Id + "' class='btn btn-sm btn-warning'>Sửa</a> ";
-                                html += "<button type='button' class='btn btn-sm btn-danger' onclick='deleteRoom(" + room.Id + ")'>Xóa</button>";
-                                html += "</td></tr>";
-                            }
-                        }
-
-                        html += "</tbody>";
-                        tbl.html(html);
+                        allRooms = rooms;           // ← giữ nguyên dữ liệu gốc
+                        filteredRooms = rooms;      // ← dùng để phân trang
+                        currentPage = 1;
+                        renderTable();             // ← render + phân trang
                     } else {
-                        $("#tbl_rooms").html('<tbody><tr><td colspan="8" class="text-center text-danger">Lỗi tải dữ liệu</td></tr></tbody>');
+                        $("#tbl_rooms tbody").html('<tr><td colspan="8" class="text-center text-danger py-4">Lỗi tải dữ liệu</td></tr>');
+                        $("#resultCount").text('0');
+                        $("#totalCount").text('0');
+                        $("#pagination").html('');
                     }
                 },
                 error: function () {
-                    $("#tbl_rooms").html('<tbody><tr><td colspan="8" class="text-center text-danger">Lỗi kết nối server</td></tr></tbody>');
+                    $("#tbl_rooms tbody").html('<tr><td colspan="8" class="text-center text-danger py-4">Lỗi kết nối server</td></tr>');
+                    $("#resultCount").text('0');
+                    $("#totalCount").text('0');
+                    $("#pagination").html('');
                 }
             });
+        }
+
+        // Hàm render bảng + phân trang (mới thêm, không thay đổi logic cũ)
+        function renderTable() {
+            const start = (currentPage - 1) * pageSize;
+            const end = start + pageSize;
+            const data = filteredRooms.slice(start, end);
+
+            let html = '';
+            if (data.length === 0) {
+                html = '<tr><td colspan="8" class="text-center py-5 text-muted">Không tìm thấy phòng nào.</td></tr>';
+            } else {
+                for (var i = 0; i < data.length; i++) {
+                    var room = data[i];
+                    var statusBadge = room.IsActive
+                        ? '<span class="badge bg-success">Active</span>'
+                        : '<span class="badge bg-secondary">Inactive</span>';
+                    html += "<tr>";
+                    html += "<td>" + (start + i + 1) + "</td>";
+                    html += "<td>" + room.HotelName + "</td>";
+                    html += "<td>" + room.Name + "</td>";
+                    html += "<td>" + room.Capacity + " người</td>";
+                    html += "<td>" + room.PricePerNight.toLocaleString() + " VNĐ</td>";
+                    html += "<td>" + room.TotalRooms + "</td>";
+                    html += "<td>" + statusBadge + "</td>";
+                    html += "<td>";
+                    // NÚT CHI TIẾT (màu xanh dương, đẹp)
+                    html += "<a href='" + url_domain + "/Admin/Room/Details/" + room.Id + "' class='btn btn-sm btn-info me-1'>";
+                    html += " Chi tiết";
+                    html += "</a> ";
+                    //";
+                    // Nút Sửa & Xóa (giữ nguyên)
+                    html += "<a href='" + url_domain + "/Admin/Room/Edit/" + room.Id + "' class='btn btn-sm btn-warning me-1'>Sửa</a> ";
+                    html += "<button type='button' class='btn btn-sm btn-danger' onclick='deleteRoom(" + room.Id + ")'>Xóa</button>";
+                    html += "</td></tr>";
+                }
+            }
+            $("#tbl_rooms tbody").html(html);
+
+            // Cập nhật số lượng
+            $("#resultCount").text(data.length);
+            $("#totalCount").text(filteredRooms.length);
+
+            // Phân trang
+            const pages = Math.max(1, Math.ceil(filteredRooms.length / pageSize));
+            let pag = '';
+            for (let i = 1; i <= pages; i++) {
+                pag += `<li class="page-item ${i === currentPage ? 'active' : ''}">
+                                <a class="page-link" href="#" onclick="currentPage=${i}; renderTable(); return false;">${i}</a>
+                            </li>`;
+            }
+            $("#pagination").html(pag);
         }
 
         function deleteRoom(id) {

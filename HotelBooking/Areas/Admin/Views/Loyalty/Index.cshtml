@@ -3,191 +3,203 @@
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-<div class="row">
-    <div class="col-sm-6"><h3 class="mb-0">Quản lý Loyalty Tiers</h3></div>
-    <div class="col-sm-6 text-end">
-        <a href="/Admin/Loyalty/Create" class="btn btn-success">+ Thêm Loyalty Tier</a>
-    </div>
-</div>
+<div class="app-content-header">
+    <div class="container-fluid">
 
+        <!-- Tiêu đề -->
+        <div class="row mb-4">
+            <div class="col-sm-12">
+                <h3 class="mb-0">Quản lý Loyalty Tiers</h3>
+            </div>
+        </div>
 
-<div class="row g-3 align-items-end mt-4">
-    <div class="col-md-4">
-        <label class="form-label">Tìm mã / tên</label>
-        <input type="text" id="searchInput" class="form-control" placeholder="Nhập từ khóa...">
-    </div>
+        <!-- Bộ lọc -->
+        <div class="row g-3 align-items-end mb-3">
+            <div class="col-md-5">
+                <label class="form-label">Tìm tên tier hoặc ID</label>
+                <input type="text" id="searchInput" class="form-control" placeholder="Nhập từ khóa...">
+            </div>
+            <div class="col-md-4 d-flex gap-2">
+                <button onclick="applyFilters()" class="btn btn-primary flex-grow-1">Lọc</button>
+                <button onclick="resetFilters()" class="btn btn-outline-secondary">Reset</button>
+            </div>
+        </div>
 
-    <div class="col-md-3 d-flex gap-2">
-        <button onclick="applyFilters()" class="btn btn-primary flex-grow-1">Lọc</button>
-        <button onclick="resetFilters()" class="btn btn-outline-secondary">Reset</button>
-    </div>
-</div>
+        <!-- NÚT THÊM – NHỎ GỌN, CĂN PHẢI, DƯỚI BỘ LỌC -->
+        <div class="mb-3 text-end">
+            <a href="/Admin/Loyalty/Create" class="btn btn-success">
+                + Thêm Loyalty Tier
+            </a>
+        </div>
 
-<div class="d-flex justify-content-between align-items-center my-4">
-    <small class="text-muted">
-        Hiển thị <strong id="resultCount">0</strong> / <strong id="totalCount">0</strong> loyalty
-    </small>
-    <nav><ul class="pagination pagination-sm mb-0" id="pagination"></ul></nav>
-</div>
+        <!-- BẢNG + PHÂN TRANG DƯỚI CÙNG -->
+        <div class="card shadow-sm">
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Tên Tier</th>
+                            <th>Giảm giá (%)</th>
+                            <th>Multiplier</th>
+                            <th>Min Points</th>
+                            <th>Ngày tạo</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tierTable">
+                        <tr>
+                            <td colspan="7" class="text-center py-5">
+                                <div class="spinner-border text-primary" role="status"></div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
 
-<div class="card shadow-sm">
-    <div class="table-responsive">
-        <table class="table table-bordered table-striped table-hover align-middle mb-0">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Tên tier</th>
-                    <th>Giảm giá (%)</th>
-                    <th>Multiplier</th>
-                    <th>MinPoints</th>
-                    <th>Ngày tạo</th>
-                    <th>Thao tác</th>
-                </tr>
-            </thead>
-            <tbody id="tierTable">
-                <tr><td colspan="6" class="text-center">Đang tải dữ liệu...</td></tr>
-            </tbody>
-        </table>
+            <!-- PHÂN TRANG + KẾT QUẢ HIỂN THỊ – ĐƯA XUỐNG DƯỚI BẢNG -->
+            <div class="card-footer bg-transparent border-top-0">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <small class="text-muted">
+                        Hiển thị <strong id="resultCount">0</strong> / <strong id="totalCount">0</strong> tier
+                    </small>
+                    <nav>
+                        <ul class="pagination pagination-sm mb-0" id="pagination"></ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
 @section Scripts {
     <script>
+        let allTiers = [];
+        let filtered = [];
+        let currentPage = 1;
+        const pageSize = 10;
 
-    let allTiers = [];
-    let filtered = [];
-    let currentPage = 1;
-    const pageSize = 10;
+        // Chuyển /Date(1234567890)/ thành Date
+        function parseDotNetDate(dateStr) {
+            if (!dateStr) return null;
+            const match = dateStr.match(/\/Date\((\d+)\)\//);
+            return match ? new Date(parseInt(match[1])) : new Date(dateStr);
+        }
 
-    function parseDotNetDate(dotNetDate) {
-        if (!dotNetDate) return "";
-        var ms = parseInt(dotNetDate.match(/\d+/));
-        return new Date(ms);
-    }
+        function loadTiers() {
+            const url = '@Url.Action("GetAllTiers", "Loyalty", new { area = "Admin" })';
+            $("#tierTable").html(`
+                <tr>
+                    <td colspan="7" class="text-center py-5">
+                        <div class="spinner-border text-primary"></div>
+                    </td>
+                </tr>
+            `);
 
-    // Load toàn bộ tiers
-    function loadTiers() {
-        let url = '@Url.Action("GetAllTiers", "Loyalty", new { area = "Admin" })';
+            $.get(url)
+                .done(res => {
+                    if (res.success && Array.isArray(res.data)) {
+                        allTiers = res.data;
+                        filtered = [...allTiers];
+                        currentPage = 1;
+                        renderTable();
+                    } else {
+                        $("#tierTable").html('<tr><td colspan="7" class="text-center text-danger py-4">Không có dữ liệu</td></tr>');
+                    }
+                })
+                .fail(() => {
+                    $("#tierTable").html('<tr><td colspan="7" class="text-center text-danger py-4">Lỗi kết nối server</td></tr>');
+                });
+        }
 
-        $("#tierTable").html(`<tr><td colspan="7" class="text-center py-4">
-            <div class="spinner-border text-primary"></div></td></tr>`);
+        function applyFilters() {
+            const search = $("#searchInput").val().trim().toLowerCase();
+            filtered = allTiers.filter(t =>
+                !search ||
+                (t.Name && t.Name.toLowerCase().includes(search)) ||
+                (t.Id && t.Id.toString().includes(search))
+            );
+            currentPage = 1;
+            renderTable();
+        }
 
-        $.get(url).done(res => {
-            if (res.success && Array.isArray(res.data)) {
-                allTiers = res.data;
-                filtered = allTiers;
-                currentPage = 1;
-                renderTable();
-            } else {
-                $("#tierTable").html(`<tr><td colspan="7" class="text-center">Không có dữ liệu</td></tr>`);
+        function resetFilters() {
+            $("#searchInput").val("");
+            filtered = [...allTiers];
+            currentPage = 1;
+            renderTable();
+        }
+
+        function renderTable() {
+            const total = filtered.length;
+            const pages = Math.max(1, Math.ceil(total / pageSize));
+            const start = (currentPage - 1) * pageSize;
+            const data = filtered.slice(start, start + pageSize);
+
+            $("#resultCount").text(data.length);
+            $("#totalCount").text(allTiers.length);
+
+            if (total === 0) {
+                $("#tierTable").html('<tr><td colspan="7" class="text-center text-muted py-5">Không tìm thấy tier nào</td></tr>');
+                $("#pagination").html('');
+                return;
             }
-        }).fail(() => {
-            $("#tierTable").html(`<tr><td colspan="7" class="text-center text-danger">Lỗi tải dữ liệu</td></tr>`);
-        });
-    }
 
-    // Áp dụng tìm kiếm
-    function applyFilters() {
-        const search = $("#searchInput").val().trim().toLowerCase();
-
-        filtered = allTiers.filter(t =>
-            !search ||
-            (t.Name && t.Name.toLowerCase().includes(search)) ||
-            (t.Id && t.Id.toString().includes(search))
-        );
-
-        currentPage = 1;
-        renderTable();
-    }
-
-    // Reset
-    function resetFilters() {
-        $("#searchInput").val("");
-        filtered = allTiers;
-        currentPage = 1;
-        renderTable();
-    }
-
-    // Render bảng + phân trang
-    function renderTable() {
-        const total = filtered.length;
-        const pages = Math.max(1, Math.ceil(total / pageSize));
-
-        $("#totalCount").text(allTiers.length);
-        $("#resultCount").text(total);
-
-        const start = (currentPage - 1) * pageSize;
-        const data = filtered.slice(start, start + pageSize);
-
-        let html = "";
-
-        if (data.length === 0) {
-            html = `<tr><td colspan="7" class="text-center text-muted py-4">Không có dữ liệu</td></tr>`;
-        } else {
+            let html = "";
             data.forEach(t => {
-                let created = parseDotNetDate(t.CreatedAt).toLocaleDateString("vi-VN");
+                const created = parseDotNetDate(t.CreatedAt);
+                const dateStr = created ? created.toLocaleDateString("vi-VN") : "-";
 
                 html += `
                     <tr id="tier_${t.Id}">
                         <td>${t.Id}</td>
-                        <td>${t.Name}</td>
-                        <td>${t.DiscountPercent}%</td>
-                        <td>${t.Multiplier}</td>
-                        <td>${t.MinPoints ?? 0}</td>
-                        <td>${created}</td>
+                        <td><strong>${t.Name || '-'}</strong></td>
+                        <td class="text-primary fw-bold">${t.DiscountPercent || 0}%</td>
+                        <td>${t.Multiplier || 1}x</td>
+                        <td>${t.MinPoints?.toLocaleString() || 0}</td>
+                        <td>${dateStr}</td>
                         <td>
-                            <a href="/Admin/Loyalty/Edit/${t.Id}" class="btn btn-sm btn-primary">Sửa</a>
-                            <button class="btn btn-sm btn-danger" onclick="deleteTier(${t.Id})">Xóa</button>
+                            <a href="/Admin/Loyalty/Edit/${t.Id}" class="btn btn-warning btn-sm">Sửa</a>
+                            <button class="btn btn-danger btn-sm ms-1" onclick="deleteTier(${t.Id})">Xóa</button>
                         </td>
                     </tr>`;
             });
-        }
 
-        $("#tierTable").html(html);
+            $("#tierTable").html(html);
 
-        // Render phân trang
-        let pag = "";
-        for (let i = 1; i <= pages; i++) {
-            pag += `
-                <li class="page-item ${i === currentPage ? "active" : ""}">
-                    <a class="page-link" href="#" onclick="currentPage=${i}; renderTable(); return false;">${i}</a>
-                </li>`;
-        }
-
-        $("#pagination").html(pag);
-    }
-
-    // Xóa tier
-    function deleteTier(id) {
-        if (!confirm("Bạn có chắc muốn xóa loyalty tier này không?")) return;
-
-        let url = '@Url.Action("DeleteTier", "Loyalty", new { area = "Admin" })';
-
-        $.post(url, { id })
-            .done(res => {
-                if (res.success) {
-                    allTiers = allTiers.filter(x => x.Id !== id);
-                    applyFilters();
-                    alert("Xóa thành công!");
-                } else {
-                    alert(res.message);
-                }
-            })
-            .fail(() => alert("Không thể xóa. Lỗi server."));
-    }
-
-    // Tự động load khi vào trang
-    $(document).ready(function () {
-        loadTiers();
-
-        // Tìm kiếm realtime
-        $('#searchInput').on('keypress', function (e) {
-            if (e.key === 'Enter') {
-                applyFilters();
+            // Phân trang
+            let pag = "";
+            for (let i = 1; i <= pages; i++) {
+                pag += `<li class="page-item ${i === currentPage ? 'active' : ''}">
+                            <a class="page-link" href="#" onclick="currentPage=${i}; renderTable(); return false;">${i}</a>
+                        </li>`;
             }
+            $("#pagination").html(pag);
+        }
+
+        function deleteTier(id) {
+            if (!confirm("Bạn có chắc chắn muốn xóa Loyalty Tier này?")) return;
+
+            const url = '@Url.Action("DeleteTier", "Loyalty", new { area = "Admin" })';
+            $.post(url, { id })
+                .done(res => {
+                    if (res.success) {
+                        allTiers = allTiers.filter(x => x.Id !== id);
+                        applyFilters();
+                        alert("Xóa thành công!");
+                    } else {
+                        alert(res.message || "Xóa thất bại");
+                    }
+                })
+                .fail(() => alert("Lỗi server"));
+        }
+
+        $(document).ready(function () {
+            loadTiers();
+
+            $("#searchInput").on("keypress", e => {
+                if (e.key === "Enter") applyFilters();
+            });
         });
-    });
     </script>
 }
-
-

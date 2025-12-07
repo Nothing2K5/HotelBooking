@@ -1,12 +1,10 @@
-﻿
-@{
+﻿@{
     ViewBag.Title = "Chỉnh sửa Phòng";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
 <div class="container-fluid">
     <h2 class="mb-4">Chỉnh sửa Phòng</h2>
-
     <div class="card shadow-sm">
         <div class="card-body">
             <form id="roomForm">
@@ -23,59 +21,67 @@
 
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label for="hotelId" class="form-label">Khách sạn <span class="text-danger">*</span></label>
-                        <select class="form-select" id="hotelId" required></select>
+                        <label class="form-label">Khách sạn <span class="text-danger">*</span></label>
+                        <select class="form-select" id="hotelId" required>
+                            <option value="">-- Chọn khách sạn --</option>
+                        </select>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label for="code" class="form-label">Mã phòng</label>
-                        <input type="text" class="form-control" id="code" />
+                        <label class="form-label">Mã phòng (Code) <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="code" maxlength="10" required />
                     </div>
                 </div>
 
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label for="name" class="form-label">Tên phòng <span class="text-danger">*</span></label>
+                        <label class="form-label">Tên loại phòng <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="name" required />
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label for="capacity" class="form-label">Sức chứa (người) <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" id="capacity" min="1" required />
+                        <label class="form-label">Sức chứa (người) <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="capacity" min="1" max="10" value="2" required />
                     </div>
                 </div>
 
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label for="pricePerNight" class="form-label">Giá/đêm (VNĐ) <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" id="pricePerNight" min="0" step="1000" required />
+                        <label class="form-label">Giá mỗi đêm (VND) <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="pricePerNight" min="0" step="10000" required />
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label for="totalRooms" class="form-label">Số lượng phòng <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" id="totalRooms" min="1" required />
+                        <label class="form-label">Tổng số phòng cùng loại <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="totalRooms" min="1" max="200" required />
                     </div>
                 </div>
 
                 <div class="mb-3">
-                    <label for="description" class="form-label">Mô tả</label>
+                    <label class="form-label">Mô tả phòng</label>
                     <textarea class="form-control" id="description" rows="4"></textarea>
                 </div>
 
-                <div class="mb-3">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="taxIncluded">
-                        <label class="form-check-label" for="taxIncluded">
-                            Đã bao gồm thuế & phí
-                        </label>
-                    </div>
+                <hr class="my-4">
+
+                <!-- Ảnh hiện tại -->
+                <div class="mb-4">
+                    <h5>Ảnh hiện tại</h5>
+                    <div id="currentImages" class="row g-3"></div>
                 </div>
 
-                <hr class="my-4">
+                <!-- Thêm ảnh mới -->
+                <div class="mb-4">
+                    <label class="form-label d-flex justify-content-between align-items-center">
+                        <span>Thêm ảnh mới (dán link URL)</span>
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="addImageUrl">
+                            Thêm ảnh
+                        </button>
+                    </label>
+                    <div id="imageUrlContainer"></div>
+                    <small class="text-muted">Dán link từ ImgBB, Cloudinary, PostImage...</small>
+                </div>
+
                 <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-warning btn-lg">
-                        Cập nhật Phòng
-                    </button>
-                    <a href="/Admin/Room/Index" class="btn btn-secondary btn-lg">
-                        Quay lại
-                    </a>
+                    <button type="submit" class="btn btn-warning btn-lg">Cập nhật Phòng</button>
+                    <a href="@Url.Action("Index")" class="btn btn-secondary btn-lg">Quay lại</a>
                 </div>
             </form>
         </div>
@@ -84,88 +90,107 @@
 
 @section scripts {
     <script>
-        var roomId = parseInt($("#roomId").val());
+    const roomId = parseInt($("#roomId").val());
 
-        $(document).ready(function () {
-            loadHotelsDropdown();
-            loadRoomData();
+    $(document).ready(function () {
+        loadHotelsDropdown();
+        loadRoomData();
+        $("#roomForm").submit(e => { e.preventDefault(); updateRoom(); });
+    });
 
-            $("#roomForm").submit(function (e) {
-                e.preventDefault();
-                updateRoom();
-            });
-        });
-
-        // Load danh sách khách sạn vào dropdown
-        function loadHotelsDropdown() {
-            $.get(window.location.origin + '/Admin/Room/GetHotelsForDropdown')
-                .done(function (res) {
-                    if (res.success) {
-                        var options = '<option value="">-- Chọn khách sạn --</option>';
-                        res.data.forEach(function (h) {
-                            options += `<option value="${h.Id}">${h.Name}</option>`;
-                        });
-                        $("#hotelId").html(options);
-                    }
-                });
-        }
-
-        // Load thông tin phòng hiện tại
-        function loadRoomData() {
-            $.get(window.location.origin + '/Admin/Room/GetRoomById/' + roomId)
-                .done(function (res) {
-                    if (res.success) {
-                        var r = res.data;
-                        $("#hotelId").val(r.HotelId);
-                        $("#code").val(r.Code);
-                        $("#name").val(r.Name);
-                        $("#capacity").val(r.Capacity);
-                        $("#pricePerNight").val(r.PricePerNight);
-                        $("#totalRooms").val(r.TotalRooms);
-                        $("#description").val(r.Description);
-                        $("#taxIncluded").prop("checked", r.TaxIncluded);
-                    } else {
-                        alert("Không tìm thấy phòng!");
-                        window.location.href = '/Admin/Room/Index';
-                    }
-                });
-        }
-
-        // Cập nhật phòng
-        function updateRoom() {
-            var formData = {
-                Id: roomId,
-                HotelId: $("#hotelId").val(),
-                Code: $("#code").val().trim(),
-                Name: $("#name").val().trim(),
-                Description: $("#description").val().trim(),
-                Capacity: parseInt($("#capacity").val()),
-                PricePerNight: parseFloat($("#pricePerNight").val()),
-                TotalRooms: parseInt($("#totalRooms").val()),
-                TaxIncluded: $("#taxIncluded").is(":checked")
-            };
-
-            $.ajax({
-                type: "POST",
-                url: window.location.origin + '/Admin/Room/UpdateRoom',
-                data: JSON.stringify(formData),
-                contentType: "application/json; charset=utf-8",
-                success: function (res) {
-                    if (res.success) {
-                        $("#success-message span").text(res.message);
-                        $("#success-message").show();
-                        $("#error-message").hide();
-                        setTimeout(() => location.href = '/Admin/Room/Index', 1500);
-                    } else {
-                        $("#error-message span").text(res.message);
-                        $("#error-message").show();
-                    }
-                },
-                error: function () {
-                    $("#error-message span").text("Lỗi hệ thống!");
-                    $("#error-message").show();
+    function loadHotelsDropdown() {
+        $.get('@Url.Action("GetHotelsForDropdown")')
+            .done(res => {
+                if (res.success) {
+                    res.data.forEach(h => {
+                        $("#hotelId").append(`<option value="${h.Id}">${h.Name}</option>`);
+                    });
                 }
             });
+    }
+
+    function loadRoomData() {
+        $.get('@Url.Action("GetRoomById")/' + roomId)
+            .done(res => {
+                if (res.success) {
+                    const r = res.data;
+                    $("#hotelId").val(r.HotelId);
+                    $("#code").val(r.Code);
+                    $("#name").val(r.Name);
+                    $("#capacity").val(r.Capacity);
+                    $("#pricePerNight").val(r.PricePerNight);
+                    $("#totalRooms").val(r.TotalRooms);
+                    $("#description").val(r.Description || '');
+
+                    if (r.Images && r.Images.length > 0) {
+                        r.Images.forEach(img => {
+                            $("#currentImages").append(`
+                                <div class="col-md-3 position-relative image-item" data-id="${img.Id}">
+                                    <img src="${img.Url}" class="img-fluid rounded shadow-sm" style="height:150px;object-fit:cover;width:100%">
+                                    <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-2 delete-image" data-id="${img.Id}">X</button>
+                                    <div class="text-center mt-2 small text-muted text-truncate" style="max-width:100%">${img.AltText}</div>
+                                </div>`);
+                        });
+                    }
+                }
+            });
+    }
+
+    $("#addImageUrl").click(() => {
+        $("#imageUrlContainer").append(`
+            <div class="input-group mb-2">
+                <input type="url" class="form-control image-url-input" placeholder="https://example.com/image.jpg">
+                <button type="button" class="btn btn-outline-danger remove-new-image">X</button>
+            </div>`);
+    });
+
+    $(document).on("click", ".remove-new-image", function () { $(this).closest(".input-group").remove(); });
+
+    $(document).on("click", ".delete-image", function () {
+        if (confirm("Xóa ảnh này?")) {
+            const id = $(this).data("id");
+            $.post('@Url.Action("DeleteRoomImage")', { id: id })
+                .done(res => {
+                    if (res.success) $(this).closest(".image-item").fadeOut(300, function () { $(this).remove(); });
+                });
         }
+    });
+
+    function updateRoom() {
+        const newUrls = [];
+        $(".image-url-input").each(function () {
+            const v = $(this).val().trim();
+            if (v && v.startsWith("http")) newUrls.push(v);
+        });
+
+        const data = {
+            Id: roomId,
+            HotelId: $("#hotelId").val(),
+            Code: $("#code").val().trim(),
+            Name: $("#name").val().trim(),
+            Description: $("#description").val().trim() || null,
+            Capacity: +$("#capacity").val(),
+            PricePerNight: +$("#pricePerNight").val(),
+            TotalRooms: +$("#totalRooms").val(),
+            NewImageUrls: newUrls.length ? newUrls : null
+        };
+
+        $.ajax({
+            url: '@Url.Action("UpdateRoom")',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: res => {
+                if (res.success) {
+                    $("#success-message span").text(res.message);
+                    $("#success-message").show();
+                    setTimeout(() => location.href = '@Url.Action("Index")', 1500);
+                } else {
+                    $("#error-message span").text(res.message);
+                    $("#error-message").show();
+                }
+            }
+        });
+    }
     </script>
 }

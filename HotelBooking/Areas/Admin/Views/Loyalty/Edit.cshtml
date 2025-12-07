@@ -39,6 +39,7 @@
         $(document).ready(function() {
             var tierId = @ViewBag.TierId;
 
+            // 1️⃣ Lấy dữ liệu tier hiện tại
             $.ajax({
                 url: '/Admin/Loyalty/GetTierById/' + tierId,
                 type: 'GET',
@@ -58,7 +59,7 @@
                 }
             });
 
-        
+            // 2️⃣ Submit form
             $("#editTierForm").on("submit", function(e) {
                 e.preventDefault();
 
