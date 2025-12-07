@@ -3,20 +3,12 @@
   "WorkspaceRootPath": "D:\\ASP_NET_WORKSPACE\\HotelBooking\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{75EFFF97-BF1A-4F51-9734-E6E903D2D519}|HotelBooking\\HotelBooking.csproj|d:\\asp_net_workspace\\hotelbooking\\hotelbooking\\areas\\admin\\controllers\\loyaltycontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{75EFFF97-BF1A-4F51-9734-E6E903D2D519}|HotelBooking\\HotelBooking.csproj|solutionrelative:hotelbooking\\areas\\admin\\controllers\\loyaltycontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{75EFFF97-BF1A-4F51-9734-E6E903D2D519}|HotelBooking\\HotelBooking.csproj|d:\\asp_net_workspace\\hotelbooking\\hotelbooking\\views\\shared\\_layout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{75EFFF97-BF1A-4F51-9734-E6E903D2D519}|HotelBooking\\HotelBooking.csproj|solutionrelative:hotelbooking\\views\\shared\\_layout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{75EFFF97-BF1A-4F51-9734-E6E903D2D519}|HotelBooking\\HotelBooking.csproj|d:\\asp_net_workspace\\hotelbooking\\hotelbooking\\areas\\admin\\controllers\\promocontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{75EFFF97-BF1A-4F51-9734-E6E903D2D519}|HotelBooking\\HotelBooking.csproj|solutionrelative:hotelbooking\\areas\\admin\\controllers\\promocontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{75EFFF97-BF1A-4F51-9734-E6E903D2D519}|HotelBooking\\HotelBooking.csproj|d:\\asp_net_workspace\\hotelbooking\\hotelbooking\\areas\\admin\\views\\room\\edit.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{75EFFF97-BF1A-4F51-9734-E6E903D2D519}|HotelBooking\\HotelBooking.csproj|solutionrelative:hotelbooking\\areas\\admin\\views\\room\\edit.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{75EFFF97-BF1A-4F51-9734-E6E903D2D519}|HotelBooking\\HotelBooking.csproj|d:\\asp_net_workspace\\hotelbooking\\hotelbooking\\areas\\admin\\views\\room\\create.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{75EFFF97-BF1A-4F51-9734-E6E903D2D519}|HotelBooking\\HotelBooking.csproj|solutionrelative:hotelbooking\\areas\\admin\\views\\room\\create.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+      "AbsoluteMoniker": "D:0:0:{75EFFF97-BF1A-4F51-9734-E6E903D2D519}|HotelBooking\\HotelBooking.csproj|D:\\ASP_NET_WORKSPACE\\HotelBooking\\hotelbooking\\views\\shared\\_adminlayout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{75EFFF97-BF1A-4F51-9734-E6E903D2D519}|HotelBooking\\HotelBooking.csproj|solutionrelative:hotelbooking\\views\\shared\\_adminlayout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     }
   ],
   "DocumentGroupContainers": [
@@ -35,54 +27,27 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "LoyaltyController.cs",
-              "DocumentMoniker": "D:\\ASP_NET_WORKSPACE\\HotelBooking\\HotelBooking\\Areas\\Admin\\Controllers\\LoyaltyController.cs",
-              "RelativeDocumentMoniker": "HotelBooking\\Areas\\Admin\\Controllers\\LoyaltyController.cs",
-              "ToolTip": "D:\\ASP_NET_WORKSPACE\\HotelBooking\\HotelBooking\\Areas\\Admin\\Controllers\\LoyaltyController.cs",
-              "RelativeToolTip": "HotelBooking\\Areas\\Admin\\Controllers\\LoyaltyController.cs",
-              "ViewState": "AgIAADwAAAAAAAAAAAAowAwAAAAiAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-26T03:35:51.876Z",
+              "Title": "_Layout.cshtml",
+              "DocumentMoniker": "D:\\ASP_NET_WORKSPACE\\HotelBooking\\HotelBooking\\Views\\Shared\\_Layout.cshtml",
+              "RelativeDocumentMoniker": "HotelBooking\\Views\\Shared\\_Layout.cshtml",
+              "ToolTip": "D:\\ASP_NET_WORKSPACE\\HotelBooking\\HotelBooking\\Views\\Shared\\_Layout.cshtml",
+              "RelativeToolTip": "HotelBooking\\Views\\Shared\\_Layout.cshtml",
+              "ViewState": "AgIAABgAAAAAAAAAAAAAAA4AAAAeAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-12-01T10:03:45.536Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 1,
-              "Title": "PromoController.cs",
-              "DocumentMoniker": "D:\\ASP_NET_WORKSPACE\\HotelBooking\\HotelBooking\\Areas\\Admin\\Controllers\\PromoController.cs",
-              "RelativeDocumentMoniker": "HotelBooking\\Areas\\Admin\\Controllers\\PromoController.cs",
-              "ToolTip": "D:\\ASP_NET_WORKSPACE\\HotelBooking\\HotelBooking\\Areas\\Admin\\Controllers\\PromoController.cs",
-              "RelativeToolTip": "HotelBooking\\Areas\\Admin\\Controllers\\PromoController.cs",
-              "ViewState": "AgIAADkAAAAAAAAAAAAYwAwAAAAgAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-26T03:35:40.147Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "Edit.cshtml",
-              "DocumentMoniker": "D:\\ASP_NET_WORKSPACE\\HotelBooking\\HotelBooking\\Areas\\Admin\\Views\\Room\\Edit.cshtml",
-              "RelativeDocumentMoniker": "HotelBooking\\Areas\\Admin\\Views\\Room\\Edit.cshtml",
-              "ToolTip": "D:\\ASP_NET_WORKSPACE\\HotelBooking\\HotelBooking\\Areas\\Admin\\Views\\Room\\Edit.cshtml",
-              "RelativeToolTip": "HotelBooking\\Areas\\Admin\\Views\\Room\\Edit.cshtml",
-              "ViewState": "AgIAAF0AAAAAAAAAAAAAAGAAAAALAAAAAAAAAA==",
+              "Title": "_AdminLayout.cshtml",
+              "DocumentMoniker": "D:\\ASP_NET_WORKSPACE\\HotelBooking\\HotelBooking\\Views\\Shared\\_AdminLayout.cshtml",
+              "RelativeDocumentMoniker": "HotelBooking\\Views\\Shared\\_AdminLayout.cshtml",
+              "ToolTip": "D:\\ASP_NET_WORKSPACE\\HotelBooking\\HotelBooking\\Views\\Shared\\_AdminLayout.cshtml",
+              "RelativeToolTip": "HotelBooking\\Views\\Shared\\_AdminLayout.cshtml",
+              "ViewState": "AgIAADwAAAAAAAAAAAAAAEEAAAAOAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-11-26T03:34:58.278Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "Create.cshtml",
-              "DocumentMoniker": "D:\\ASP_NET_WORKSPACE\\HotelBooking\\HotelBooking\\Areas\\Admin\\Views\\Room\\Create.cshtml",
-              "RelativeDocumentMoniker": "HotelBooking\\Areas\\Admin\\Views\\Room\\Create.cshtml",
-              "ToolTip": "D:\\ASP_NET_WORKSPACE\\HotelBooking\\HotelBooking\\Areas\\Admin\\Views\\Room\\Create.cshtml",
-              "RelativeToolTip": "HotelBooking\\Areas\\Admin\\Views\\Room\\Create.cshtml",
-              "ViewState": "AgIAABIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-11-26T03:34:29.079Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-26T04:00:09.343Z"
             }
           ]
         }
