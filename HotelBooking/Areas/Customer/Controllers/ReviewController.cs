@@ -18,7 +18,8 @@ namespace HotelBooking.Areas.Customer.Controllers
         private int GetCurrentUserId()
         {
             var email = User.Identity.Name;
-            return _db.Users.First(u => u.Email == email).Id;
+            var user = _db.Users.FirstOrDefault(u => u.Email == email);
+            return user != null ? user.Id : 0;
         }
 
         // GET: Customer/Review/Index
@@ -34,13 +35,15 @@ namespace HotelBooking.Areas.Customer.Controllers
             try
             {
                 var userId = GetCurrentUserId();
+                // SỬA: Reviews không còn trực tiếp nối với Hotel. Phải qua Booking.
                 var reviews = _db.Reviews
                     .Where(r => r.UserId == userId && r.DeletedAt == null)
                     .OrderByDescending(r => r.CreatedAt)
                     .Select(r => new
                     {
                         r.Id,
-                        HotelName = r.Hotel.Name,
+                        // Update: Lấy tên khách sạn thông qua Booking
+                        HotelName = r.Booking.Hotel.Name,
                         r.Rating,
                         r.Title,
                         r.Content,
@@ -71,6 +74,7 @@ namespace HotelBooking.Areas.Customer.Controllers
             try
             {
                 var userId = GetCurrentUserId();
+                // Query này vẫn đúng vì nó query từ Bookings (bảng này vẫn giữ HotelId)
                 var booking = _db.Bookings
                     .Where(b => b.Id == bookingId && b.UserId == userId)
                     .Select(b => new
@@ -78,6 +82,7 @@ namespace HotelBooking.Areas.Customer.Controllers
                         b.Id,
                         b.HotelId,
                         HotelName = b.Hotel.Name,
+                        // Kiểm tra xem đã có review nào link với booking này chưa
                         HasReview = _db.Reviews.Any(r => r.BookingId == bookingId)
                     })
                     .FirstOrDefault();
@@ -111,6 +116,7 @@ namespace HotelBooking.Areas.Customer.Controllers
 
                 var userId = GetCurrentUserId();
                 model.UserId = userId;
+                // Không cần gán model.HotelId vì cột này đã bị xóa trong DB
                 model.CreatedAt = DateTime.Now;
                 model.UpdatedAt = DateTime.Now;
 
@@ -139,13 +145,15 @@ namespace HotelBooking.Areas.Customer.Controllers
             try
             {
                 var userId = GetCurrentUserId();
+                // SỬA: Điều chỉnh đường dẫn lấy thông tin Hotel
                 var review = _db.Reviews
                     .Where(r => r.Id == id && r.UserId == userId)
                     .Select(r => new
                     {
                         r.Id,
-                        r.HotelId,
-                        HotelName = r.Hotel.Name,
+                        // r.HotelId, -> Cột này không còn tồn tại
+                        // Lấy tên khách sạn qua Booking
+                        HotelName = r.Booking.Hotel.Name,
                         r.Rating,
                         r.Title,
                         r.Content,
@@ -174,6 +182,7 @@ namespace HotelBooking.Areas.Customer.Controllers
         {
             try
             {
+                // Logic update giữ nguyên vì chỉ update nội dung, không đụng đến quan hệ bảng
                 if (!ModelState.IsValid)
                     return Json(new { success = false, message = "Dữ liệu không hợp lệ" });
 

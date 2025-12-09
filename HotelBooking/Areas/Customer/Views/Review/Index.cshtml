@@ -3,23 +3,23 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="container-fluid">
-    <div class="row mb-3">
-        <div class="col-sm-6">
-            <h3 class="mb-0"><i class="fas fa-star"></i> Đánh giá của tôi</h3>
-        </div>
-        <div class="col-sm-6">
-            <ol class="breadcrumb float-sm-end">
-                <li class="breadcrumb-item"><a href="/">Trang chủ</a></li>
-                <li class="breadcrumb-item active">Đánh giá</li>
-            </ol>
-        </div>
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3><i class="fas fa-star text-warning"></i> Lịch sử đánh giá</h3>
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="/">Trang chủ</a></li>
+            <li class="breadcrumb-item active">Đánh giá</li>
+        </ol>
     </div>
 
-    <div class="row">
-        <div class="col-sm-12" id="reviewsList"></div>
+    <div id="reviewsList">
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-2 text-muted">Đang tải đánh giá...</p>
+        </div>
     </div>
 </div>
+
 @section scripts {
     <script>
         $(document).ready(function () {
@@ -29,7 +29,7 @@
         function loadMyReviews() {
             $.ajax({
                 type: "GET",
-                url: window.location.origin + '/Customer/Review/GetMyReviews',
+                url: '/Customer/Review/GetMyReviews',
                 success: function (response) {
                     if (response.success) {
                         displayReviews(response.data);
@@ -45,61 +45,93 @@
 
         function displayReviews(reviews) {
             if (reviews.length === 0) {
-                $("#reviewsList").html('<div class="alert alert-info">Bạn chưa có đánh giá nào. Hãy hoàn thành booking để có thể đánh giá!</div>');
+                $("#reviewsList").html(`
+                        <div class="text-center py-5 bg-light rounded">
+                            <i class="far fa-comment-dots fa-3x text-muted mb-3"></i>
+                            <h5>Bạn chưa có đánh giá nào</h5>
+                            <p class="text-muted">Sau khi hoàn thành chuyến đi, hãy quay lại đây để chia sẻ trải nghiệm của bạn nhé!</p>
+                            <a href="/Customer/Booking/Index" class="btn btn-primary">Xem lịch sử đặt phòng</a>
+                        </div>
+                    `);
                 return;
             }
 
             var html = '';
             reviews.forEach(function (review) {
-                html += '<div class="card mb-3">';
-                html += '<div class="card-body">';
-                html += '<div class="row">';
-                html += '<div class="col-md-8">';
-                html += '<h5><i class="fas fa-hotel"></i> ' + review.HotelName + '</h5>';
-                html += '<p class="mb-1">' + '⭐'.repeat(review.Rating) + '</p>';
-                if (review.Title) {
-                    html += '<p class="fw-bold mb-1">' + review.Title + '</p>';
-                }
-                html += '<p class="text-muted">' + review.Content + '</p>';
-                html += '<small class="text-muted"><i class="far fa-calendar"></i> ' + new Date(review.CreatedAt).toLocaleDateString('vi-VN') + '</small>';
-                html += '</div>';
-                html += '<div class="col-md-4 text-end">';
-
-                if (review.CanEdit) {
-                    html += '<a href="/Customer/Review/Edit/' + review.Id + '" class="btn btn-warning btn-sm mb-2 w-100"><i class="fas fa-edit"></i> Chỉnh sửa</a>';
-                    html += '<button class="btn btn-danger btn-sm w-100" onclick="deleteReview(' + review.Id + ')"><i class="fas fa-trash"></i> Xóa</button>';
-                } else {
-                    html += '<small class="text-muted">Không thể chỉnh sửa sau 30 ngày</small>';
+                // Tạo chuỗi ngôi sao
+                var stars = '';
+                for (var i = 1; i <= 5; i++) {
+                    if (i <= review.Rating) stars += '<i class="fas fa-star text-warning"></i>';
+                    else stars += '<i class="far fa-star text-warning"></i>';
                 }
 
-                html += '</div></div></div></div>';
+                html += `
+                    <div class="card mb-3 shadow-sm hover-shadow">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-9">
+                                    <h5 class="card-title text-primary"><i class="fas fa-hotel"></i> ${review.HotelName}</h5>
+                                    <div class="mb-2 fs-5">${stars}</div>
+                                    ${review.Title ? `<h6 class="fw-bold mb-1">${review.Title}</h6>` : ''}
+                                    <p class="card-text text-secondary mb-2">${review.Content || '<i>Không có nội dung chi tiết</i>'}</p>
+                                    <small class="text-muted"><i class="far fa-clock"></i> Đánh giá ngày: ${formatDate(review.CreatedAt)}</small>
+                                </div>
+                                <div class="col-md-3 text-end border-start">
+                                    ${review.CanEdit ?
+                        `<a href="/Customer/Review/Edit/${review.Id}" class="btn btn-outline-warning btn-sm mb-2 w-100"><i class="fas fa-edit"></i> Chỉnh sửa</a>
+                                         <button class="btn btn-outline-danger btn-sm w-100" onclick="deleteReview(${review.Id})"><i class="fas fa-trash-alt"></i> Xóa</button>
+                                         <div class="small text-success mt-2"><i class="fas fa-check-circle"></i> Có thể chỉnh sửa</div>`
+                        :
+                        `<button class="btn btn-secondary btn-sm w-100" disabled>Đã chốt</button>
+                                         <div class="small text-muted mt-2">Quá hạn chỉnh sửa (30 ngày)</div>`
+                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
             });
-
             $("#reviewsList").html(html);
         }
 
         function deleteReview(reviewId) {
-            if (!confirm("Bạn có chắc chắn muốn xóa đánh giá này?")) {
+            if (!confirm("Bạn có chắc chắn muốn xóa đánh giá này? Hành động này không thể hoàn tác.")) {
                 return;
             }
 
             $.ajax({
                 type: "POST",
-                url: window.location.origin + '/Customer/Review/DeleteReview',
+                url: '/Customer/Review/DeleteReview',
                 data: JSON.stringify({ id: reviewId }),
                 contentType: "application/json; charset=utf-8",
                 success: function (response) {
                     if (response.success) {
-                        alert(response.message);
-                        loadMyReviews();
+                        loadMyReviews(); // Reload lại danh sách
                     } else {
                         alert(response.message);
                     }
                 },
                 error: function () {
-                    alert("Đã xảy ra lỗi khi xóa đánh giá");
+                    alert("Đã xảy ra lỗi hệ thống.");
                 }
             });
         }
+
+        // Helper xử lý ngày tháng JSON /Date(...)/
+        function formatDate(jsonDate) {
+            if (!jsonDate) return "";
+            var date;
+            if (jsonDate.indexOf("/Date(") !== -1) {
+                date = new Date(parseInt(jsonDate.replace(/\/Date\((-?\d+)\)\//, '$1')));
+            } else {
+                date = new Date(jsonDate);
+            }
+            return date.toLocaleDateString('vi-VN');
+        }
     </script>
+    <style>
+        .hover-shadow:hover {
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+            transition: 0.3s;
+        }
+    </style>
 }

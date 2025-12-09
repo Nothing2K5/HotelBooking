@@ -8,48 +8,66 @@
 <input type="hidden" id="hidden_bookingId" value="@Model.Id" />
 
 <div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3>Chi tiết đặt phòng</h3>
+        <a href="/Customer/Booking/GetMyBookings" class="btn btn-outline-secondary"><i class="fas fa-arrow-left"></i> Quay lại</a>
+    </div>
+
     <div class="row" id="booking_content_area" style="display:none;">
         <div class="col-md-8">
             <div class="card shadow-sm mb-4">
-                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="fas fa-file-invoice"></i> Mã: <span id="lbl_Code" class="fw-bold"></span></h5>
+                <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                    <h5 class="mb-0 text-primary fw-bold"><i class="fas fa-receipt"></i> <span id="lbl_Code"></span></h5>
                     <span id="lbl_StatusBadge"></span>
                 </div>
                 <div class="card-body">
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <p class="mb-1 text-muted">Khách sạn:</p>
-                            <h5 id="lbl_HotelName" class="text-primary">Loading...</h5>
-                            <p><i class="fas fa-map-marker-alt text-danger"></i> <span id="lbl_HotelAddress"></span></p>
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <h4 id="lbl_HotelName" class="fw-bold mb-1">Loading...</h4>
+                            <p class="text-muted mb-0"><i class="fas fa-map-marker-alt text-danger"></i> <span id="lbl_HotelAddress"></span></p>
                         </div>
-                        <div class="col-md-6 border-start">
-                            <p><strong><i class="fas fa-calendar-check text-success"></i> Nhận phòng:</strong> <span id="lbl_CheckIn"></span></p>
-                            <p><strong><i class="fas fa-calendar-times text-danger"></i> Trả phòng:</strong> <span id="lbl_CheckOut"></span></p>
-                            <p><strong><i class="fas fa-users"></i> Số khách:</strong> <span id="lbl_Guests"></span> người</p>
+                    </div>
+
+                    <div class="row mb-4 bg-light p-3 rounded mx-0">
+                        <div class="col-md-4 text-center border-end">
+                            <small class="text-muted d-block">Nhận phòng</small>
+                            <strong class="h5" id="lbl_CheckIn">--/--/----</strong>
+                        </div>
+                        <div class="col-md-4 text-center border-end">
+                            <small class="text-muted d-block">Trả phòng</small>
+                            <strong class="h5" id="lbl_CheckOut">--/--/----</strong>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <small class="text-muted d-block">Số khách</small>
+                            <strong class="h5" id="lbl_Guests">1</strong> người
                         </div>
                     </div>
 
                     <hr />
 
-                    <h6 class="fw-bold">Chi tiết phòng nghỉ</h6>
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-hover">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Loại phòng</th>
-                                    <th class="text-center">Số đêm</th>
-                                    <th class="text-end">Giá/đêm</th>
-                                    <th class="text-center">SL</th>
-                                    <th class="text-end">Thành tiền</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tbl_rooms_body">
-                            </tbody>
-                        </table>
+                    <h6 class="fw-bold text-uppercase text-secondary mb-3">Thông tin phòng nghỉ</h6>
+
+                    <div class="d-flex align-items-start" id="room_detail_container">
+                        <div class="flex-grow-1">
+                            <h5 class="fw-bold mb-1" id="lbl_RoomNumber"></h5>
+                            <span class="badge bg-info text-dark mb-2" id="lbl_RoomType"></span>
+                            <div class="text-muted small">
+                                <span class="me-3"><i class="fas fa-moon"></i> <span id="lbl_Nights"></span> đêm</span>
+                                <span><i class="fas fa-tag"></i> <span id="lbl_PricePerNight"></span>/đêm</span>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <small class="text-muted">Thành tiền</small>
+                            <div class="h5 fw-bold text-dark" id="lbl_SubTotal"></div>
+                        </div>
                     </div>
 
-                    <div id="div_NoteSection" class="alert alert-secondary mt-3" style="display:none;">
-                        <strong><i class="fas fa-sticky-note"></i> Ghi chú:</strong> <span id="lbl_Note"></span>
+                    <div id="div_NoteSection" class="alert alert-secondary mt-4 mb-0" style="display:none;">
+                        <strong><i class="fas fa-sticky-note"></i> Ghi chú của bạn:</strong> <span id="lbl_Note"></span>
+                    </div>
+
+                    <div id="div_CancelReason" class="alert alert-danger mt-3 mb-0" style="display:none;">
+                        <span id="lbl_CancelReason"></span>
                     </div>
                 </div>
             </div>
@@ -57,35 +75,41 @@
 
         <div class="col-md-4">
             <div class="card shadow-sm mb-3">
-                <div class="card-header bg-info text-white">
-                    <h5 class="mb-0"><i class="fas fa-money-bill-wave"></i> Thanh toán</h5>
+                <div class="card-header bg-light">
+                    <h6 class="mb-0 fw-bold">Chi tiết thanh toán</h6>
                 </div>
                 <div class="card-body">
                     <div class="d-flex justify-content-between mb-2">
-                        <span>Tổng cộng:</span>
-                        <span class="h4 text-danger fw-bold" id="lbl_TotalAmount"></span>
+                        <span>Giá phòng:</span>
+                        <span id="lbl_SubTotalSummary"></span>
+                    </div>
+                    <hr class="my-2" />
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="fw-bold">Tổng cộng:</span>
+                        <span class="h4 text-danger fw-bold mb-0" id="lbl_TotalAmount"></span>
                     </div>
 
-                    <div id="div_Penalty" style="display:none;" class="text-danger border-top pt-2">
-                        <small><i class="fas fa-exclamation-circle"></i> Phí hủy: <span id="lbl_PenaltyAmount"></span></small>
+                    <div id="div_Penalty" style="display:none;" class="alert alert-danger mt-3 mb-0 p-2">
+                        <small class="fw-bold d-block"><i class="fas fa-exclamation-circle"></i> Booking đã hủy</small>
+                        <div class="d-flex justify-content-between">
+                            <span>Phí hủy:</span>
+                            <span id="lbl_PenaltyAmount" class="fw-bold"></span>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="card shadow-sm">
-                <div class="card-header bg-light">
-                    <h6 class="mb-0">Thao tác</h6>
-                </div>
+            <div class="card shadow-sm mb-3">
                 <div class="card-body d-grid gap-2" id="div_Actions">
                 </div>
             </div>
 
-            <div class="card shadow-sm mt-3">
-                <div class="card-body bg-light">
+            <div class="card shadow-sm bg-light border-0">
+                <div class="card-body">
                     <small class="text-muted">
-                        <i class="fas fa-info-circle"></i>
-                        Miễn phí hủy trước: <strong id="lbl_FreeCancelDate"></strong>.<br />
-                        Sau thời gian này phí hủy là 50%.
+                        <i class="fas fa-info-circle text-primary"></i>
+                        Hạn hủy miễn phí: <strong id="lbl_FreeCancelDate" class="text-dark"></strong>.<br />
+                        Sau thời gian này phí hủy là 50% tổng giá trị đơn đặt.
                     </small>
                 </div>
             </div>
@@ -95,8 +119,8 @@
 
 @section scripts {
     <script>
-        var url_domain = window.location.origin; // Lấy domain gốc
-        var bookingId = $("#hidden_bookingId").val(); // Lấy ID từ hidden input
+        var url_domain = window.location.origin;
+        var bookingId = $("#hidden_bookingId").val();
 
         $(document).ready(function () {
             loadBookingDetails();
@@ -105,14 +129,14 @@
         function loadBookingDetails() {
             $.ajax({
                 type: "GET",
-                url: url_domain + '/Customer/Booking/GetBookingInfo', // URL trỏ về Controller của bạn
+                url: '/Customer/Booking/GetBookingInfo',
                 data: { id: bookingId },
                 success: function (response) {
                     if (response.success) {
                         renderData(response.data);
                         $("#booking_content_area").fadeIn();
                     } else {
-                        alert("Lỗi: " + response.message);
+                        $("#booking_content_area").html('<div class="alert alert-danger m-3">' + response.message + '</div>').fadeIn();
                     }
                 },
                 error: function () {
@@ -129,121 +153,108 @@
             $("#lbl_CheckIn").text(formatDate(data.CheckInDate));
             $("#lbl_CheckOut").text(formatDate(data.CheckOutDate));
             $("#lbl_Guests").text(data.Guests);
-            $("#lbl_TotalAmount").text(formatCurrency(data.TotalAmount));
-            $("#lbl_FreeCancelDate").text(formatDate(data.FreeCancellationDeadline));
+
+            // Format tiền
+            var totalStr = formatCurrency(data.TotalAmount);
+            $("#lbl_TotalAmount").text(totalStr);
+            $("#lbl_SubTotalSummary").text(totalStr); // Tạm tính = Tổng (chưa có promo logic phức tạp)
+
+            $("#lbl_FreeCancelDate").text(formatDateTime(data.FreeCancellationDeadline));
 
             if (data.Note) {
+                // Tách note hệ thống và note người dùng nếu cần
                 $("#lbl_Note").text(data.Note);
                 $("#div_NoteSection").show();
             }
 
-            // 2. Xử lý Trạng thái (Badge)
-            var statusHtml = "";
-            switch (data.Status) {
-                case "draft": statusHtml = '<span class="badge bg-secondary">Nháp</span>'; break;
-                case "pending": statusHtml = '<span class="badge bg-warning text-dark">Chờ thanh toán</span>'; break;
-                case "paid": statusHtml = '<span class="badge bg-success">Đã thanh toán</span>'; break;
-                case "confirmed": statusHtml = '<span class="badge bg-primary">Đã xác nhận</span>'; break;
-                case "cancelled": statusHtml = '<span class="badge bg-danger">Đã hủy</span>'; break;
-                case "completed": statusHtml = '<span class="badge bg-success">Hoàn thành</span>'; break;
-                default: statusHtml = '<span class="badge bg-secondary">' + data.Status + '</span>';
-            }
-            $("#lbl_StatusBadge").html(statusHtml);
+            // 2. Trạng thái
+            $("#lbl_StatusBadge").html(getStatusBadge(data.Status));
 
+            // Hiển thị phí phạt nếu có
             if (data.PenaltyAmount > 0) {
                 $("#lbl_PenaltyAmount").text(formatCurrency(data.PenaltyAmount));
                 $("#div_Penalty").show();
             }
 
-            // 3. Render Bảng phòng (BookingItems)
-            var itemsHtml = "";
-            if (data.BookingItems && data.BookingItems.length > 0) {
-                $.each(data.BookingItems, function (i, item) {
-                    itemsHtml += "<tr>";
-                    itemsHtml += "<td>" + item.RoomName + "</td>";
-                    itemsHtml += "<td class='text-center'>" + item.Nights + "</td>";
-                    itemsHtml += "<td class='text-end'>" + formatCurrency(item.Price) + "</td>";
-                    itemsHtml += "<td class='text-center'>" + item.Quantity + "</td>";
-                    itemsHtml += "<td class='text-end fw-bold'>" + formatCurrency(item.SubTotal) + "</td>";
-                    itemsHtml += "</tr>";
-                });
+            // 3. UPDATE: Render Room Info (Object phẳng, không phải Array)
+            // Controller trả về: RoomInfo = { RoomNumber, RoomType, Price, Nights, SubTotal }
+            var room = data.RoomInfo;
+            if (room) {
+                $("#lbl_RoomNumber").text("Phòng " + room.RoomNumber);
+                $("#lbl_RoomType").text(room.RoomType === 'VIP' ? 'Hạng VIP' : 'Hạng Thường');
+                $("#lbl_Nights").text(room.Nights);
+                $("#lbl_PricePerNight").text(formatCurrency(room.Price));
+                $("#lbl_SubTotal").text(formatCurrency(room.SubTotal));
             } else {
-                itemsHtml = "<tr><td colspan='5' class='text-center'>Không có thông tin phòng</td></tr>";
+                $("#room_detail_container").html('<p class="text-danger">Không tìm thấy thông tin phòng</p>');
             }
-            $("#tbl_rooms_body").html(itemsHtml);
 
-            // 4. Render Nút bấm (Action Buttons)
+            // 4. Render Nút bấm
             var btnHtml = "";
 
-            // Nút thanh toán (chỉ hiện khi chưa trả tiền)
-            if (data.Status === "draft" || data.Status === "pending") {
-                btnHtml += '<a href="' + url_domain + '/Customer/Booking/Payment/' + data.Id + '" class="btn btn-success mb-2">';
-                btnHtml += '<i class="fas fa-credit-card"></i> Thanh toán ngay</a>';
+            // Thanh toán
+            if (data.Status === "draft" || data.Status === "pending" || data.Status === "confirmed") {
+                // Nếu confirmed (trả sau) thì có thể ko hiện nút thanh toán online nữa, tùy logic.
+                // Ở đây cho phép thanh toán online để chốt đơn luôn
+                if (data.Status !== "confirmed") {
+                    btnHtml += `<a href="/Customer/Booking/Payment/${data.Id}" class="btn btn-success mb-2"><i class="fas fa-credit-card"></i> Thanh toán ngay</a>`;
+                }
             }
 
-            // Nút hủy (chỉ hiện khi chưa hủy và chưa hoàn thành)
-            if (data.Status !== "cancelled" && data.Status !== "completed") {
-                // Logic kiểm tra miễn phí hủy
-                var isFreeCancel = new Date() < new Date(parseInt(data.FreeCancellationDeadline.replace(/\/Date\((-?\d+)\)\//, '$1')));
+            // Hủy
+            if (data.Status !== "cancelled" && data.Status !== "completed" && data.Status !== "paid") {
+                // Kiểm tra hạn hủy client-side để hiển thị cảnh báo (Backend check lại lần nữa)
+                var deadline = parseJsonDate(data.FreeCancellationDeadline);
+                var isFree = new Date() < deadline;
 
-                btnHtml += '<button class="btn btn-outline-danger" onclick="confirmCancel(' + data.Id + ', ' + isFreeCancel + ')">';
-                btnHtml += '<i class="fas fa-times"></i> Hủy đặt phòng</button>';
+                btnHtml += `<button class="btn btn-outline-danger" onclick="confirmCancel(${data.Id}, ${isFree})">
+                                    <i class="fas fa-times"></i> Hủy đặt phòng
+                                </button>`;
             }
 
-            if (btnHtml === "") btnHtml = "<p class='text-muted text-center'>Không có hành động khả thi</p>";
+            if (btnHtml === "") btnHtml = "<p class='text-muted text-center mb-0'>Đơn hàng đã hoàn tất hoặc bị hủy</p>";
             $("#div_Actions").html(btnHtml);
         }
 
         function confirmCancel(id, isFree) {
-            var msg = isFree
-                ? "Bạn đang trong thời gian hủy miễn phí. Bạn có chắc chắn muốn hủy?"
-                : "Bạn đã quá hạn hủy miễn phí. Hủy bây giờ sẽ mất phí phạt 50%. Tiếp tục?";
+            // Redirect sang trang Cancel để xử lý logic phức tạp
+            window.location.href = '/Customer/Booking/Cancel/' + id;
+        }
 
-            if (confirm(msg)) {
-                var reason = prompt("Vui lòng nhập lý do hủy:", "Thay đổi kế hoạch");
-                if (reason != null) {
-                    cancelBookingAjax(id, reason, isFree);
-                }
+        // --- Helpers ---
+        function formatCurrency(val) {
+            if (val === null || val === undefined) return "0 ₫";
+            return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val);
+        }
+
+        function getStatusBadge(status) {
+            switch (status) {
+                case "draft": return '<span class="badge bg-secondary">Bản nháp</span>';
+                case "pending": return '<span class="badge bg-warning text-dark">Chờ thanh toán</span>';
+                case "paid": return '<span class="badge bg-success">Đã thanh toán</span>';
+                case "confirmed": return '<span class="badge bg-info">Đã xác nhận</span>';
+                case "cancelled": return '<span class="badge bg-danger">Đã hủy</span>';
+                case "completed": return '<span class="badge bg-primary">Hoàn thành</span>';
+                default: return '<span class="badge bg-secondary">' + status + '</span>';
             }
         }
 
-        function cancelBookingAjax(id, reason, isFree) {
-            var model = {
-                BookingId: id,
-                Reason: reason,
-                IsFreeCancellation: isFree
-            };
-
-            $.ajax({
-                type: "POST",
-                url: url_domain + '/Customer/Booking/CancelBooking',
-                data: JSON.stringify(model),
-                contentType: "application/json; charset=utf-8",
-                success: function (response) {
-                    if (response.success) {
-                        alert(response.message);
-                        loadBookingDetails(); // Reload lại trang để cập nhật trạng thái
-                    } else {
-                        alert("Lỗi: " + response.message);
-                    }
-                },
-                error: function () {
-                    alert("Đã xảy ra lỗi khi gửi yêu cầu.");
-                }
-            });
-        }
-
-        // --- Helper Format ---
-        function formatCurrency(val) {
-            if (!val) return "0 VNĐ";
-            return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val).replace('₫', 'VNĐ');
+        function parseJsonDate(jsonDate) {
+            if (!jsonDate) return new Date();
+            if (jsonDate.indexOf("/Date(") !== -1) {
+                return new Date(parseInt(jsonDate.replace(/\/Date\((-?\d+)\)\//, '$1')));
+            }
+            return new Date(jsonDate);
         }
 
         function formatDate(jsonDate) {
-            if (!jsonDate) return "";
-            // Xử lý format ngày tháng từ C# JSON (/Date(...)/)
-            var date = new Date(parseInt(jsonDate.replace(/\/Date\((-?\d+)\)\//, '$1')));
-            return date.toLocaleDateString('vi-VN') + " " + date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+            var date = parseJsonDate(jsonDate);
+            return date.toLocaleDateString('vi-VN');
+        }
+
+        function formatDateTime(jsonDate) {
+            var date = parseJsonDate(jsonDate);
+            return date.toLocaleString('vi-VN');
         }
     </script>
 }

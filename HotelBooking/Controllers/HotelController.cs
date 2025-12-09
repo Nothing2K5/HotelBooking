@@ -63,16 +63,21 @@ namespace HotelBooking.Controllers
         {
             try
             {
+                // DB Mới: Lấy danh sách phòng cụ thể
+                // Trả về RoomNumber và Code (Loại phòng)
                 var rooms = _db.Rooms
                     .Where(r => r.HotelId == id && r.IsActive == true)
                     .Select(r => new
                     {
                         r.Id,
-                        r.Name,
+                        r.RoomNumber,   // Số phòng (VD: 101)
+                        Type = r.Code,  // Loại: VIP/Normal
                         r.Description,
                         r.Capacity,
                         r.PricePerNight,
-                        r.TotalRooms
+                        r.Status,       // Available, Occupied (trạng thái hiện tại)
+                        // Lấy ảnh đại diện phòng
+                        ImageUrl = r.RoomImages.FirstOrDefault().Url
                     })
                     .ToList();
 
@@ -90,13 +95,18 @@ namespace HotelBooking.Controllers
         {
             try
             {
+                // DB Mới: Bảng Review liên kết với Booking, từ Booking mới qua Hotel
+                // Tuy nhiên trong SQL của bạn: Bảng Reviews chỉ có BookingId và UserId, không có HotelId trực tiếp (đã comment).
+                // Do đó phải join: Review -> Booking -> Hotel
+
                 var reviews = _db.Reviews
-                    .Where(r => r.HotelId == id && r.DeletedAt == null)
+                    .Where(r => r.Booking.HotelId == id && r.DeletedAt == null)
                     .OrderByDescending(r => r.CreatedAt)
                     .Select(r => new
                     {
                         r.Rating,
                         r.Content,
+                        r.Title,
                         UserEmail = r.User.Email,
                         r.CreatedAt
                     })

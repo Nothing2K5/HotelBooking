@@ -3,68 +3,69 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h2>Tìm kiếm khách sạn</h2>
+<h2 class="mb-4">Tìm kiếm khách sạn</h2>
 
-<div class="card">
+<div class="card shadow-sm">
     <div class="card-body">
         <form id="searchForm">
             <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label for="location">Địa điểm</label>
+                    <label for="location" class="form-label fw-bold">Địa điểm</label>
                     <input type="text" class="form-control" id="location" name="Location"
                            placeholder="Thành phố hoặc tên khách sạn" />
                 </div>
 
                 <div class="col-md-3 mb-3">
-                    <label for="checkInDate">Ngày nhận phòng</label>
-                    <input type="date" class="form-control" id="checkInDate" name="CheckInDate" />
+                    <label for="checkInDate" class="form-label fw-bold">Ngày nhận phòng</label>
+                    <input type="date" class="form-control" id="checkInDate" name="CheckInDate" required />
                 </div>
 
                 <div class="col-md-3 mb-3">
-                    <label for="checkOutDate">Ngày trả phòng</label>
-                    <input type="date" class="form-control" id="checkOutDate" name="CheckOutDate" />
+                    <label for="checkOutDate" class="form-label fw-bold">Ngày trả phòng</label>
+                    <input type="date" class="form-control" id="checkOutDate" name="CheckOutDate" required />
                 </div>
             </div>
 
             <div class="row">
                 <div class="col-md-3 mb-3">
-                    <label for="guests">Số khách</label>
+                    <label for="guests" class="form-label fw-bold">Số khách</label>
                     <input type="number" class="form-control" id="guests" name="Guests"
                            value="1" min="1" max="10" />
                 </div>
 
                 <div class="col-md-9 mb-3 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary btn-lg w-100">🔍 Tìm kiếm</button>
+                    <button type="submit" class="btn btn-primary btn-lg w-100">
+                        <i class="fas fa-search"></i> Tìm kiếm phòng trống
+                    </button>
                 </div>
             </div>
         </form>
     </div>
 </div>
 
-<!-- Filters -->
-<div class="card mt-3">
+<div class="card mt-3 shadow-sm">
     <div class="card-body">
-        <h5>Bộ lọc</h5>
+        <h5 class="card-title">Bộ lọc kết quả</h5>
         <div class="row">
             <div class="col-md-3">
-                <label>Hạng sao</label>
+                <label class="fw-bold">Hạng sao</label>
                 <div class="form-check">
                     <input class="form-check-input filter-star" type="checkbox" value="5" id="star5">
-                    <label class="form-check-label" for="star5">⭐⭐⭐⭐⭐</label>
+                    <label class="form-check-label text-warning" for="star5">⭐⭐⭐⭐⭐</label>
                 </div>
                 <div class="form-check">
                     <input class="form-check-input filter-star" type="checkbox" value="4" id="star4">
-                    <label class="form-check-label" for="star4">⭐⭐⭐⭐</label>
+                    <label class="form-check-label text-warning" for="star4">⭐⭐⭐⭐</label>
                 </div>
                 <div class="form-check">
                     <input class="form-check-input filter-star" type="checkbox" value="3" id="star3">
-                    <label class="form-check-label" for="star3">⭐⭐⭐</label>
+                    <label class="form-check-label text-warning" for="star3">⭐⭐⭐</label>
                 </div>
             </div>
             <div class="col-md-3">
-                <label>Giá mỗi đêm</label>
-                <select class="form-control" id="priceRange">
-                    <option value="">Tất cả</option>
+                <label class="fw-bold">Khoảng giá (VND/đêm)</label>
+                <select class="form-select" id="priceRange">
+                    <option value="">Tất cả mức giá</option>
                     <option value="0-500000">Dưới 500k</option>
                     <option value="500000-1000000">500k - 1 triệu</option>
                     <option value="1000000-2000000">1 - 2 triệu</option>
@@ -72,8 +73,8 @@
                 </select>
             </div>
             <div class="col-md-3">
-                <label for="sortBy">Sắp xếp theo</label>
-                <select class="form-control" id="sortBy">
+                <label class="fw-bold" for="sortBy">Sắp xếp theo</label>
+                <select class="form-select" id="sortBy">
                     <option value="">Mặc định</option>
                     <option value="price_asc">Giá: Thấp đến Cao</option>
                     <option value="price_desc">Giá: Cao đến Thấp</option>
@@ -81,25 +82,42 @@
                 </select>
             </div>
             <div class="col-md-3 d-flex align-items-end">
-                <button type="button" class="btn btn-secondary w-100" onclick="clearFilters()">Xóa bộ lọc</button>
+                <button type="button" class="btn btn-outline-secondary w-100" onclick="clearFilters()">
+                    <i class="fas fa-filter"></i> Xóa bộ lọc
+                </button>
             </div>
         </div>
     </div>
 </div>
 
-<div id="searchResults" class="mt-3"></div>
+<div id="loading" class="text-center mt-4 d-none">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+    <p>Đang tìm khách sạn phù hợp...</p>
+</div>
+
+<div id="searchResults" class="mt-4"></div>
 
 @section scripts {
     <script>
-        var allHotels = []; // Store all hotels
-        var filteredHotels = []; // Store filtered results
+        var currentHotels = []; // Lưu danh sách khách sạn hiện tại (có thể là tất cả hoặc kết quả tìm kiếm)
 
         $(document).ready(function () {
-            // Set min date to today
+            // Setup ngày tháng mặc định
             var today = new Date().toISOString().split('T')[0];
             $("#checkInDate").attr('min', today);
-            $("#checkOutDate").attr('min', today);
 
+            // Mặc định checkin hôm nay, checkout ngày mai
+            if (!$("#checkInDate").val()) $("#checkInDate").val(today);
+
+            var tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            var tomorrowStr = tomorrow.toISOString().split('T')[0];
+            $("#checkOutDate").attr('min', tomorrowStr);
+            if (!$("#checkOutDate").val()) $("#checkOutDate").val(tomorrowStr);
+
+            // Logic ràng buộc ngày
             $("#checkInDate").change(function () {
                 var checkIn = $(this).val();
                 $("#checkOutDate").attr('min', checkIn);
@@ -110,135 +128,191 @@
                 }
             });
 
-            // Load all hotels on page load
+            // Load tất cả khách sạn ban đầu
             loadAllHotels();
 
-            // Search form submit
+            // Xử lý nút tìm kiếm (Gửi Ajax Search lên Server để check trùng lịch)
             $("#searchForm").submit(function (e) {
                 e.preventDefault();
-                applyFilters();
+                performSearch();
             });
 
-            // Filter changes
+            // Xử lý bộ lọc Client-side (Star, Price, Sort)
             $(".filter-star, #priceRange, #sortBy").change(function () {
-                applyFilters();
+                applyClientFilters();
             });
         });
 
+        // Hàm gọi API lấy tất cả khách sạn (GET)
         function loadAllHotels() {
+            $("#loading").removeClass('d-none');
+            $("#searchResults").empty();
+
             $.ajax({
                 type: "GET",
-                url: window.location.origin + '/Search/GetAllHotels',
+                url: '/Search/GetAllHotels',
                 success: function (response) {
+                    $("#loading").addClass('d-none');
                     if (response.success) {
-                        allHotels = response.hotels;
-                        filteredHotels = allHotels;
-                        displayResults(filteredHotels);
+                        currentHotels = response.hotels;
+                        applyClientFilters(); // Hiển thị và áp dụng bộ lọc nếu có
                     } else {
                         $("#searchResults").html('<div class="alert alert-warning">' + response.message + '</div>');
                     }
                 },
                 error: function () {
-                    $("#searchResults").html('<div class="alert alert-danger">Đã xảy ra lỗi. Vui lòng thử lại.</div>');
+                    $("#loading").addClass('d-none');
+                    $("#searchResults").html('<div class="alert alert-danger">Lỗi kết nối server.</div>');
                 }
             });
         }
 
-        function applyFilters() {
-            filteredHotels = allHotels;
+        // Hàm gọi API tìm kiếm theo ngày (POST)
+        function performSearch() {
+            var searchData = {
+                Location: $("#location").val(),
+                CheckInDate: $("#checkInDate").val(),
+                CheckOutDate: $("#checkOutDate").val(),
+                Guests: $("#guests").val()
+            };
 
-            // Location filter
-            var location = $("#location").val().toLowerCase();
-            if (location) {
-                filteredHotels = filteredHotels.filter(function (h) {
-                    return h.Name.toLowerCase().includes(location) ||
-                        h.City.toLowerCase().includes(location) ||
-                        (h.Address && h.Address.toLowerCase().includes(location));
-                });
-            }
+            $("#loading").removeClass('d-none');
+            $("#searchResults").empty();
 
-            // Star rating filter
+            $.ajax({
+                type: "POST",
+                url: '/Search/SearchHotels',
+                data: searchData,
+                success: function (response) {
+                    $("#loading").addClass('d-none');
+                    if (response.success) {
+                        currentHotels = response.hotels;
+                        applyClientFilters(); // Hiển thị kết quả mới
+
+                        if (currentHotels.length > 0) {
+                            // Scroll xuống kết quả
+                            $('html, body').animate({
+                                scrollTop: $("#searchResults").offset().top - 100
+                            }, 500);
+                        }
+                    } else {
+                        $("#searchResults").html('<div class="alert alert-danger">' + response.message + '</div>');
+                    }
+                },
+                error: function () {
+                    $("#loading").addClass('d-none');
+                    $("#searchResults").html('<div class="alert alert-danger">Lỗi khi tìm kiếm. Vui lòng thử lại.</div>');
+                }
+            });
+        }
+
+        // Hàm lọc và sắp xếp Client-side trên danh sách currentHotels
+        function applyClientFilters() {
+            var filtered = [...currentHotels]; // Copy mảng
+
+            // 1. Lọc theo Sao (Client-side)
             var selectedStars = [];
             $(".filter-star:checked").each(function () {
                 selectedStars.push(parseInt($(this).val()));
             });
             if (selectedStars.length > 0) {
-                filteredHotels = filteredHotels.filter(function (h) {
-                    return selectedStars.includes(h.StarRating);
-                });
+                filtered = filtered.filter(h => selectedStars.includes(h.StarRating));
             }
 
-            // Price range filter
+            // 2. Lọc theo Giá (Client-side)
             var priceRange = $("#priceRange").val();
             if (priceRange) {
                 var range = priceRange.split('-');
-                var minPrice = parseInt(range[0]);
-                var maxPrice = parseInt(range[1]);
-                filteredHotels = filteredHotels.filter(function (h) {
-                    return h.MinPrice >= minPrice && h.MinPrice <= maxPrice;
-                });
+                var min = parseInt(range[0]);
+                var max = parseInt(range[1]);
+                filtered = filtered.filter(h => h.MinPrice >= min && h.MinPrice <= max);
             }
 
-            // Sort
+            // Lưu ý: Lọc địa điểm (Location) đã được xử lý ở Server khi bấm Tìm kiếm.
+            // Nếu muốn lọc thêm client-side cho ô input khi chưa bấm tìm kiếm thì thêm logic ở đây.
+
+            // 3. Sắp xếp
             var sortBy = $("#sortBy").val();
             if (sortBy === 'price_asc') {
-                filteredHotels.sort(function (a, b) { return a.MinPrice - b.MinPrice; });
+                filtered.sort((a, b) => a.MinPrice - b.MinPrice);
             } else if (sortBy === 'price_desc') {
-                filteredHotels.sort(function (a, b) { return b.MinPrice - a.MinPrice; });
+                filtered.sort((a, b) => b.MinPrice - a.MinPrice);
             } else if (sortBy === 'rating') {
-                filteredHotels.sort(function (a, b) { return (b.AvgRating || 0) - (a.AvgRating || 0); });
+                filtered.sort((a, b) => (b.AvgRating || 0) - (a.AvgRating || 0));
             }
 
-            displayResults(filteredHotels);
+            displayResults(filtered);
         }
 
         function clearFilters() {
             $("#location").val('');
-            $("#checkInDate").val('');
-            $("#checkOutDate").val('');
-            $("#guests").val(1);
             $(".filter-star").prop('checked', false);
             $("#priceRange").val('');
             $("#sortBy").val('');
-            filteredHotels = allHotels;
-            displayResults(filteredHotels);
+            // Reset ngày về mặc định
+            var today = new Date().toISOString().split('T')[0];
+            $("#checkInDate").val(today);
+
+            // Load lại tất cả (reset cả kết quả search server)
+            loadAllHotels();
         }
 
         function displayResults(hotels) {
-            if (hotels.length === 0) {
-                $("#searchResults").html('<div class="alert alert-info">Không tìm thấy khách sạn nào phù hợp.</div>');
+            if (!hotels || hotels.length === 0) {
+                $("#searchResults").html('<div class="alert alert-info text-center"><h5>Không tìm thấy khách sạn nào phù hợp</h5><p>Hãy thử thay đổi điều kiện tìm kiếm.</p></div>');
                 return;
             }
 
-            var html = '<h3 class="mb-3">Tìm thấy ' + hotels.length + ' khách sạn</h3>';
+            var html = '<h4 class="mb-3">Kết quả: ' + hotels.length + ' khách sạn</h4>';
 
             hotels.forEach(function (hotel) {
-                html += '<div class="card mb-3">';
-                html += '<div class="row g-0">';
-                html += '<div class="col-md-4">';
-                if (hotel.ImageUrl) {
-                    html += '<img src="' + hotel.ImageUrl + '" class="img-fluid rounded-start" style="height: 250px; object-fit: cover; width: 100%;" alt="' + hotel.Name + '">';
-                } else {
-                    html += '<img src="/Content/images/no-image.png" class="img-fluid rounded-start" style="height: 250px; object-fit: cover; width: 100%;" alt="No image">';
-                }
-                html += '</div>';
-                html += '<div class="col-md-8">';
-                html += '<div class="card-body">';
-                html += '<h5 class="card-title">' + hotel.Name + '</h5>';
-                html += '<p class="card-text"><small class="text-muted">' + '⭐'.repeat(hotel.StarRating) + '</small></p>';
-                html += '<p class="card-text"><i class="fas fa-map-marker-alt"></i> ' + hotel.Address + ', ' + hotel.City + ', ' + hotel.Country + '</p>';
-                if (hotel.Description) {
-                    html += '<p class="card-text">' + (hotel.Description.substring(0, 150) + '...') + '</p>';
-                }
-                if (hotel.AvgRating) {
-                    html += '<p class="card-text"><strong>Đánh giá:</strong> ' + hotel.AvgRating.toFixed(1) + '/5 ⭐ (' + hotel.ReviewCount + ' đánh giá)</p>';
-                }
-                html += '<p class="card-text"><strong class="text-danger">Từ ' + hotel.MinPrice.toLocaleString() + ' VNĐ</strong>/đêm</p>';
-                html += '<a href="/Hotel/Details/' + hotel.Id + '" class="btn btn-primary">Xem chi tiết</a>';
-                html += '</div></div></div></div>';
+                var imgUrl = hotel.ImageUrl ? hotel.ImageUrl : '/Content/images/no-image.png';
+                var stars = '';
+                for (let i = 0; i < Math.floor(hotel.StarRating || 0); i++) stars += '⭐';
+
+                html += `
+                    <div class="card mb-4 shadow-sm hover-shadow">
+                        <div class="row g-0">
+                            <div class="col-md-4">
+                                <img src="${imgUrl}" class="img-fluid rounded-start h-100" style="object-fit: cover; min-height: 200px; width: 100%;" alt="${hotel.Name}">
+                            </div>
+                            <div class="col-md-8">
+                                <div class="card-body d-flex flex-column h-100">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <h5 class="card-title text-primary fw-bold mb-1">${hotel.Name}</h5>
+                                        <span class="badge bg-warning text-dark">${hotel.StarRating} <i class="fas fa-star small"></i></span>
+                                    </div>
+                                    <p class="card-text text-muted small mb-2"><i class="fas fa-map-marker-alt text-danger"></i> ${hotel.Address}, ${hotel.City}</p>
+
+                                    <div class="mb-2">
+                                        ${hotel.Description ? (hotel.Description.length > 150 ? hotel.Description.substring(0, 150) + '...' : hotel.Description) : ''}
+                                    </div>
+
+                                    <div class="mt-auto d-flex justify-content-between align-items-end">
+                                        <div>
+                                            ${hotel.AvgRating
+                        ? `<span class="badge bg-success"><i class="fas fa-thumbs-up"></i> ${hotel.AvgRating.toFixed(1)}</span> <small class="text-muted">(${hotel.ReviewCount} đánh giá)</small>`
+                        : '<small class="text-muted">Chưa có đánh giá</small>'}
+                                        </div>
+                                        <div class="text-end">
+                                            <div class="text-muted small">Giá chỉ từ</div>
+                                            <div class="h4 text-danger fw-bold mb-2">${hotel.MinPrice.toLocaleString()} ₫</div>
+                                            <a href="/Hotel/Details/${hotel.Id}" class="btn btn-primary px-4">Xem chi tiết <i class="fas fa-arrow-right"></i></a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
             });
 
             $("#searchResults").html(html);
         }
     </script>
+    <style>
+        .hover-shadow:hover {
+            box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important;
+            transition: all 0.3s;
+        }
+    </style>
 }

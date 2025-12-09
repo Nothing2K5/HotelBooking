@@ -21,29 +21,20 @@
       <Association Name="User_Review" Member="Reviews" ThisKey="Id" OtherKey="UserId" Type="Review" />
     </Type>
   </Table>
-  <Table Name="dbo.BookingItems" Member="BookingItems">
-    <Type Name="BookingItem">
-      <Column Name="Id" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
-      <Column Name="BookingId" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
-      <Column Name="RoomId" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
-      <Column Name="PricePerNight" Type="System.Decimal" DbType="Decimal(12,2) NOT NULL" CanBeNull="false" />
-      <Column Name="Nights" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
-      <Column Name="Quantity" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
-      <Column Name="SubTotal" Type="System.Decimal" DbType="Decimal(14,2) NOT NULL" CanBeNull="false" />
-      <Association Name="Booking_BookingItem" Member="Booking" ThisKey="BookingId" OtherKey="Id" Type="Booking" IsForeignKey="true" />
-      <Association Name="Room_BookingItem" Member="Room" ThisKey="RoomId" OtherKey="Id" Type="Room" IsForeignKey="true" />
-    </Type>
-  </Table>
   <Table Name="dbo.Bookings" Member="Bookings">
     <Type Name="Booking">
       <Column Name="Id" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
       <Column Name="UserId" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
       <Column Name="HotelId" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="RoomId" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
       <Column Name="Code" Type="System.String" DbType="VarChar(50) NOT NULL" CanBeNull="false" />
       <Column Name="Status" Type="System.String" DbType="VarChar(20) NOT NULL" CanBeNull="false" />
       <Column Name="CheckInDate" Type="System.DateTime" DbType="Date NOT NULL" CanBeNull="false" />
       <Column Name="CheckOutDate" Type="System.DateTime" DbType="Date NOT NULL" CanBeNull="false" />
       <Column Name="Guests" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="PricePerNight" Type="System.Decimal" DbType="Decimal(12,2) NOT NULL" CanBeNull="false" />
+      <Column Name="Nights" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="SubTotal" Type="System.Decimal" DbType="Decimal(14,2) NOT NULL" CanBeNull="false" />
       <Column Name="TotalAmount" Type="System.Decimal" DbType="Decimal(14,2) NOT NULL" CanBeNull="false" />
       <Column Name="PromotionId" Type="System.Int32" DbType="Int" CanBeNull="true" />
       <Column Name="FreeCancellationDeadline" Type="System.DateTime" DbType="DateTime2" CanBeNull="true" />
@@ -53,12 +44,12 @@
       <Column Name="CancelledAt" Type="System.DateTime" DbType="DateTime2" CanBeNull="true" />
       <Column Name="DeletedAt" Type="System.DateTime" DbType="DateTime2" CanBeNull="true" />
       <Column Name="Note" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
-      <Association Name="Booking_BookingItem" Member="BookingItems" ThisKey="Id" OtherKey="BookingId" Type="BookingItem" />
       <Association Name="Booking_Payment" Member="Payments" ThisKey="Id" OtherKey="BookingId" Type="Payment" />
       <Association Name="Booking_Review" Member="Reviews" ThisKey="Id" OtherKey="BookingId" Type="Review" />
       <Association Name="User_Booking" Member="User" ThisKey="UserId" OtherKey="Id" Type="User" IsForeignKey="true" />
       <Association Name="Hotel_Booking" Member="Hotel" ThisKey="HotelId" OtherKey="Id" Type="Hotel" IsForeignKey="true" />
       <Association Name="Promotion_Booking" Member="Promotion" ThisKey="PromotionId" OtherKey="Id" Type="Promotion" IsForeignKey="true" />
+      <Association Name="Room_Booking" Member="Room" ThisKey="RoomId" OtherKey="Id" Type="Room" IsForeignKey="true" />
     </Type>
   </Table>
   <Table Name="dbo.Customers" Member="Customers">
@@ -96,7 +87,6 @@
       <Column Name="UpdatedAt" Type="System.DateTime" DbType="DateTime2 NOT NULL" CanBeNull="false" />
       <Association Name="Hotel_Booking" Member="Bookings" ThisKey="Id" OtherKey="HotelId" Type="Booking" />
       <Association Name="Hotel_HotelImage" Member="HotelImages" ThisKey="Id" OtherKey="HotelId" Type="HotelImage" />
-      <Association Name="Hotel_Review" Member="Reviews" ThisKey="Id" OtherKey="HotelId" Type="Review" />
       <Association Name="Hotel_Room" Member="Rooms" ThisKey="Id" OtherKey="HotelId" Type="Room" />
     </Type>
   </Table>
@@ -116,7 +106,7 @@
       <Column Name="Id" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
       <Column Name="BookingId" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
       <Column Name="Amount" Type="System.Decimal" DbType="Decimal(14,2) NOT NULL" CanBeNull="false" />
-      <Column Name="Status" Type="System.String" DbType="VarChar(30) NOT NULL" CanBeNull="false" />
+      <Column Name="Status" Type="System.String" DbType="NVarChar(30) NOT NULL" CanBeNull="false" />
       <Column Name="PaidAt" Type="System.DateTime" DbType="DateTime2" CanBeNull="true" />
       <Column Name="CreatedAt" Type="System.DateTime" DbType="DateTime2 NOT NULL" CanBeNull="false" />
       <Association Name="Booking_Payment" Member="Booking" ThisKey="BookingId" OtherKey="Id" Type="Booking" IsForeignKey="true" />
@@ -131,9 +121,6 @@
       <Column Name="Value" Type="System.Decimal" DbType="Decimal(12,2) NOT NULL" CanBeNull="false" />
       <Column Name="StartDate" Type="System.DateTime" DbType="Date" CanBeNull="true" />
       <Column Name="EndDate" Type="System.DateTime" DbType="Date" CanBeNull="true" />
-      <Column Name="UsageLimit" Type="System.Int32" DbType="Int" CanBeNull="true" />
-      <Column Name="UsedCount" Type="System.Int32" DbType="Int" CanBeNull="true" />
-      <Column Name="PerUserLimit" Type="System.Int32" DbType="Int" CanBeNull="true" />
       <Column Name="IsActive" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
       <Column Name="DeletedAt" Type="System.DateTime" DbType="DateTime2" CanBeNull="true" />
       <Column Name="CreatedAt" Type="System.DateTime" DbType="DateTime2 NOT NULL" CanBeNull="false" />
@@ -145,7 +132,6 @@
     <Type Name="Review">
       <Column Name="Id" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
       <Column Name="UserId" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
-      <Column Name="HotelId" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
       <Column Name="BookingId" Type="System.Int32" DbType="Int" CanBeNull="true" />
       <Column Name="Rating" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
       <Column Name="Title" Type="System.String" DbType="NVarChar(255)" CanBeNull="true" />
@@ -154,7 +140,6 @@
       <Column Name="UpdatedAt" Type="System.DateTime" DbType="DateTime2 NOT NULL" CanBeNull="false" />
       <Column Name="DeletedAt" Type="System.DateTime" DbType="DateTime2" CanBeNull="true" />
       <Association Name="Booking_Review" Member="Booking" ThisKey="BookingId" OtherKey="Id" Type="Booking" IsForeignKey="true" />
-      <Association Name="Hotel_Review" Member="Hotel" ThisKey="HotelId" OtherKey="Id" Type="Hotel" IsForeignKey="true" />
       <Association Name="User_Review" Member="User" ThisKey="UserId" OtherKey="Id" Type="User" IsForeignKey="true" />
     </Type>
   </Table>
@@ -167,37 +152,22 @@
       <Association Name="Room_RoomImage" Member="Room" ThisKey="RoomId" OtherKey="Id" Type="Room" IsForeignKey="true" />
     </Type>
   </Table>
-  <Table Name="dbo.RoomInventory" Member="RoomInventories">
-    <Type Name="RoomInventory">
-      <Column Name="Id" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
-      <Column Name="RoomId" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
-      <Column Name="Date" Type="System.DateTime" DbType="Date NOT NULL" CanBeNull="false" />
-      <Column Name="Available" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
-      <Column Name="PriceOverride" Type="System.Decimal" DbType="Decimal(12,2)" CanBeNull="true" />
-      <Column Name="IsActive" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
-      <Column Name="DeletedAt" Type="System.DateTime" DbType="DateTime2" CanBeNull="true" />
-      <Column Name="CreatedAt" Type="System.DateTime" DbType="DateTime2 NOT NULL" CanBeNull="false" />
-      <Column Name="UpdatedAt" Type="System.DateTime" DbType="DateTime2 NOT NULL" CanBeNull="false" />
-      <Association Name="Room_RoomInventory" Member="Room" ThisKey="RoomId" OtherKey="Id" Type="Room" IsForeignKey="true" />
-    </Type>
-  </Table>
   <Table Name="dbo.Rooms" Member="Rooms">
     <Type Name="Room">
       <Column Name="Id" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
       <Column Name="HotelId" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
-      <Column Name="Code" Type="System.String" DbType="VarChar(50)" CanBeNull="true" />
-      <Column Name="Name" Type="System.String" DbType="NVarChar(200) NOT NULL" CanBeNull="false" />
+      <Column Name="Code" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
+      <Column Name="RoomNumber" Type="System.String" DbType="NVarChar(50) NOT NULL" CanBeNull="false" />
       <Column Name="Description" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
       <Column Name="Capacity" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="Status" Type="System.String" DbType="NVarChar(100) NOT NULL" CanBeNull="false" />
       <Column Name="PricePerNight" Type="System.Decimal" DbType="Decimal(12,2) NOT NULL" CanBeNull="false" />
-      <Column Name="TotalRooms" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
       <Column Name="IsActive" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
       <Column Name="DeletedAt" Type="System.DateTime" DbType="DateTime2" CanBeNull="true" />
       <Column Name="CreatedAt" Type="System.DateTime" DbType="DateTime2 NOT NULL" CanBeNull="false" />
       <Column Name="UpdatedAt" Type="System.DateTime" DbType="DateTime2 NOT NULL" CanBeNull="false" />
-      <Association Name="Room_BookingItem" Member="BookingItems" ThisKey="Id" OtherKey="RoomId" Type="BookingItem" />
+      <Association Name="Room_Booking" Member="Bookings" ThisKey="Id" OtherKey="RoomId" Type="Booking" />
       <Association Name="Room_RoomImage" Member="RoomImages" ThisKey="Id" OtherKey="RoomId" Type="RoomImage" />
-      <Association Name="Room_RoomInventory" Member="RoomInventories" ThisKey="Id" OtherKey="RoomId" Type="RoomInventory" />
       <Association Name="Hotel_Room" Member="Hotel" ThisKey="HotelId" OtherKey="Id" Type="Hotel" IsForeignKey="true" />
     </Type>
   </Table>

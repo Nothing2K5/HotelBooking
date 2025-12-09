@@ -37,8 +37,8 @@ namespace HotelBooking.Areas.Admin.Controllers
                         p.Value,
                         p.StartDate,
                         p.EndDate,
-                        p.UsageLimit,
-                        p.UsedCount,
+                        //p.UsageLimit,
+                        //p.UsedCount,
                         p.IsActive
                     })
                     .ToList();
@@ -73,7 +73,7 @@ namespace HotelBooking.Areas.Admin.Controllers
                 model.IsActive = true;
                 model.CreatedAt = DateTime.Now;
                 model.UpdatedAt = DateTime.Now;
-                model.UsedCount = 0;
+                //model.UsedCount = 0;
 
                 _db.Promotions.InsertOnSubmit(model);
                 _db.SubmitChanges();
@@ -119,8 +119,8 @@ namespace HotelBooking.Areas.Admin.Controllers
                         ? promoEntity.EndDate.Value.ToString("yyyy-MM-dd")
                         : null,
 
-                    UsageLimit = promoEntity.UsageLimit ?? 0,
-                    PerUserLimit = promoEntity.PerUserLimit ?? 0,
+                    //UsageLimit = promoEntity.UsageLimit ?? 0,
+                    //PerUserLimit = promoEntity.PerUserLimit ?? 0,
                     promoEntity.IsActive
                 };
 
@@ -155,14 +155,14 @@ namespace HotelBooking.Areas.Admin.Controllers
                     bool isCurrentlyActive = promo.StartDate <= DateTime.Today &&
                                            (!promo.EndDate.HasValue || promo.EndDate >= DateTime.Today);
 
-                    if (isCurrentlyActive && promo.UsedCount > 0)
-                    {
-                        return Json(new
-                        {
-                            success = false,
-                            message = "Không thể tạm dừng khuyến mãi vì đang trong thời gian áp dụng và đã có khách hàng sử dụng!"
-                        });
-                    }
+                    //if (isCurrentlyActive && promo.UsedCount > 0)
+                    //{
+                    //    return Json(new
+                    //    {
+                    //        success = false,
+                    //        message = "Không thể tạm dừng khuyến mãi vì đang trong thời gian áp dụng và đã có khách hàng sử dụng!"
+                    //    });
+                    //}
                 }
 
                 // === Cập nhật các trường ===
@@ -172,9 +172,9 @@ namespace HotelBooking.Areas.Admin.Controllers
                 promo.Value = model.Value;
                 promo.StartDate = model.StartDate;
                 promo.EndDate = model.EndDate;
-                promo.UsageLimit = model.UsageLimit;
-                promo.PerUserLimit = model.PerUserLimit;
-                promo.IsActive = model.IsActive;           
+                //promo.UsageLimit = model.UsageLimit;
+                //promo.PerUserLimit = model.PerUserLimit;
+                promo.IsActive = model.IsActive;
                 promo.UpdatedAt = DateTime.Now;
 
                 _db.SubmitChanges();

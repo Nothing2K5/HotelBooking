@@ -1,0 +1,150 @@
+﻿@{
+    ViewBag.Title = "Viết đánh giá";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="row justify-content-center py-4">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-pen-nib"></i> Viết đánh giá của bạn</h4>
+            </div>
+            <div class="card-body">
+                <div id="bookingInfo" class="mb-4 p-3 bg-light rounded border">
+                    <div class="spinner-border spinner-border-sm text-primary" role="status"></div> Đang tải thông tin...
+                </div>
+
+                <form id="createReviewForm">
+                    <input type="hidden" id="bookingId" value="@ViewBag.BookingId" />
+                    <input type="hidden" id="ratingValue" name="Rating" value="5" />
+
+                    <div class="mb-4 text-center">
+                        <label class="form-label d-block fw-bold">Bạn cảm thấy thế nào về kỳ nghỉ?</label>
+                        <div class="star-rating fs-1 text-warning" style="cursor: pointer;">
+                            <i class="fas fa-star" data-value="1"></i>
+                            <i class="fas fa-star" data-value="2"></i>
+                            <i class="fas fa-star" data-value="3"></i>
+                            <i class="fas fa-star" data-value="4"></i>
+                            <i class="fas fa-star" data-value="5"></i>
+                        </div>
+                        <div id="ratingText" class="text-primary fw-bold mt-1">Tuyệt vời (5/5)</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="title" class="form-label fw-bold">Tiêu đề (Tóm tắt trải nghiệm)</label>
+                        <input type="text" class="form-control" id="title" placeholder="VD: Kỳ nghỉ tuyệt vời, Phòng sạch sẽ..." required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="content" class="form-label fw-bold">Nội dung chi tiết</label>
+                        <textarea class="form-control" id="content" rows="5" placeholder="Chia sẻ chi tiết về phòng ốc, dịch vụ, vị trí..." required></textarea>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success btn-lg">Gửi đánh giá</button>
+                        <a href="/Customer/Booking/Index" class="btn btn-outline-secondary">Hủy bỏ</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        var bookingId = $("#bookingId").val();
+
+        $(document).ready(function () {
+            loadBookingInfo();
+
+            // Xử lý chọn sao
+            $(".star-rating i").hover(function() {
+                var val = $(this).data("value");
+                highlightStars(val);
+            }, function() {
+                var val = $("#ratingValue").val();
+                highlightStars(val);
+            });
+
+            $(".star-rating i").click(function() {
+                var val = $(this).data("value");
+                $("#ratingValue").val(val);
+                highlightStars(val);
+                updateRatingText(val);
+            });
+
+            $("#createReviewForm").submit(function(e) {
+                e.preventDefault();
+                submitReview();
+            });
+        });
+
+        function highlightStars(count) {
+            $(".star-rating i").each(function(index) {
+                if (index < count) {
+                    $(this).removeClass("far").addClass("fas");
+                } else {
+                    $(this).removeClass("fas").addClass("far");
+                }
+            });
+        }
+
+        function updateRatingText(val) {
+            var texts = ["Rất tệ", "Tệ", "Bình thường", "Tốt", "Tuyệt vời"];
+            $("#ratingText").text(texts[val-1] + " (" + val + "/5)");
+        }
+
+        function loadBookingInfo() {
+            $.ajax({
+                type: "GET",
+                url: '/Customer/Review/GetBookingInfo',
+                data: { bookingId: bookingId },
+                success: function(response) {
+                    if (response.success) {
+                        var b = response.data;
+                        $("#bookingInfo").html(`
+                            <h5 class="mb-1 text-primary"><i class="fas fa-hotel"></i> ${b.HotelName}</h5>
+                            <p class="mb-0 text-muted small">Mã booking: ${b.Id} (Check-in: ${formatDate(b.CheckInDate)})</p>
+                        `);
+                    } else {
+                        $("#bookingInfo").html(`<div class="text-danger">${response.message}</div>`);
+                        $("button[type=submit]").prop("disabled", true);
+                    }
+                }
+            });
+        }
+
+        function submitReview() {
+            var data = {
+                BookingId: bookingId,
+                Rating: $("#ratingValue").val(),
+                Title: $("#title").val(),
+                Content: $("#content").val()
+            };
+
+            $.ajax({
+                type: "POST",
+                url: '/Customer/Review/CreateReview',
+                data: JSON.stringify(data),
+                contentType: "application/json; charset=utf-8",
+                success: function(response) {
+                    if (response.success) {
+                        alert(response.message);
+                        window.location.href = "/Customer/Review/Index";
+                    } else {
+                        alert("Lỗi: " + response.message);
+                    }
+                },
+                error: function() {
+                    alert("Đã xảy ra lỗi khi gửi đánh giá.");
+                }
+            });
+        }
+
+        function formatDate(jsonDate) {
+             if (!jsonDate) return "";
+             var date = new Date(parseInt(jsonDate.replace(/\/Date\((-?\d+)\)\//, '$1')));
+             return date.toLocaleDateString('vi-VN');
+        }
+    </script>
+}

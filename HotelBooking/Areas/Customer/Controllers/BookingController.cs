@@ -19,7 +19,8 @@ namespace HotelBooking.Areas.Customer.Controllers
         private int GetCurrentUserId()
         {
             var email = User.Identity.Name;
-            return _db.Users.First(u => u.Email == email).Id;
+            var user = _db.Users.FirstOrDefault(u => u.Email == email);
+            return user != null ? user.Id : 0;
         }
 
         // GET: Customer/Booking/Index
@@ -43,6 +44,8 @@ namespace HotelBooking.Areas.Customer.Controllers
                         b.Id,
                         b.Code,
                         HotelName = b.Hotel.Name,
+                        RoomNumber = b.Room.RoomNumber, // DB Mới: Số phòng
+                        RoomType = b.Room.Code,         // DB Mới: Loại phòng (VIP/Normal)
                         b.CheckInDate,
                         b.CheckOutDate,
                         b.Status,
@@ -78,6 +81,8 @@ namespace HotelBooking.Areas.Customer.Controllers
         // GET: Customer/Booking/Create
         public ActionResult Create(int hotelId, int roomId)
         {
+            ViewBag.HotelId = hotelId;
+            ViewBag.RoomId = roomId;
             return View();
         }
 
@@ -96,7 +101,14 @@ namespace HotelBooking.Areas.Customer.Controllers
                 return Json(new
                 {
                     success = true,
-                    room = new { room.Name, room.PricePerNight, room.Capacity },
+                    room = new
+                    {
+                        //room.Name, // Lưu ý: Nếu DB bạn xóa cột Name ở bảng Room thì dùng room.Code hoặc room.RoomNumber
+                        room.RoomNumber,
+                        Type = room.Code,
+                        room.PricePerNight,
+                        room.Capacity
+                    },
                     hotel = new { hotel.Name }
                 }, JsonRequestBehavior.AllowGet);
             }
@@ -105,37 +117,6 @@ namespace HotelBooking.Areas.Customer.Controllers
                 return Json(new { success = false, message = "Lỗi: " + ex.Message }, JsonRequestBehavior.AllowGet);
             }
         }
-
-        // POST: Customer/Booking/ValidatePromo - AJAX
-        //[HttpPost]
-        //public ActionResult ValidatePromo(PromoCodeVM model)
-        //{
-        //    try
-        //    {
-        //        var promo = _db.Promotions.FirstOrDefault(p => p.Code == model.Code && p.IsActive);
-
-        //        if (promo == null)
-        //            return Json(new { success = false, message = "Mã không tồn tại" });
-
-        //        var now = DateTime.Now;
-        //        if (promo.StartDate.HasValue && now < promo.StartDate.Value)
-        //            return Json(new { success = false, message = "Mã chưa có hiệu lực" });
-
-        //        if (promo.EndDate.HasValue && now > promo.EndDate.Value)
-        //            return Json(new { success = false, message = "Mã đã hết hạn" });
-
-        //        if (promo.UsageLimit.HasValue && promo.UsedCount >= promo.UsageLimit.Value)
-        //            return Json(new { success = false, message = "Mã đã hết lượt sử dụng" });
-
-        //        decimal discountAmount = promo.Type == "amount" ? promo.Value : 0; // Simplified
-
-        //        return Json(new { success = true, discountAmount = discountAmount });
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return Json(new { success = false, message = "Lỗi: " + ex.Message });
-        //    }
-        //}
 
         // POST: Customer/Booking/CreateBooking - AJAX
         [HttpPost]
@@ -155,39 +136,43 @@ namespace HotelBooking.Areas.Customer.Controllers
                 if (room == null)
                     return Json(new { success = false, message = "Không tìm thấy phòng" });
 
+                // LOGIC MỚI: Kiểm tra Overlap (Trùng lịch) trong bảng Bookings
+                // Một phòng bị coi là bận nếu tồn tại booking nào đó (không bị hủy) mà thời gian giao nhau với lịch mới
+                bool isRoomBusy = _db.Bookings.Any(b =>
+                    b.RoomId == model.RoomId &&
+                    b.Status != "cancelled" &&
+                    // Logic giao nhau: (StartA < EndB) && (EndA > StartB)
+                    (model.CheckInDate < b.CheckOutDate && model.CheckOutDate > b.CheckInDate)
+                );
+
+                if (isRoomBusy)
+                    return Json(new { success = false, message = "Phòng này đã được đặt trong khoảng thời gian bạn chọn. Vui lòng chọn phòng khác." });
+
                 var nights = (model.CheckOutDate - model.CheckInDate).Days;
                 var subtotal = room.PricePerNight * nights;
 
+                // Tạo Booking (Cấu trúc mới không có BookingItems)
                 var booking = new Booking
                 {
                     UserId = userId,
                     HotelId = model.HotelId,
+                    RoomId = model.RoomId,
                     Code = "BK" + DateTime.Now.ToString("yyyyMMddHHmmss"),
                     Status = "draft",
                     CheckInDate = model.CheckInDate,
                     CheckOutDate = model.CheckOutDate,
                     Guests = model.Guests,
-                    TotalAmount = subtotal,
-                    FreeCancellationDeadline = model.CheckInDate.AddDays(-2),
+                    PricePerNight = room.PricePerNight, // Cột mới
+                    Nights = nights,                    // Cột mới
+                    SubTotal = subtotal,                // Cột mới
+                    TotalAmount = subtotal,             // Logic khuyến mãi tính sau
+                    FreeCancellationDeadline = model.CheckInDate.AddDays(-3), // Deadline hủy = CheckIn - 3 ngày
                     CreatedAt = DateTime.Now,
                     UpdatedAt = DateTime.Now,
                     Note = model.Note
                 };
 
                 _db.Bookings.InsertOnSubmit(booking);
-                _db.SubmitChanges();
-
-                // Tạo BookingItem
-                var bookingItem = new BookingItem
-                {
-                    BookingId = booking.Id,
-                    RoomId = model.RoomId,
-                    PricePerNight = room.PricePerNight,
-                    Nights = nights,
-                    Quantity = 1,
-                    SubTotal = subtotal
-                };
-                _db.BookingItems.InsertOnSubmit(bookingItem);
                 _db.SubmitChanges();
 
                 return Json(new { success = true, bookingId = booking.Id });
@@ -211,7 +196,7 @@ namespace HotelBooking.Areas.Customer.Controllers
         {
             try
             {
-                // Lấy đầy đủ thông tin cần thiết cho View
+                // Logic Mới: Lấy thông tin phẳng (Flatten) vì 1 Booking = 1 Room
                 var booking = _db.Bookings
                     .Where(b => b.Id == id && b.UserId == GetCurrentUserId())
                     .Select(b => new
@@ -226,18 +211,17 @@ namespace HotelBooking.Areas.Customer.Controllers
                         b.Note,
                         b.FreeCancellationDeadline,
                         b.PenaltyAmount,
-                        // Thông tin khách sạn phẳng hóa
                         HotelName = b.Hotel.Name,
                         HotelAddress = b.Hotel.Address + ", " + b.Hotel.City,
-                        // Lấy danh sách phòng (quan trọng)
-                        BookingItems = b.BookingItems.Select(bi => new
+                        // Thông tin phòng lấy trực tiếp
+                        RoomInfo = new
                         {
-                            RoomName = bi.Room.Name,
-                            Price = bi.PricePerNight,
-                            Nights = bi.Nights,
-                            Quantity = bi.Quantity,
-                            SubTotal = bi.SubTotal
-                        }).ToList()
+                            RoomNumber = b.Room.RoomNumber,
+                            RoomType = b.Room.Code,
+                            Price = b.PricePerNight,
+                            Nights = b.Nights,
+                            SubTotal = b.SubTotal
+                        }
                     })
                     .FirstOrDefault();
 
@@ -265,7 +249,6 @@ namespace HotelBooking.Areas.Customer.Controllers
 
                 if (model.PaymentMethod == "online")
                 {
-                    // Mô phỏng thanh toán online thành công
                     booking.Status = "paid";
                     booking.UpdatedAt = DateTime.Now;
 
@@ -279,12 +262,14 @@ namespace HotelBooking.Areas.Customer.Controllers
                     };
                     _db.Payments.InsertOnSubmit(payment);
                     _db.SubmitChanges();
+                    // Trigger SQL sẽ tự động tích điểm
 
                     return Json(new { success = true, message = "Thanh toán thành công!" });
                 }
                 else
                 {
-                    booking.Status = "pending";
+                    // Trả sau thì chuyển sang confirmed
+                    booking.Status = "confirmed";
                     booking.UpdatedAt = DateTime.Now;
                     _db.SubmitChanges();
 
@@ -332,11 +317,12 @@ namespace HotelBooking.Areas.Customer.Controllers
                 if (booking.Status == "completed")
                     return Json(new { success = false, message = "Không thể hủy booking đã hoàn thành" });
 
-                // Calculate penalty
+                // Tính phí hủy
                 decimal penaltyAmount = 0;
-                if (!model.IsFreeCancellation)
+                // Nếu hiện tại đã vượt quá hạn hủy miễn phí
+                if (booking.FreeCancellationDeadline.HasValue && DateTime.Now > booking.FreeCancellationDeadline.Value)
                 {
-                    penaltyAmount = booking.TotalAmount * 0.5m; // 50% penalty
+                    penaltyAmount = booking.TotalAmount * 0.5m; // Phạt 50%
                 }
 
                 booking.Status = "cancelled";
@@ -351,7 +337,7 @@ namespace HotelBooking.Areas.Customer.Controllers
 
                 _db.SubmitChanges();
 
-                var message = model.IsFreeCancellation
+                var message = penaltyAmount == 0
                     ? "Hủy booking thành công! Toàn bộ số tiền sẽ được hoàn lại."
                     : $"Hủy booking thành công! Phí hủy: {penaltyAmount:N0} VNĐ. Số tiền hoàn lại: {(booking.TotalAmount - penaltyAmount):N0} VNĐ";
 

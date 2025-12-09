@@ -3,21 +3,16 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="container-fluid">
-    <div class="row mb-3">
-        <div class="col-sm-6">
-            <h3 class="mb-0">Danh sách Booking của tôi</h3>
-        </div>
-        <div class="col-sm-6">
-            <ol class="breadcrumb float-sm-end">
-                <li class="breadcrumb-item"><a href="/">Trang chủ</a></li>
-                <li class="breadcrumb-item active">Booking</li>
-            </ol>
-        </div>
+<div class="container-fluid py-3">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="mb-0">Danh sách Booking của tôi</h3>
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="/">Trang chủ</a></li>
+            <li class="breadcrumb-item active">Booking</li>
+        </ol>
     </div>
 
-    <!-- Filter tabs -->
-    <ul class="nav nav-tabs mb-3" id="statusTabs">
+    <ul class="nav nav-pills mb-4" id="statusTabs">
         <li class="nav-item">
             <a class="nav-link active" href="#" data-status="">Tất cả</a>
         </li>
@@ -32,9 +27,10 @@
         </li>
     </ul>
 
-    <div class="row">
-        <div class="col-sm-12" id="div_ShowData">
-            <div id="bookingsList"></div>
+    <div id="bookingsList">
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p>Đang tải dữ liệu...</p>
         </div>
     </div>
 </div>
@@ -47,7 +43,6 @@
         $(document).ready(function () {
             loadBookings();
 
-            // Tab click handler
             $("#statusTabs .nav-link").click(function (e) {
                 e.preventDefault();
                 $("#statusTabs .nav-link").removeClass('active');
@@ -60,18 +55,15 @@
         function loadBookings() {
             $.ajax({
                 type: "GET",
-                url: url_domain + '/Customer/Booking/GetMyBookings',
+                url: '/Customer/Booking/GetMyBookings',
                 success: function (response) {
                     if (response.success) {
                         var bookings = response.data;
-
-                        // Filter by status
                         if (currentFilter) {
                             bookings = bookings.filter(function (b) {
                                 return b.Status === currentFilter;
                             });
                         }
-
                         displayBookings(bookings);
                     } else {
                         $("#bookingsList").html("<p class='alert alert-danger'>" + response.message + "</p>");
@@ -85,42 +77,56 @@
 
         function displayBookings(bookings) {
             if (bookings.length === 0) {
-                $("#bookingsList").html('<div class="alert alert-info">Chưa có booking nào. <a href="/Search/Index">Tìm kiếm khách sạn</a></div>');
+                $("#bookingsList").html('<div class="alert alert-info text-center py-4"><h5>Chưa có booking nào.</h5><a href="/Search/Index" class="btn btn-primary mt-2">Tìm kiếm khách sạn ngay</a></div>');
                 return;
             }
 
             var html = '';
-            bookings.forEach(function (booking, index) {
-                html += '<div class="card mb-3">';
-                html += '<div class="card-body">';
-                html += '<div class="row">';
-                html += '<div class="col-md-8">';
-                html += '<h5><i class="fas fa-hotel"></i> ' + booking.HotelName + '</h5>';
-                html += '<p class="mb-1"><strong>Mã booking:</strong> ' + booking.Code + '</p>';
-                html += '<p class="mb-1"><i class="far fa-calendar-alt"></i> ' + formatDate(booking.CheckInDate) + ' → ' + formatDate(booking.CheckOutDate) + '</p>';
-                html += '<p class="mb-0"><strong>Tổng tiền:</strong> <span class="text-danger h5">' + booking.TotalAmount.toLocaleString() + ' VNĐ</span></p>';
-                html += '</div>';
-                html += '<div class="col-md-4 text-end">';
-                html += '<p>' + getStatusBadge(booking.Status) + '</p>';
-                html += '<div class="btn-group-vertical w-100">';
-                html += '<a href="' + url_domain + '/Customer/Booking/Details/' + booking.Id + '" class="btn btn-info btn-sm mb-1">Chi tiết</a>';
+            bookings.forEach(function (booking) {
+                // Update: Hiển thị thêm thông tin Phòng
+                var roomInfo = `<span class="badge bg-light text-dark border me-1"><i class="fas fa-door-open"></i> Phòng ${booking.RoomNumber}</span>
+                                    <span class="badge bg-light text-dark border">${booking.RoomType === 'VIP' ? 'VIP' : 'Thường'}</span>`;
 
-                if (booking.Status === 'draft' || booking.Status === 'pending') {
-                    html += '<a href="' + url_domain + '/Customer/Booking/Payment/' + booking.Id + '" class="btn btn-success btn-sm mb-1">Thanh toán</a>';
-                }
+                html += `
+                    <div class="card mb-3 shadow-sm border-start border-4 ${getBorderColor(booking.Status)}">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-8">
+                                    <h5 class="text-primary mb-1"><i class="fas fa-hotel"></i> ${booking.HotelName}</h5>
+                                    <div class="mb-2 text-muted small"><i class="fas fa-barcode"></i> ${booking.Code}</div>
 
-                if (booking.Status !== 'cancelled' && booking.Status !== 'completed') {
-                    html += '<button class="btn btn-danger btn-sm" onclick="confirmCancel(' + booking.Id + ')">Hủy booking</button>';
-                }
+                                    <div class="mb-2">${roomInfo}</div>
 
-                html += '</div></div></div></div></div>';
+                                    <p class="mb-1"><i class="far fa-calendar-alt text-success"></i> ${formatDate(booking.CheckInDate)} <i class="fas fa-arrow-right small text-muted"></i> ${formatDate(booking.CheckOutDate)}</p>
+                                    <p class="mb-0"><strong>Tổng tiền:</strong> <span class="text-danger h5 fw-bold">${booking.TotalAmount.toLocaleString()} VNĐ</span></p>
+                                </div>
+                                <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                                    <div class="mb-3">${getStatusBadge(booking.Status)}</div>
+                                    <div class="btn-group">
+                                        <a href="/Customer/Booking/Details/${booking.Id}" class="btn btn-outline-primary btn-sm">Chi tiết</a>
+
+                                        ${(booking.Status === 'draft' || booking.Status === 'pending' || booking.Status === 'confirmed') ?
+                        `<a href="/Customer/Booking/Payment/${booking.Id}" class="btn btn-success btn-sm">Thanh toán</a>` : ''}
+
+                                        ${(booking.Status !== 'cancelled' && booking.Status !== 'completed' && booking.Status !== 'paid') ?
+                        `<button class="btn btn-outline-danger btn-sm" onclick="confirmCancel(${booking.Id})">Hủy</button>` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
             });
-
             $("#bookingsList").html(html);
         }
 
         function formatDate(dateString) {
-            var date = new Date(dateString);
+            // Xử lý cả dạng /Date()/ và ISO
+            var date;
+            if (dateString.indexOf("/Date(") !== -1) {
+                date = new Date(parseInt(dateString.replace(/\/Date\((-?\d+)\)\//, '$1')));
+            } else {
+                date = new Date(dateString);
+            }
             return date.toLocaleDateString('vi-VN');
         }
 
@@ -129,17 +135,25 @@
                 'draft': '<span class="badge bg-secondary">Nháp</span>',
                 'pending': '<span class="badge bg-warning text-dark">Chờ thanh toán</span>',
                 'paid': '<span class="badge bg-success">Đã thanh toán</span>',
-                'confirmed': '<span class="badge bg-info">Đã xác nhận</span>',
+                'confirmed': '<span class="badge bg-info">Đã xác nhận (Trả sau)</span>',
                 'cancelled': '<span class="badge bg-danger">Đã hủy</span>',
                 'completed': '<span class="badge bg-primary">Hoàn thành</span>'
             };
             return badges[status] || '<span class="badge bg-secondary">' + status + '</span>';
         }
 
-        function confirmCancel(bookingId) {
-            if (confirm("Bạn có chắc chắn muốn hủy booking này không?")) {
-                window.location.href = url_domain + '/Customer/Booking/Cancel/' + bookingId;
+        function getBorderColor(status) {
+            switch (status) {
+                case 'paid': return 'border-success';
+                case 'cancelled': return 'border-danger';
+                case 'pending': return 'border-warning';
+                default: return 'border-secondary';
             }
+        }
+
+        function confirmCancel(bookingId) {
+            // Chuyển hướng sang trang Cancel để xem chi tiết phí phạt
+            window.location.href = '/Customer/Booking/Cancel/' + bookingId;
         }
     </script>
 }

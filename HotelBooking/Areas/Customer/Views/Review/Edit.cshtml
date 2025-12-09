@@ -1,0 +1,141 @@
+﻿@{
+    ViewBag.Title = "Chỉnh sửa đánh giá";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="row justify-content-center py-4">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-warning text-dark">
+                <h4 class="mb-0"><i class="fas fa-edit"></i> Chỉnh sửa đánh giá</h4>
+            </div>
+            <div class="card-body">
+                <div id="hotelInfo" class="mb-3 text-muted border-bottom pb-2"></div>
+
+                <form id="editReviewForm">
+                    <input type="hidden" id="reviewId" value="@ViewBag.ReviewId" />
+                    <input type="hidden" id="ratingValue" name="Rating" />
+
+                    <div class="mb-4 text-center">
+                        <label class="form-label d-block fw-bold">Đánh giá của bạn</label>
+                        <div class="star-rating fs-1 text-warning" style="cursor: pointer;">
+                            <i class="fas fa-star" data-value="1"></i>
+                            <i class="fas fa-star" data-value="2"></i>
+                            <i class="fas fa-star" data-value="3"></i>
+                            <i class="fas fa-star" data-value="4"></i>
+                            <i class="fas fa-star" data-value="5"></i>
+                        </div>
+                        <div id="ratingText" class="text-primary fw-bold mt-1"></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="title" class="form-label fw-bold">Tiêu đề</label>
+                        <input type="text" class="form-control" id="title" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="content" class="form-label fw-bold">Nội dung</label>
+                        <textarea class="form-control" id="content" rows="5" required></textarea>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">Cập nhật</button>
+                        <a href="/Customer/Review/Index" class="btn btn-outline-secondary">Quay lại</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        var reviewId = $("#reviewId").val();
+
+        $(document).ready(function () {
+            loadReviewData();
+
+            // Logic chọn sao tương tự Create
+            $(".star-rating i").hover(function() {
+                highlightStars($(this).data("value"));
+            }, function() {
+                highlightStars($("#ratingValue").val());
+            });
+
+            $(".star-rating i").click(function() {
+                var val = $(this).data("value");
+                $("#ratingValue").val(val);
+                highlightStars(val);
+                updateRatingText(val);
+            });
+
+            $("#editReviewForm").submit(function(e) {
+                e.preventDefault();
+                updateReview();
+            });
+        });
+
+        function loadReviewData() {
+            $.ajax({
+                type: "GET",
+                url: '/Customer/Review/GetReviewById',
+                data: { id: reviewId },
+                success: function(response) {
+                    if (response.success) {
+                        var r = response.data;
+                        $("#hotelInfo").html(`<h5 class="text-primary"><i class="fas fa-hotel"></i> ${r.HotelName}</h5>`);
+                        $("#ratingValue").val(r.Rating);
+                        $("#title").val(r.Title);
+                        $("#content").val(r.Content);
+
+                        // Cập nhật giao diện sao
+                        highlightStars(r.Rating);
+                        updateRatingText(r.Rating);
+                    } else {
+                        alert(response.message);
+                        window.location.href = "/Customer/Review/Index";
+                    }
+                }
+            });
+        }
+
+        function updateReview() {
+            var data = {
+                Id: reviewId,
+                Rating: $("#ratingValue").val(),
+                Title: $("#title").val(),
+                Content: $("#content").val()
+            };
+
+            $.ajax({
+                type: "POST",
+                url: '/Customer/Review/UpdateReview',
+                data: JSON.stringify(data),
+                contentType: "application/json; charset=utf-8",
+                success: function(response) {
+                    if (response.success) {
+                        alert(response.message);
+                        window.location.href = "/Customer/Review/Index";
+                    } else {
+                        alert("Lỗi: " + response.message);
+                    }
+                },
+                error: function() {
+                    alert("Đã xảy ra lỗi khi cập nhật.");
+                }
+            });
+        }
+
+        function highlightStars(count) {
+            $(".star-rating i").each(function(index) {
+                if (index < count) $(this).removeClass("far").addClass("fas");
+                else $(this).removeClass("fas").addClass("far");
+            });
+        }
+
+        function updateRatingText(val) {
+            var texts = ["Rất tệ", "Tệ", "Bình thường", "Tốt", "Tuyệt vời"];
+            $("#ratingText").text(texts[val-1] + " (" + val + "/5)");
+        }
+    </script>
+}

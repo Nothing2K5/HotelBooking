@@ -33,25 +33,39 @@ namespace HotelBooking.Controllers
                 if (model.CheckOutDate <= model.CheckInDate)
                     return Json(new { success = false, message = "Ngày trả phòng phải sau ngày nhận phòng" });
 
-                var hotels = _db.Hotels
-                    .Where(h => h.IsActive &&
+                // Lấy danh sách Hotel phù hợp địa điểm
+                var query = _db.Hotels.Where(h => h.IsActive &&
                            (h.City.Contains(model.Location) ||
                             h.Name.Contains(model.Location) ||
-                            h.Address.Contains(model.Location)))
-                    .Select(h => new
-                    {
-                        h.Id,
-                        h.Name,
-                        h.Address,
-                        h.City,
-                        h.Country,
-                        h.StarRating,
-                        h.Description,
-                        ImageUrl = h.HotelImages.Any() ? h.HotelImages.FirstOrDefault().Url : null
-                    })
-                    .ToList();
+                            h.Address.Contains(model.Location)));
 
-                return Json(new { success = true, hotels = hotels });
+                // Lọc Hotel có ít nhất 1 phòng trống
+                var availableHotels = query.ToList().Where(h =>
+                    h.Rooms.Any(r =>
+                        r.IsActive == true &&
+                        !r.Bookings.Any(b =>
+                            b.Status != "cancelled" &&
+                            (
+                                model.CheckInDate < b.CheckOutDate &&
+                                model.CheckOutDate > b.CheckInDate
+                            )
+                        )
+                    )
+                ).Select(h => new
+                {
+                    h.Id,
+                    h.Name,
+                    h.Address,
+                    h.City,
+                    h.Country,
+                    h.StarRating,
+                    h.Description,
+                    ImageUrl = h.HotelImages.Any() ? h.HotelImages.FirstOrDefault().Url : null,
+                    // Giá thấp nhất
+                    MinPrice = h.Rooms.Where(r => r.IsActive == true).Any() ? h.Rooms.Where(r => r.IsActive == true).Min(r => (decimal?)r.PricePerNight) : 0
+                }).ToList();
+
+                return Json(new { success = true, hotels = availableHotels });
             }
             catch (Exception ex)
             {
@@ -77,9 +91,17 @@ namespace HotelBooking.Controllers
                         h.StarRating,
                         h.Description,
                         ImageUrl = h.HotelImages.Any() ? h.HotelImages.FirstOrDefault().Url : null,
-                        MinPrice = h.Rooms.Any() ? h.Rooms.Min(r => r.PricePerNight) : 0,
-                        AvgRating = h.Reviews.Any() ? h.Reviews.Average(r => (decimal?)r.Rating) : null,
-                        ReviewCount = h.Reviews.Count(r => r.DeletedAt == null)
+                        MinPrice = h.Rooms.Any() ? h.Rooms.Min(r => (decimal?)r.PricePerNight) : 0,
+
+                        // --- SỬA LỖI TẠI ĐÂY ---
+                        // Cũ (Lỗi): h.Reviews...
+                        // Mới: Đi từ Hotel -> Bookings -> Reviews
+                        AvgRating = h.Bookings.SelectMany(b => b.Reviews).Any()
+                                    ? h.Bookings.SelectMany(b => b.Reviews).Average(r => (decimal?)r.Rating)
+                                    : null,
+
+                        ReviewCount = h.Bookings.SelectMany(b => b.Reviews).Count(r => r.DeletedAt == null)
+                        // -----------------------
                     })
                     .ToList();
 

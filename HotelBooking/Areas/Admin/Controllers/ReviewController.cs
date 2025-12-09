@@ -29,15 +29,15 @@ namespace HotelBooking.Areas.Admin.Controllers
             {
                 var query = _db.Reviews.Where(r => r.DeletedAt == null);
 
-                if (hotelId.HasValue)
-                    query = query.Where(r => r.HotelId == hotelId.Value);
+                //if (hotelId.HasValue)
+                //    query = query.Where(r => r.HotelId == hotelId.Value);
 
                 var reviews = query
                     .OrderByDescending(r => r.CreatedAt)
                     .Select(r => new
                     {
                         r.Id,
-                        HotelName = r.Hotel.Name,
+                        //HotelName = r.Hotel.Name,
                         UserEmail = r.User.Email,
                         r.Rating,
                         r.Title,
