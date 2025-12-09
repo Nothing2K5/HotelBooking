@@ -109,7 +109,7 @@
                     if (res.success && Array.isArray(res.data)) {
                         allHotels = res.data;
 
-                        // Fill tỉnh/thành tự động
+                        // Fill tỉnh/thành tự động -
                         const provinces = [...new Set(
                             allHotels.map(h => h.City).filter(c => c && c.trim() !== '')
                         )].sort((a, b) => a.localeCompare(b, 'vi'));

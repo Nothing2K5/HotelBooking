@@ -60,7 +60,6 @@ namespace HotelBooking.Areas.Admin.Controllers
             {
                 model.CreatedAt = DateTime.Now;
                 model.UpdatedAt = DateTime.Now;
-
                 _db.Hotels.InsertOnSubmit(model);
                 _db.SubmitChanges();
 
@@ -212,38 +211,38 @@ namespace HotelBooking.Areas.Admin.Controllers
             try
             {
                 var hotel = _db.Hotels.FirstOrDefault(h => h.Id == id);
-                //if (hotel == null)
-                //    return HttpNotFound();
+                if (hotel == null)
+                    return HttpNotFound();
 
-                //// Ảnh khách sạn
-                //var images = _db.HotelImages
-                //    .Where(i => i.HotelId == id)
-                //    .ToList();
+                // Ảnh khách sạn
+                var images = _db.HotelImages
+                    .Where(i => i.HotelId == id)
+                    .ToList();
 
-                //// Danh sách phòng
-                //var rooms = _db.Rooms
-                //    .Where(r => r.HotelId == id)
-                //    .ToList();
+                // Danh sách phòng
+                var rooms = _db.Rooms
+                    .Where(r => r.HotelId == id)
+                    .ToList();
 
-                //// Ảnh phòng
-                //var roomImages = _db.RoomImages.ToList();
+                // Ảnh phòng
+                var roomImages = _db.RoomImages.ToList();
 
-                //// Review
-                //var reviews = _db.Reviews
-                //    .Where(r => r.HotelId == id && r.DeletedAt == null)
-                //    .OrderByDescending(r => r.CreatedAt)
-                //    .ToList();
+                // Review
+                var reviews = _db.Reviews
+                    .Where(r => r.BookingId == id && r.DeletedAt == null)
+                    .OrderByDescending(r => r.CreatedAt)
+                    .ToList();
 
-                //double avgRating = reviews.Count > 0
-                //    ? reviews.Average(r => r.Rating)
-                //    : 0;
+                double avgRating = reviews.Count > 0
+                    ? reviews.Average(r => r.Rating)
+                    : 0;
 
-                //// Gửi dữ liệu xuống View
-                //ViewBag.HotelImages = images;
-                //ViewBag.Rooms = rooms;
-                //ViewBag.RoomImages = roomImages;
-                //ViewBag.Reviews = reviews;
-                //ViewBag.AvgRating = avgRating;
+                // Gửi dữ liệu xuống View
+                ViewBag.HotelImages = images;
+                ViewBag.Rooms = rooms;
+                ViewBag.RoomImages = roomImages;
+                ViewBag.Reviews = reviews;
+                ViewBag.AvgRating = avgRating;
 
                 return View(hotel);
             }

@@ -37,8 +37,8 @@ namespace HotelBooking.Areas.Admin.Controllers
                         p.Value,
                         p.StartDate,
                         p.EndDate,
-                        //p.UsageLimit,
-                        //p.UsedCount,
+                        /*p.UsageLimit,
+                        p.UsedCount,*/
                         p.IsActive
                     })
                     .ToList();
@@ -73,7 +73,7 @@ namespace HotelBooking.Areas.Admin.Controllers
                 model.IsActive = true;
                 model.CreatedAt = DateTime.Now;
                 model.UpdatedAt = DateTime.Now;
-                //model.UsedCount = 0;
+                /*model.UsedCount = 0;*/
 
                 _db.Promotions.InsertOnSubmit(model);
                 _db.SubmitChanges();
@@ -119,8 +119,8 @@ namespace HotelBooking.Areas.Admin.Controllers
                         ? promoEntity.EndDate.Value.ToString("yyyy-MM-dd")
                         : null,
 
-                    //UsageLimit = promoEntity.UsageLimit ?? 0,
-                    //PerUserLimit = promoEntity.PerUserLimit ?? 0,
+                    /*UsageLimit = promoEntity.UsageLimit ?? 0,
+                    PerUserLimit = promoEntity.PerUserLimit ?? 0,*/
                     promoEntity.IsActive
                 };
 
@@ -149,21 +149,21 @@ namespace HotelBooking.Areas.Admin.Controllers
                 if (promo.Code != model.Code && _db.Promotions.Any(p => p.Code == model.Code && p.Id != model.Id))
                     return Json(new { success = false, message = "Mã khuyến mãi đã tồn tại" });
 
-                // === RÀNG BUỘC QUAN TRỌNG: Không cho Tạm dừng nếu đang có hiệu lực và đã được dùng ===
+                /*// === RÀNG BUỘC QUAN TRỌNG: Không cho Tạm dừng nếu đang có hiệu lực và đã được dùng ===
                 if ((bool)!model.IsActive) // đang cố tắt
                 {
                     bool isCurrentlyActive = promo.StartDate <= DateTime.Today &&
                                            (!promo.EndDate.HasValue || promo.EndDate >= DateTime.Today);
 
-                    //if (isCurrentlyActive && promo.UsedCount > 0)
-                    //{
-                    //    return Json(new
-                    //    {
-                    //        success = false,
-                    //        message = "Không thể tạm dừng khuyến mãi vì đang trong thời gian áp dụng và đã có khách hàng sử dụng!"
-                    //    });
-                    //}
-                }
+                    if (isCurrentlyActive && promo.UsedCount > 0)
+                    {
+                        return Json(new
+                        {
+                            success = false,
+                            message = "Không thể tạm dừng khuyến mãi vì đang trong thời gian áp dụng và đã có khách hàng sử dụng!"
+                        });
+                    }
+                }*/
 
                 // === Cập nhật các trường ===
                 promo.Code = model.Code.Trim().ToUpper();
@@ -172,9 +172,9 @@ namespace HotelBooking.Areas.Admin.Controllers
                 promo.Value = model.Value;
                 promo.StartDate = model.StartDate;
                 promo.EndDate = model.EndDate;
-                //promo.UsageLimit = model.UsageLimit;
-                //promo.PerUserLimit = model.PerUserLimit;
-                promo.IsActive = model.IsActive;
+                /*promo.UsageLimit = model.UsageLimit;
+                promo.PerUserLimit = model.PerUserLimit;*/
+                promo.IsActive = model.IsActive;           
                 promo.UpdatedAt = DateTime.Now;
 
                 _db.SubmitChanges();

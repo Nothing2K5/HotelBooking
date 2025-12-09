@@ -1,17 +1,92 @@
-﻿@section scripts {
+﻿@{
+    ViewBag.Title = "Hủy đặt phòng";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="row justify-content-center py-4">
+    <div class="col-md-8">
+        <div class="card shadow border-danger">
+            <div class="card-header bg-danger text-white">
+                <h4 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Xác nhận hủy đặt phòng</h4>
+            </div>
+
+            <div id="loading_spinner" class="text-center p-5">
+                <div class="spinner-border text-danger" role="status" style="width: 3rem; height: 3rem;">
+                    <span class="visually-hidden">Đang tải...</span>
+                </div>
+                <p class="mt-2 text-muted">Đang kiểm tra chính sách hủy...</p>
+            </div>
+
+            <div class="card-body" id="cancel_content" style="display:none;">
+
+                <div class="alert alert-light border shadow-sm mb-4">
+                    <div class="row">
+                        <div class="col-md-6 border-end">
+                            <p class="mb-1 text-muted">Mã đặt phòng:</p>
+                            <h5 id="lbl_Code" class="fw-bold text-primary">...</h5>
+                            <p class="mb-1 text-muted">Khách sạn:</p>
+                            <strong id="lbl_HotelName">...</strong>
+                        </div>
+                        <div class="col-md-6 ps-md-4">
+                            <p class="mb-1 text-muted">Tổng tiền:</p>
+                            <h5 id="lbl_TotalAmount" class="fw-bold text-danger">...</h5>
+                            <p class="mb-0 small text-muted">
+                                Hạn hủy miễn phí: <span id="lbl_Deadline" class="fw-bold text-dark">...</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="div_PolicyAlert" class="mb-4">
+                </div>
+
+                <hr />
+
+                <form id="cancelForm">
+                    <div class="mb-3">
+                        <label for="cancelReason" class="form-label fw-bold">Lý do hủy (Không bắt buộc):</label>
+                        <textarea class="form-control" id="cancelReason" rows="3" placeholder="Ví dụ: Thay đổi lịch trình, tìm được khách sạn khác..."></textarea>
+                    </div>
+
+                    <div class="form-check mb-4 p-3 bg-light border rounded">
+                        <input class="form-check-input" type="checkbox" id="confirmCancel" style="transform: scale(1.2); margin-right: 10px; margin-left: 0;" required>
+                        <label class="form-check-label fw-bold text-danger" for="confirmCancel" style="margin-left: 10px;">
+                            Tôi đã đọc kỹ chính sách và đồng ý hủy booking này.
+                        </label>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                        <a href="javascript:history.back()" class="btn btn-secondary btn-lg px-4">
+                            <i class="fas fa-arrow-left"></i> Quay lại
+                        </a>
+                        <button type="submit" class="btn btn-danger btn-lg px-5" id="btn_SubmitCancel">
+                            <i class="fas fa-times-circle"></i> Xác nhận hủy
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
     <script>
-        var url_domain = window.location.origin;
+        // Lấy ID từ URL (Ví dụ: /Customer/Booking/Cancel/5 -> lấy số 5)
         var bookingId = window.location.pathname.split('/').pop();
         var currentBookingData = null;
         var isFreeCancellation = false;
 
         $(document).ready(function () {
+            // Kiểm tra ID hợp lệ
             if (!bookingId || isNaN(bookingId)) {
                 alert("Đường dẫn không hợp lệ!");
                 window.location.href = "/Customer/Booking/Index";
                 return;
             }
+
             loadBookingInfo();
+
+            // Xử lý sự kiện submit form
             $("#cancelForm").submit(function (e) {
                 e.preventDefault();
                 submitCancel();
@@ -21,7 +96,7 @@
         function loadBookingInfo() {
             $.ajax({
                 type: "GET",
-                url: '/Customer/Booking/GetBookingInfo', // Sửa URL cho gọn
+                url: '/Customer/Booking/GetBookingInfo',
                 data: { id: bookingId },
                 success: function (response) {
                     if (response.success) {
@@ -31,48 +106,67 @@
                             $("#cancel_content").fadeIn();
                         });
                     } else {
-                        alert("Không tìm thấy thông tin booking.");
+                        alert("Không tìm thấy thông tin booking hoặc bạn không có quyền truy cập.");
                         window.location.href = "/Customer/Booking/Index";
                     }
                 },
                 error: function () {
-                    alert("Lỗi kết nối đến máy chủ.");
+                    alert("Lỗi kết nối đến máy chủ. Vui lòng thử lại sau.");
                 }
             });
         }
 
         function renderUI(data) {
+            // 1. Điền thông tin cơ bản
             $("#lbl_Code").text(data.Code);
-            $("#lbl_HotelName").text(data.HotelName); // Controller trả về HotelName trực tiếp
+            $("#lbl_HotelName").text(data.HotelName);
             $("#lbl_TotalAmount").text(formatCurrency(data.TotalAmount));
 
-            // Xử lý ngày deadline hủy
+            // 2. Xử lý logic thời gian
             var deadlineDate = parseJsonDate(data.FreeCancellationDeadline);
             $("#lbl_Deadline").text(formatDateTime(deadlineDate));
 
+            // So sánh thời gian hiện tại với deadline
             var now = new Date();
             isFreeCancellation = now < deadlineDate;
 
             var htmlAlert = "";
+
             if (isFreeCancellation) {
+                // TRƯỜNG HỢP: MIỄN PHÍ
                 htmlAlert = `
-                            <div class="alert alert-success">
-                                <h5><i class="fas fa-check-circle"></i> Bạn được hủy miễn phí!</h5>
-                                <p class="mb-0">Bạn đang trong thời hạn cho phép. Số tiền <strong>${formatCurrency(data.TotalAmount)}</strong> sẽ được hoàn lại (nếu đã thanh toán).</p>
+                            <div class="alert alert-success border-success">
+                                <h5 class="alert-heading"><i class="fas fa-check-circle"></i> Miễn phí hủy phòng!</h5>
+                                <p class="mb-0">Bạn đang trong thời hạn cho phép hủy miễn phí.</p>
+                                <hr>
+                                <p class="mb-0 text-success fw-bold">Số tiền hoàn lại: ${formatCurrency(data.TotalAmount)}</p>
                             </div>`;
             } else {
-                var penalty = data.TotalAmount * 0.5;
-                var refund = data.TotalAmount - penalty;
+                // TRƯỜNG HỢP: CÓ PHÍ (50%)
+                var penalty = data.TotalAmount * 0.5; // Phí 50%
+                var refund = data.TotalAmount - penalty; // Hoàn lại 50%
+
                 htmlAlert = `
-                            <div class="alert alert-danger">
-                                <h5><i class="fas fa-exclamation-triangle"></i> Hủy quá hạn - Mất phí</h5>
-                                <p>Bạn đã quá hạn hủy miễn phí. Theo chính sách, bạn sẽ chịu phí phạt <strong>50%</strong>.</p>
-                                <ul class="mb-0">
-                                    <li>Phí phạt hủy: <strong class="text-danger">${formatCurrency(penalty)}</strong></li>
-                                    <li>Hoàn lại (nếu đã trả): <strong class="text-success">${formatCurrency(refund)}</strong></li>
-                                </ul>
+                            <div class="alert alert-danger border-danger bg-danger bg-opacity-10">
+                                <h5 class="alert-heading text-danger"><i class="fas fa-exclamation-triangle"></i> Hủy quá hạn - Có tính phí</h5>
+                                <p>Đã quá thời hạn hủy miễn phí (${formatDateTime(deadlineDate)}). Theo chính sách, bạn sẽ chịu phí phạt <strong>50%</strong> giá trị đơn đặt.</p>
+                                <div class="bg-white p-3 rounded border border-danger">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Tổng tiền:</span>
+                                        <span class="fw-bold">${formatCurrency(data.TotalAmount)}</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2 text-danger">
+                                        <span>Phí hủy (50%):</span>
+                                        <span class="fw-bold">-${formatCurrency(penalty)}</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between border-top pt-2">
+                                        <span class="fw-bold text-success">Số tiền hoàn lại:</span>
+                                        <span class="fw-bold text-success">${formatCurrency(refund)}</span>
+                                    </div>
+                                </div>
                             </div>`;
             }
+
             $("#div_PolicyAlert").html(htmlAlert);
         }
 
@@ -83,20 +177,20 @@
             }
 
             var confirmMsg = isFreeCancellation
-                ? "Xác nhận hủy booking này? (Miễn phí hủy)"
-                : "CẢNH BÁO: Bạn sẽ bị trừ phí phạt 50%. Bạn có chắc chắn muốn tiếp tục?";
+                ? "Xác nhận hủy booking này? Bạn sẽ được hoàn tiền 100%."
+                : "CẢNH BÁO QUAN TRỌNG:\nBạn sẽ bị trừ phí phạt 50%.\nSố tiền hoàn lại sẽ thấp hơn số tiền đã thanh toán.\n\nBạn có chắc chắn muốn tiếp tục?";
 
             if (!confirm(confirmMsg)) return;
 
+            // Khóa nút submit
             var btn = $("#btn_SubmitCancel");
             var originalText = btn.html();
-            btn.prop("disabled", true).html('<i class="fas fa-spinner fa-spin"></i> Đang xử lý...');
+            btn.prop("disabled", true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang xử lý...');
 
             var model = {
                 BookingId: parseInt(bookingId),
                 Reason: $("#cancelReason").val(),
-                // Controller không cần IsFreeCancellation từ client để tính tiền (để đảm bảo bảo mật),
-                // nhưng có thể gửi để log hoặc confirm
+                IsFreeCancellation: isFreeCancellation
             };
 
             $.ajax({
@@ -107,33 +201,48 @@
                 success: function (response) {
                     if (response.success) {
                         alert(response.message);
-                        window.location.href = '/Customer/Booking/Index';
+                        window.location.href = '/Customer/Booking/Index'; // Chuyển về danh sách
                     } else {
                         alert("Lỗi: " + response.message);
                         btn.prop("disabled", false).html(originalText);
                     }
                 },
                 error: function () {
-                    alert("Đã xảy ra lỗi hệ thống.");
+                    alert("Đã xảy ra lỗi hệ thống khi gửi yêu cầu hủy.");
                     btn.prop("disabled", false).html(originalText);
                 }
             });
         }
 
-        // Helpers (Giống các file khác)
+        // --- Helper Functions ---
+
+        // Format tiền tệ VNĐ
         function formatCurrency(amount) {
-            return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+            if (amount === null || amount === undefined) return "0 VNĐ";
+            return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount).replace('₫', 'VNĐ');
         }
+
+        // Parse Date từ chuỗi JSON /Date(...)/ hoặc ISO string
         function parseJsonDate(jsonDate) {
             if (!jsonDate) return new Date();
-            if (jsonDate.indexOf("/Date(") !== -1) {
-                return new Date(parseInt(jsonDate.replace(/\/Date\((-?\d+)\)\//, '$1')));
+            // Xử lý định dạng /Date(123456...)/ của .NET MVC
+            if (jsonDate.toString().indexOf("/Date(") !== -1) {
+                var timestamp = parseInt(jsonDate.replace(/\/Date\((-?\d+)\)\//, '$1'));
+                return new Date(timestamp);
             }
+            // Xử lý định dạng ISO chuẩn
             return new Date(jsonDate);
         }
+
+        // Format ngày giờ hiển thị (dd/mm/yyyy hh:mm)
         function formatDateTime(date) {
             if (!(date instanceof Date)) date = parseJsonDate(date);
-            return date.toLocaleString('vi-VN');
+
+            return date.getDate().toString().padStart(2, '0') + "/" +
+                (date.getMonth() + 1).toString().padStart(2, '0') + "/" +
+                date.getFullYear() + " " +
+                date.getHours().toString().padStart(2, '0') + ":" +
+                date.getMinutes().toString().padStart(2, '0');
         }
     </script>
 }

@@ -21,24 +21,20 @@ namespace HotelBooking.Areas.Admin.Controllers
             return View();
         }
 
-        // GET: Admin/Review/GetAllReviews - AJAX
+        // GET: Admin/Review/GetAllReviews (AJAX)
         [HttpGet]
-        public ActionResult GetAllReviews(int? hotelId)
+        public ActionResult GetAllReviews()
         {
             try
             {
-                var query = _db.Reviews.Where(r => r.DeletedAt == null);
-
-                //if (hotelId.HasValue)
-                //    query = query.Where(r => r.HotelId == hotelId.Value);
-
-                var reviews = query
+                var reviews = _db.Reviews
+                    .Where(r => r.DeletedAt == null)
                     .OrderByDescending(r => r.CreatedAt)
                     .Select(r => new
                     {
                         r.Id,
-                        //HotelName = r.Hotel.Name,
-                        UserEmail = r.User.Email,
+                        r.BookingId,
+                        r.UserId,
                         r.Rating,
                         r.Title,
                         r.Content,
@@ -54,38 +50,30 @@ namespace HotelBooking.Areas.Admin.Controllers
             }
         }
 
-        // GET: Admin/Review/Details/5
+        // GET: Admin/Review/Details
         public ActionResult Details(int id)
         {
-            try
-            {
-                var review = _db.Reviews.FirstOrDefault(r => r.Id == id);
-                if (review == null)
-                    return HttpNotFound();
-
-                return View(review);
-            }
-            catch
-            {
+            var review = _db.Reviews.FirstOrDefault(r => r.Id == id);
+            if (review == null)
                 return HttpNotFound();
-            }
+
+            return View(review);
         }
 
-        // POST: Admin/Review/DeleteReview - AJAX
+        // POST: Admin/Review/DeleteReview (AJAX)
         [HttpPost]
         public ActionResult DeleteReview(int id)
         {
             try
             {
                 var review = _db.Reviews.FirstOrDefault(r => r.Id == id);
-                if (review != null)
-                {
-                    review.DeletedAt = DateTime.Now;
-                    _db.SubmitChanges();
+                if (review == null)
+                    return Json(new { success = false, message = "Không tìm thấy đánh giá" });
 
-                    return Json(new { success = true, message = "Xóa đánh giá thành công" });
-                }
-                return Json(new { success = false, message = "Không tìm thấy đánh giá" });
+                review.DeletedAt = DateTime.Now;
+                _db.SubmitChanges();
+
+                return Json(new { success = true, message = "Xóa đánh giá thành công" });
             }
             catch (Exception ex)
             {
