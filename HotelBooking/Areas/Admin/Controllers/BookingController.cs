@@ -132,7 +132,36 @@ namespace HotelBooking.Areas.Admin.Controllers
             {
                 return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
             }
+        }
+
+        [HttpPost]
+        public ActionResult SoftDeleteBooking(int id)
+        {
+            try
+            {
+                var booking = _db.Bookings.FirstOrDefault(b => b.Id == id && b.DeletedAt == null);
+                if (booking == null)
+                    return Json(new { success = false, message = "Booking không tồn tại hoặc đã bị xóa." });
+
+                var status = booking.Status.ToLower();
+
+                // Cho phép xóa nếu: draft | cancelled | paid + đã qua checkout
+                if (status == "paid" && booking.CheckOutDate >= DateTime.Today)
+                {
+                    return Json(new { success = false, message = "Không thể xóa booking Paid khi chưa đến ngày Check-out." });
+                }
+
+                // Các trạng thái khác (draft, cancelled, pending, confirmed) đều cho xóa
+                booking.DeletedAt = DateTime.Now;
+                _db.SubmitChanges();
+
+                return Json(new { success = true, message = "Xóa mềm booking thành công!" });
             }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi hệ thống: " + ex.Message });
+            }
+        }
 
         // Các action bị comment vẫn giữ nguyên comment như yêu cầu
         //// GET: Admin/Booking/Details/5
@@ -151,63 +180,63 @@ namespace HotelBooking.Areas.Admin.Controllers
         //    }
         //}
 
-            //// GET: Admin/Booking/Edit/5
-            //public ActionResult Edit(int id)
-            //{
-            //    ViewBag.BookingId = id;
-            //    return View();
-            //}
+        //// GET: Admin/Booking/Edit/5
+        //public ActionResult Edit(int id)
+        //{
+        //    ViewBag.BookingId = id;
+        //    return View();
+        //}
 
-            //// GET: Admin/Booking/GetBookingById/5 - AJAX
-            //[HttpGet]
-            //public ActionResult GetBookingById(int id)
-            //{
-            //    try
-            //    {
-            //        var booking = _db.Bookings
-            //            .Where(b => b.Id == id)
-            //            .Select(b => new
-            //            {
-            //                b.Id,
-            //                b.Code,
-            //                b.Status,
-            //                b.Note,
-            //                CheckInDate = b.CheckInDate.ToString("yyyy-MM-dd"),
-            //                CheckOutDate = b.CheckOutDate.ToString("yyyy-MM-dd"),
-            //                b.Guests
-            //            })
-            //            .FirstOrDefault();
-            //        if (booking == null)
-            //            return Json(new { success = false, message = "Không tìm thấy booking" }, JsonRequestBehavior.AllowGet);
-            //        return Json(new { success = true, data = booking }, JsonRequestBehavior.AllowGet);
-            //    }
-            //    catch (Exception ex)
-            //    {
-            //        return Json(new { success = false, message = "Lỗi: " + ex.Message }, JsonRequestBehavior.AllowGet);
-            //    }
-            //}
+        //// GET: Admin/Booking/GetBookingById/5 - AJAX
+        //[HttpGet]
+        //public ActionResult GetBookingById(int id)
+        //{
+        //    try
+        //    {
+        //        var booking = _db.Bookings
+        //            .Where(b => b.Id == id)
+        //            .Select(b => new
+        //            {
+        //                b.Id,
+        //                b.Code,
+        //                b.Status,
+        //                b.Note,
+        //                CheckInDate = b.CheckInDate.ToString("yyyy-MM-dd"),
+        //                CheckOutDate = b.CheckOutDate.ToString("yyyy-MM-dd"),
+        //                b.Guests
+        //            })
+        //            .FirstOrDefault();
+        //        if (booking == null)
+        //            return Json(new { success = false, message = "Không tìm thấy booking" }, JsonRequestBehavior.AllowGet);
+        //        return Json(new { success = true, data = booking }, JsonRequestBehavior.AllowGet);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return Json(new { success = false, message = "Lỗi: " + ex.Message }, JsonRequestBehavior.AllowGet);
+        //    }
+        //}
 
-            //// POST: Admin/Booking/UpdateBooking - AJAX
-            //[HttpPost]
-            //public ActionResult UpdateBooking(Booking model)
-            //{
-            //    try
-            //    {
-            //        var booking = _db.Bookings.FirstOrDefault(b => b.Id == model.Id);
-            //        if (booking != null)
-            //        {
-            //            booking.Status = model.Status;
-            //            booking.Note = model.Note;
-            //            booking.UpdatedAt = DateTime.Now;
-            //            _db.SubmitChanges();
-            //            return Json(new { success = true, message = "Cập nhật thành công!" });
-            //        }
-            //        return Json(new { success = false, message = "Không tìm thấy booking" });
-            //    }
-            //    catch (Exception ex)
-            //    {
-            //        return Json(new { success = false, message = "Lỗi: " + ex.Message });
-            //    }
-            //}
+        //// POST: Admin/Booking/UpdateBooking - AJAX
+        //[HttpPost]
+        //public ActionResult UpdateBooking(Booking model)
+        //{
+        //    try
+        //    {
+        //        var booking = _db.Bookings.FirstOrDefault(b => b.Id == model.Id);
+        //        if (booking != null)
+        //        {
+        //            booking.Status = model.Status;
+        //            booking.Note = model.Note;
+        //            booking.UpdatedAt = DateTime.Now;
+        //            _db.SubmitChanges();
+        //            return Json(new { success = true, message = "Cập nhật thành công!" });
+        //        }
+        //        return Json(new { success = false, message = "Không tìm thấy booking" });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return Json(new { success = false, message = "Lỗi: " + ex.Message });
+        //    }
+        //}
     }
     }

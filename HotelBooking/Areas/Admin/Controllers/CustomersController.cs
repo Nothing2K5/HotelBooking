@@ -152,6 +152,61 @@ namespace HotelBooking.Areas.Admin.Controllers
                 return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
             }
         }
+
+        [HttpPost]
+        public ActionResult ToggleLockUser(int id, bool isActive)
+        {
+            try
+            {
+                var user = _db.Users.FirstOrDefault(u => u.Id == id);
+                if (user == null)
+                    return Json(new { success = false, message = "Tài khoản không tồn tại!" });
+
+                // Nếu đang cố KHÓA (isActive = false)
+                if (!isActive)
+                {
+                    // 1. Không cho khóa admin cuối cùng
+                    if (user.Role == "admin")
+                    {
+                        var activeAdminCount = _db.Users.Count(u => u.Role == "admin" && u.IsActive == true);
+                        if (activeAdminCount <= 1)
+                            return Json(new { success = false, message = "Không thể khóa! Đây là quản trị viên cuối cùng còn hoạt động." });
+                    }
+
+                    // 2. Không cho khóa customer nếu có booking chưa check-out
+                    if (user.Role == "customer")
+                    {
+                        var hasActiveBooking = _db.Bookings.Any(b =>
+                            b.UserId == user.Id &&
+                            b.DeletedAt == null &&
+                            (b.Status == "paid" || b.Status == "confirmed") &&
+                            b.CheckOutDate >= DateTime.Today);
+
+                        if (hasActiveBooking)
+                            return Json(new { success = false, message = "Không thể khóa! Khách hàng đang có đặt phòng chưa hoàn tất (Paid/Confirmed)." });
+                    }
+                }
+
+                // Thực hiện thay đổi trạng thái
+                user.IsActive = isActive;
+                if (!isActive)
+                    user.DeletedAt = DateTime.Now;
+                else
+                    user.DeletedAt = null;
+
+                _db.SubmitChanges();
+
+                return Json(new
+                {
+                    success = true,
+                    message = isActive ? "Đã mở khóa tài khoản thành công!" : "Đã khóa tài khoản thành công!"
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi hệ thống: " + ex.Message });
+            }
+        }
         //[HttpPost]
         //public ActionResult CreateCustomer(string FullName, string Phone, string Email = "", string Address = "", string Notes = "")
         //{

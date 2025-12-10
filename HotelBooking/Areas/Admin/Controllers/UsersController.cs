@@ -26,48 +26,25 @@ namespace HotelBooking.Areas.Admin.Controllers
         {
             try
             {
-                // Lấy tất cả user + join thông tin tên và phone
-                var users = _db.Users.Select(u => new
+                var query = _db.Users.Select(u => new
                 {
                     id = u.Id,
                     email = u.Email,
-                    password = u.Password,
                     role = u.Role,
-                    isActive = u.IsActive,
-                    fullName = u.Role == "admin"
-                        ? _db.Admins.Where(a => a.UserId == u.Id).Select(a => a.FullName).FirstOrDefault()
-                        : _db.Customers.Where(c => c.UserId == u.Id).Select(c => c.FullName).FirstOrDefault(),
-                    phone = u.Role == "customer"
-                        ? _db.Customers.Where(c => c.UserId == u.Id).Select(c => c.Phone).FirstOrDefault()
-                        : (string)null
-                }).AsQueryable();
+                    // ÉP NULLABLE BOOL THÀNH BOOL RÕ RÀNG
+                    isActive = u.IsActive == true   // Đây là dòng cứu cả thế giới!
+                });
 
-                // === TÌM KIẾM ===
                 if (!string.IsNullOrWhiteSpace(keyword))
                 {
                     keyword = keyword.Trim().ToLower();
-                    users = users.Where(u =>
-                        u.email.ToLower().Contains(keyword) ||
-                        (u.fullName != null && u.fullName.ToLower().Contains(keyword)) ||
-                        (u.phone != null && u.phone.Contains(keyword))
-                    );
+                    query = query.Where(u => u.email.ToLower().Contains(keyword));
                 }
 
-                // === LỌC THEO ROLE ===
-                if (!string.IsNullOrWhiteSpace(role) && (role == "admin" || role == "customer"))
-                {
-                    users = users.Where(u => u.role == role);
-                }
+                if (!string.IsNullOrEmpty(role) && (role == "admin" || role == "customer"))
+                    query = query.Where(u => u.role == role);
 
-                // Chỉ trả về những field cần thiết (ẩn password nếu muốn bảo mật)
-                var result = users.Select(u => new
-                {
-                    id = u.id,
-                    email = u.email,
-                    password = u.password, // bạn đang hiển thị → có thể đổi thành "••••••" ở View
-                    role = u.role,
-                    isActive = u.isActive
-                }).ToList();
+                var result = query.ToList();
 
                 return Json(new { success = true, data = result }, JsonRequestBehavior.AllowGet);
             }
@@ -254,6 +231,58 @@ namespace HotelBooking.Areas.Admin.Controllers
         public ActionResult Create()
         {
             return View();
+        }
+        // POST: Admin/Users/ToggleLockUser - Khóa / Mở khóa tài khoản
+        [HttpPost]
+        public ActionResult ToggleLockUser(int id, bool isActive)
+        {
+            try
+            {
+                var user = _db.Users.FirstOrDefault(u => u.Id == id);
+                if (user == null)
+                    return Json(new { success = false, message = "Tài khoản không tồn tại!" });
+
+                // Nếu đang cố KHÓA (isActive = false)
+                if (!isActive)
+                {
+                    // 1. Không cho khóa admin cuối cùng
+                    if (user.Role == "admin")
+                    {
+                        var activeAdminCount = _db.Users.Count(u => u.Role == "admin" && u.IsActive == true);
+                        if (activeAdminCount <= 1)
+                            return Json(new { success = false, message = "Không thể khóa! Đây là quản trị viên cuối cùng còn hoạt động." });
+                    }
+
+                    // 2. Không cho khóa customer nếu đang có booking chưa check-out
+                    if (user.Role == "customer")
+                    {
+                        var hasActiveBooking = _db.Bookings.Any(b =>
+                            b.UserId == user.Id &&
+                            b.DeletedAt == null &&
+                            (b.Status == "paid" || b.Status == "confirmed") &&
+                            b.CheckOutDate >= DateTime.Today);
+
+                        if (hasActiveBooking)
+                            return Json(new { success = false, message = "Không thể khóa! Khách hàng đang có đặt phòng chưa hoàn tất." });
+                    }
+                }
+
+                // Thực hiện thay đổi
+                user.IsActive = isActive;
+                user.DeletedAt = isActive ? (DateTime?)null : DateTime.Now;
+
+                _db.SubmitChanges();
+
+                return Json(new
+                {
+                    success = true,
+                    message = isActive ? "Đã mở khóa tài khoản thành công!" : "Đã khóa tài khoản thành công!"
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi hệ thống: " + ex.Message });
+            }
         }
 
     }

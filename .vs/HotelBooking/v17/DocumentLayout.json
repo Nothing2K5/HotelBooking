@@ -7,7 +7,7 @@
       "RelativeMoniker": "D:0:0:{75EFFF97-BF1A-4F51-9734-E6E903D2D519}|HotelBooking\\HotelBooking.csproj|solutionrelative:hotelbooking\\areas\\customer\\views\\booking\\cancel.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{75EFFF97-BF1A-4F51-9734-E6E903D2D519}|HotelBooking\\HotelBooking.csproj|d:\\asp_net_workspace\\hotelbooking\\hotelbooking\\areas\\admin\\controllers\\promocontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{75EFFF97-BF1A-4F51-9734-E6E903D2D519}|HotelBooking\\HotelBooking.csproj|D:\\ASP_NET_WORKSPACE\\HotelBooking\\hotelbooking\\areas\\admin\\controllers\\promocontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{75EFFF97-BF1A-4F51-9734-E6E903D2D519}|HotelBooking\\HotelBooking.csproj|solutionrelative:hotelbooking\\areas\\admin\\controllers\\promocontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
@@ -67,8 +67,7 @@
               "RelativeToolTip": "HotelBooking\\Areas\\Admin\\Controllers\\PromoController.cs",
               "ViewState": "AgIAAAwAAAAAAAAAAAAwwBgAAAARAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-09T09:42:22.598Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-12-09T09:42:22.598Z"
             },
             {
               "$type": "Document",

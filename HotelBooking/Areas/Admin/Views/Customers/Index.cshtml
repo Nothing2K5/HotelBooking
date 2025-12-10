@@ -166,7 +166,8 @@
                     html += "<td>" + customer.FullName + "</td>";
                     html += "<td>" + customer.Phone + "</td>";
                     html += "<td>" + rankText + "</td>";
-                    html += "<td><a href='" + url_domain + "/Admin/Customers/Edit/" + customer.UserId + "' class='btn btn-sm btn-warning me-1'>Sửa</a> <button type='button' class='btn btn-sm btn-danger ms-1' onclick='deleteCustomer(" + customer.UserId + ")'>Xóa</button></td>";
+                    html += "<td><a href='" + url_domain + "/Admin/Customers/Edit/" + customer.UserId + "' class='btn btn-sm btn-warning me-1'>Sửa</a> </td>";
+                    //<button type='button' class='btn btn-sm btn-danger ms-1' onclick='deleteCustomer(" + customer.UserId + ")'>Xóa</button>
                     html += "</tr>";
                 }
             }

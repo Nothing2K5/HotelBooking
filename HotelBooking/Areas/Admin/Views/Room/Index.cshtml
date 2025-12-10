@@ -36,10 +36,11 @@
                         <tr>
                             <th>STT</th>
                             <th>Khách sạn</th>
-                            <th>Tên phòng</th>
+                            <th>Mã phòng</th>
+                            <th>Số phòng</th>
+                            <th>Mô tả</th>
                             <th>Sức chứa</th>
                             <th>Giá/đêm</th>
-                            <th>Số phòng</th>
                             <th>Trạng thái</th>
                             <th>Thao tác</th>
                         </tr>
@@ -149,11 +150,13 @@
                     html += "<tr>";
                     html += "<td>" + (start + i + 1) + "</td>";
                     html += "<td>" + room.HotelName + "</td>";
-                    html += "<td>" + room.Name + "</td>";
+                    html += "<td>" + room.Code + "</td>";
+                    html += "<td><strong>" + room.RoomNumber + "</strong></td>";
+                    html += "<td>" + (room.Description || '—') + "</td>";
                     html += "<td>" + room.Capacity + " người</td>";
                     html += "<td>" + room.PricePerNight.toLocaleString() + " VNĐ</td>";
-                    html += "<td>" + room.TotalRooms + "</td>";
-                    html += "<td>" + statusBadge + "</td>";
+                    html += "<td><span class='badge bg-" + (room.Status === 'available' ? 'success' : 'warning') + "'>" +
+                        (room.Status || 'available') + "</span></td>";
                     html += "<td>";
                     // NÚT CHI TIẾT (màu xanh dương, đẹp)
                     html += "<a href='" + url_domain + "/Admin/Room/Details/" + room.Id + "' class='btn btn-sm btn-info me-1'>";

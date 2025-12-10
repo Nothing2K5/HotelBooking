@@ -141,10 +141,10 @@ namespace HotelBooking.Areas.Admin.Controllers
                     bool hasActiveBooking = _db.Bookings.Any(b => b.HotelId == model.Id &&
                         (b.Status == "pending" ||
                          b.Status == "confirmed" ||
-                         b.Status == "paid" ||
-                         b.Status == "cancelled" ||
-                         b.Status == "draft") &&
-                        (b.CheckOutDate == null || b.CheckOutDate >= DateTime.Today));
+                         b.Status == "paid")
+                         /*b.Status == "cancelled" ||
+                         b.Status == "draft")*/ &&
+                        (b.CheckOutDate != null && b.CheckOutDate >= DateTime.Today));
 
                     if (hasActiveBooking)
                     {
@@ -260,22 +260,35 @@ namespace HotelBooking.Areas.Admin.Controllers
             try
             {
                 var hotel = _db.Hotels.FirstOrDefault(h => h.Id == id);
-                if (hotel != null)
+                if (hotel == null)
+                    return Json(new { success = false, message = "Không tìm thấy khách sạn" });
+
+                // ===== CHECK ACTIVE BOOKING (status + date) =====
+                bool hasActiveBookings = _db.Bookings.Any(b =>
+                    b.HotelId == id &&
+                    (b.Status == "pending" ||
+                     b.Status == "confirmed" ||
+                     b.Status == "paid") &&
+                    b.CheckOutDate != null &&
+                    b.CheckOutDate >= DateTime.Today
+                );
+
+                if (hasActiveBookings)
                 {
-                    // Check if hotel has active bookings
-                    var hasActiveBookings = _db.Bookings.Any(b => b.HotelId == id &&
-                                                                  (b.Status == "paid" || b.Status == "confirmed"));
-
-                    if (hasActiveBookings)
-                        return Json(new { success = false, message = "Không thể xóa khách sạn có booking đang hoạt động" });
-
-                    hotel.IsActive = false;
-                    hotel.DeletedAt = DateTime.Now;
-                    _db.SubmitChanges();
-
-                    return Json(new { success = true, message = "Xóa thành công" });
+                    return Json(new
+                    {
+                        success = false,
+                        message = "Không thể xóa khách sạn vì còn booking chưa kết thúc!"
+                    });
                 }
-                return Json(new { success = false, message = "Không tìm thấy khách sạn" });
+
+                // ===== SOFT DELETE =====
+                hotel.IsActive = false;
+                hotel.DeletedAt = DateTime.Now;
+
+                _db.SubmitChanges();
+
+                return Json(new { success = true, message = "Xóa thành công" });
             }
             catch (Exception ex)
             {

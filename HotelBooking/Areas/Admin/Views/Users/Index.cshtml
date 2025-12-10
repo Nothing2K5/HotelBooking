@@ -17,11 +17,10 @@
             </div>
         </div>
 
-        <!-- PHẦN MỚI: Tìm kiếm + Lọc vai trò -->
         <div class="row mt-3">
             <div class="col-md-4 mb-3">
                 <label for="searchUser">Tìm kiếm tài khoản:</label>
-                <input type="text" class="form-control" id="searchUser" placeholder="Nhập email, tên, số điện thoại...">
+                <input type="text" class="form-control" id="searchUser" placeholder="Nhập email...">
             </div>
             <div class="col-md-3 mb-3">
                 <label for="filterRole">Lọc theo vai trò:</label>
@@ -32,11 +31,11 @@
                 </select>
             </div>
             <div class="col-md-5 mb-3 text-end">
-                <a href="/Admin/Users/Create" class="btn btn-primary">Thêm tài khoản mới</a>
+                <a href="/Admin/Users/Create" class="btn btn-success">+ Thêm tài khoản mới</a>
             </div>
         </div>
 
-        <!-- BẢNG + PHÂN TRANG DƯỚI BẢNG (đồng bộ với tất cả trang admin) -->
+        <!-- BẢNG + PHÂN TRANG (đồng bộ hoàn toàn với trang Room) -->
         <div class="card shadow-sm mt-4">
             <div class="table-responsive">
                 <table id="tbl_users" class="table table-bordered table-striped table-hover align-middle mb-0">
@@ -45,7 +44,6 @@
                             <th>STT</th>
                             <th>ID</th>
                             <th>Email</th>
-                            <th>Mật Khẩu</th>
                             <th>Vai trò</th>
                             <th>Trạng thái</th>
                             <th>Thao tác</th>
@@ -53,7 +51,7 @@
                     </thead>
                     <tbody>
                         <tr>
-                            <td colspan="7" class="text-center py-5">
+                            <td colspan="6" class="text-center py-5">
                                 <div class="spinner-border text-primary" role="status">
                                     <span class="visually-hidden">Đang tải...</span>
                                 </div>
@@ -63,7 +61,7 @@
                 </table>
             </div>
 
-            <!-- Footer: thông tin + phân trang -->
+            <!-- Footer giống hệt trang Room -->
             <div class="card-footer bg-white border-top-0">
                 <div class="d-flex justify-content-between align-items-center py-2">
                     <small class="text-muted">
@@ -83,63 +81,49 @@
     <script>
         var url_domain = window.location.origin;
         var searchTimeout;
-
-        let allUsers = [];           // ← dữ liệu gốc từ server
-        let filteredUsers = [];      // ← dùng để phân trang
+        let allUsers = [];
+        let filteredUsers = [];
         const pageSize = 10;
         let currentPage = 1;
 
         $(document).ready(function () {
-            loadUsers(); // Load lần đầu
+            loadUsers();
 
-            // Tìm kiếm khi gõ (debounce 300ms)
             $("#searchUser").on("keyup", function () {
                 clearTimeout(searchTimeout);
                 searchTimeout = setTimeout(loadUsers, 300);
             });
 
-            // Lọc khi thay đổi dropdown
-            $("#filterRole").on("change", function () {
-                loadUsers();
-            });
+            $("#filterRole").on("change", loadUsers);
         });
 
         function loadUsers() {
             var keyword = $("#searchUser").val().trim();
             var role = $("#filterRole").val();
             var url = url_domain + '/Admin/Users/GetAllUsers';
-            var hasParam = false;
+            if (keyword !== "") url += '?keyword=' + encodeURIComponent(keyword);
+            if (role !== "") url += (keyword !== "" ? '&' : '?') + 'role=' + role;
 
-            if (keyword !== "") {
-                url += '?keyword=' + encodeURIComponent(keyword);
-                hasParam = true;
-            }
-            if (role !== "") {
-                url += (hasParam ? '&' : '?') + 'role=' + encodeURIComponent(role);
-            }
-
-            // Hiển thị loading nhẹ
-            $("#tbl_users tbody").html('<tr><td colspan="7" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr>');
+            $("#tbl_users tbody").html('<tr><td colspan="6" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr>');
 
             $.ajax({
                 type: "GET",
                 url: url,
-                success: function (response) {
-                    if (response.success) {
-                        var users = response.data;
-                        allUsers = users;
-                        filteredUsers = users;
+                success: function (res) {
+                    if (res.success && res.data) {
+                        allUsers = res.data;
+                        filteredUsers = res.data;
                         currentPage = 1;
                         renderTable();
                     } else {
-                        $("#tbl_users tbody").html('<tr><td colspan="7" class="text-center text-danger py-4">Lỗi: ' + response.message + '</td></tr>');
+                        $("#tbl_users tbody").html('<tr><td colspan="6" class="text-center text-danger py-4">Lỗi tải dữ liệu</td></tr>');
                         $("#resultCount").text('0');
                         $("#totalCount").text('0');
                         $("#pagination").html('');
                     }
                 },
                 error: function () {
-                    $("#tbl_users tbody").html('<tr><td colspan="7" class="text-center text-danger py-4">Lỗi kết nối server</td></tr>');
+                    $("#tbl_users tbody").html('<tr><td colspan="6" class="text-center text-danger py-4">Lỗi kết nối server</td></tr>');
                     $("#resultCount").text('0');
                     $("#totalCount").text('0');
                     $("#pagination").html('');
@@ -147,44 +131,45 @@
             });
         }
 
-        // Hàm render bảng + phân trang (mới thêm)
         function renderTable() {
             const start = (currentPage - 1) * pageSize;
             const end = start + pageSize;
             const data = filteredUsers.slice(start, end);
-
             let html = '';
+
             if (data.length === 0) {
-                html = '<tr><td colspan="7" class="text-center py-5 text-muted">Không tìm thấy tài khoản nào.</td></tr>';
+                html = '<tr><td colspan="6" class="text-center py-5 text-muted">Không tìm thấy tài khoản nào.</td></tr>';
             } else {
                 for (var i = 0; i < data.length; i++) {
                     var u = data[i];
-                    var status = u.isActive
-                        ? '<span class="badge bg-success">Hoạt động</span>'
-                        : '<span class="badge bg-secondary">Khóa</span>';
                     var roleText = u.role === "admin" ? "Quản trị" : "Khách hàng";
+                    var statusBadge = u.isActive
+                        ? '<span class="badge bg-success">Hoạt động</span>'
+                        : '<span class="badge bg-secondary">Đã khóa</span>';
+
+                    // Nút Khóa = đỏ như nút Xóa bên Room
+                    // Nút Mở khóa = xanh lá
+                    var lockBtn = u.isActive
+                        ? `<button type="button" class="btn btn-sm btn-danger" onclick="toggleLockUser(${u.id}, false)">Khóa</button>`
+                        : `<button type="button" class="btn btn-sm btn-success" onclick="toggleLockUser(${u.id}, true)">Mở khóa</button>`;
 
                     html += "<tr>";
                     html += "<td>" + (start + i + 1) + "</td>";
                     html += "<td>" + u.id + "</td>";
                     html += "<td>" + u.email + "</td>";
-                    html += "<td>" + u.password + "</td>";
                     html += "<td>" + roleText + "</td>";
-                    html += "<td>" + status + "</td>";
+                    html += "<td>" + statusBadge + "</td>";
                     html += "<td>";
-                    // ĐÃ ĐỔI THÀNH MÀU VÀNG WARNING NHƯ YÊU CẦU
-                    html += "<a href='/Admin/Users/Edit/" + u.id + "' class='btn btn-sm btn-warning me-1'>Sửa</a> ";
-                    html += "</td>";
-                    html += "</tr>";
+                    html += "<a href='" + url_domain + "/Admin/Users/Edit/" + u.id + "' class='btn btn-sm btn-warning me-1'>Sửa</a> ";
+                    html += lockBtn;
+                    html += "</td></tr>";
                 }
             }
-            $("#tbl_users tbody").html(html);
 
-            // Cập nhật số lượng
+            $("#tbl_users tbody").html(html);
             $("#resultCount").text(data.length);
             $("#totalCount").text(filteredUsers.length);
 
-            // Phân trang
             const pages = Math.max(1, Math.ceil(filteredUsers.length / pageSize));
             let pag = '';
             for (let i = 1; i <= pages; i++) {
@@ -193,6 +178,28 @@
                             </li>`;
             }
             $("#pagination").html(pag);
+        }
+
+        function toggleLockUser(userId, makeActive) {
+            if (confirm(makeActive ? "Bạn có chắc muốn mở khóa tài khoản này?" : "Bạn có chắc muốn khóa tài khoản này?")) {
+                $.ajax({
+                    type: "POST",
+                    url: url_domain + '/Admin/Users/ToggleLockUser',
+                    data: JSON.stringify({ id: userId, isActive: makeActive }),
+                    contentType: "application/json; charset=utf-8",
+                    success: function (res) {
+                        if (res.success) {
+                            alert(res.message || "Thao tác thành công!");
+                            loadUsers();
+                        } else {
+                            alert("Lỗi: " + res.message);
+                        }
+                    },
+                    error: function () {
+                        alert("Lỗi kết nối server!");
+                    }
+                });
+            }
         }
     </script>
 }

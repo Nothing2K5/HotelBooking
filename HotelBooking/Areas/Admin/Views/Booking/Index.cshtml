@@ -1,5 +1,5 @@
 ﻿@{
-    ViewBag.Title = "Quản lý Booking";
+    ViewData["Title"] = "Quản lý Booking";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
@@ -36,7 +36,6 @@
             </div>
         </div>
 
-        <!-- BẢNG + PHÂN TRANG ĐẨY XUỐNG DƯỚI BẢNG -->
         <div class="card shadow-sm mt-4">
             <div class="table-responsive">
                 <table class="table table-bordered table-striped table-hover align-middle mb-0">
@@ -50,11 +49,12 @@
                             <th>KHÁCH</th>
                             <th>TỔNG TIỀN</th>
                             <th>TRẠNG THÁI</th>
+                            <th class="text-center">THAO TÁC</th>
                         </tr>
                     </thead>
                     <tbody id="bookingsTable">
                         <tr>
-                            <td colspan="8" class="text-center py-5">
+                            <td colspan="9" class="text-center py-5">
                                 <div class="spinner-border text-primary" role="status">
                                     <span class="visually-hidden">Loading...</span>
                                 </div>
@@ -64,7 +64,6 @@
                 </table>
             </div>
 
-            <!-- PHÂN TRANG + SỐ LƯỢNG Ở DƯỚI BẢNG (giống hệt trang Khách sạn) -->
             <div class="card-footer bg-white border-top-0">
                 <div class="d-flex justify-content-between align-items-center py-2">
                     <small class="text-muted">
@@ -94,7 +93,7 @@
         }
 
         function getStatusBadge(status) {
-            const s = (status || '').trim().toLowerCase();
+            const s = (status || '').toLowerCase();
             const map = {
                 'confirmed': 'bg-success text-white',
                 'paid': 'bg-success text-white',
@@ -105,17 +104,17 @@
             return map[s] || 'bg-secondary text-white';
         }
 
-        function formatToDateInput(dateStr) {
+        function parseDate(dateStr) {
             if (!dateStr || dateStr === 'N/A') return null;
             const [m, d, y] = dateStr.split('/');
-            return `20${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+            return new Date(`20${y}`, m - 1, d);
         }
 
         function loadHotels() {
             const select = document.getElementById('hotelFilter');
             select.innerHTML = '<option value="">Tất cả khách sạn</option>';
             fetch('/Admin/Booking/GetAllHotels')
-                .then(r => r.ok ? r.json() : Promise.reject())
+                .then(r => r.json())
                 .then(res => {
                     if (res.success && res.data?.length > 0) {
                         res.data.forEach(h => {
@@ -131,30 +130,36 @@
 
         function loadBookings() {
             const tbody = document.getElementById('bookingsTable');
-            tbody.innerHTML = `<tr><td colspan="8" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="9" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr>`;
 
             fetch('/Admin/Booking/GetAllBookings')
-                .then(r => r.ok ? r.json() : Promise.reject())
+                .then(r => r.json())
                 .then(res => {
                     if (res.success && Array.isArray(res.data)) {
-                        allBookings = res.data.map(b => ({
-                            id: b.Id,
-                            code: b.Code,
-                            customerName: safe(b.CustomerName, 'Không xác định'),
-                            customerEmail: safe(b.CustomerEmail, 'N/A'),
-                            hotelName: safe(b.HotelName, 'Không có'),
-                            checkInDate: safe(b.CheckInDate),
-                            checkOutDate: safe(b.CheckOutDate),
-                            guests: b.Guests || 0,
-                            totalAmount: b.TotalAmount || 0,
-                            status: (b.Status || 'Pending').trim().replace(/^\w/, c => c.toUpperCase()),
-                            createdAt: safe(b.CreatedAt)
-                        }));
+                        allBookings = res.data
+                            .filter(b => !b.DeletedAt) // Ẩn hoàn toàn booking đã xóa mềm
+                            .map(b => ({
+                                id: b.Id,
+                                code: b.Code,
+                                customerName: safe(b.CustomerName, 'Không xác định'),
+                                customerEmail: safe(b.CustomerEmail, 'N/A'),
+                                hotelName: safe(b.HotelName, 'Không có'),
+                                checkInDate: safe(b.CheckInDate),
+                                checkOutDate: safe(b.CheckOutDate),
+                                guests: b.Guests || 0,
+                                totalAmount: b.TotalAmount || 0,
+                                status: b.Status.trim(),
+                                rawStatus: b.Status.toLowerCase(),
+                                checkOutDateObj: parseDate(b.CheckOutDate),
+                                createdAt: b.CreatedAt
+                            }));
                         applyFilters();
+                    } else {
+                        tbody.innerHTML = `<tr><td colspan="9" class="text-center py-5 text-danger">Không có dữ liệu</td></tr>`;
                     }
                 })
                 .catch(() => {
-                    tbody.innerHTML = `<tr><td colspan="8" class="text-center py-5 text-danger">Lỗi tải dữ liệu</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="9" class="text-center py-5 text-danger">Lỗi tải dữ liệu</td></tr>`;
                 });
         }
 
@@ -167,10 +172,13 @@
             filteredBookings = allBookings.filter(b => {
                 if (search && !b.code.toLowerCase().includes(search)) return false;
                 if (hotel && b.hotelName !== hotel) return false;
-                const ci = formatToDateInput(b.checkInDate);
-                const co = formatToDateInput(b.checkOutDate);
-                if (checkIn && ci && ci < checkIn) return false;
-                if (checkOut && co && co > checkOut) return false;
+
+                const ciDate = parseDate(b.checkInDate);
+                const coDate = parseDate(b.checkOutDate);
+
+                if (checkIn && ciDate && ciDate < new Date(checkIn)) return false;
+                if (checkOut && coDate && coDate > new Date(checkOut)) return false;
+
                 return true;
             });
 
@@ -195,26 +203,42 @@
             const total = filteredBookings.length;
             const pages = Math.max(1, Math.ceil(total / pageSize));
             const start = (currentPage - 1) * pageSize;
-            const end = Math.min(start + pageSize, total);
-            const pageData = filteredBookings.slice(start, end);
+            const pageData = filteredBookings.slice(start, start + pageSize);
 
             resultCount.textContent = pageData.length;
             totalCount.textContent = total;
 
             if (total === 0) {
-                tbody.innerHTML = `<tr><td colspan="8" class="text-center py-5 text-muted">Không tìm thấy booking nào</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="9" class="text-center py-5 text-muted">Không tìm thấy booking nào</td></tr>`;
                 pagination.innerHTML = '';
                 return;
             }
 
             let html = '';
-            pageData.forEach((b, i) => {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            pageData.forEach(b => {
+                // Quy tắc xóa mềm: draft | cancelled | paid + đã qua checkout
+                const canDelete =
+                    b.rawStatus === 'draft' ||
+                    b.rawStatus === 'cancelled' ||
+                    (b.rawStatus === 'paid' && b.checkOutDateObj && b.checkOutDateObj < today);
+
+                const deleteBtn = canDelete
+                    ? `<button type="button" class="btn btn-sm btn-outline-danger" onclick="softDeleteBooking(${b.id})" title="Xóa mềm">
+                             <i class="bi bi-trash"></i>
+                           </button>`
+                    : `<button type="button" class="btn btn-sm btn-secondary" disabled title="Chỉ xóa được khi: Draft, Cancelled hoặc Paid + đã qua ngày Check-out">
+                             <i class="bi bi-lock"></i>
+                           </button>`;
+
                 html += `
                         <tr>
                             <td><strong>${b.code}</strong><br><small class="text-muted">${b.createdAt}</small></td>
                             <td>
-                                <div style="display:flex;align-items:center;gap:8px;">
-                                    <i class="bi bi-person-circle text-muted"></i>
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-person-circle text-muted fs-4"></i>
                                     <div>
                                         <strong>${b.customerName}</strong><br>
                                         <small class="text-muted">${b.customerEmail}</small>
@@ -227,8 +251,12 @@
                             <td>${b.guests}</td>
                             <td><strong>${formatCurrency(b.totalAmount)}</strong></td>
                             <td><span class="badge rounded-pill ${getStatusBadge(b.status)} px-3 py-2">${b.status}</span></td>
+                            <td class="text-center">
+                                ${deleteBtn}
+                            </td>
                         </tr>`;
             });
+
             tbody.innerHTML = html;
 
             // Phân trang
@@ -241,10 +269,32 @@
             pagination.innerHTML = pag;
         }
 
-        document.getElementById('searchInput').addEventListener('keypress', e => {
+        function softDeleteBooking(id) {
+            if (confirm("Xác nhận xóa mềm booking này?\nBooking sẽ bị ẩn khỏi danh sách và không thể khôi phục dễ dàng.")) {
+                fetch('/Admin/Booking/SoftDeleteBooking', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id })
+                })
+                    .then(r => r.json())
+                    .then(res => {
+                        if (res.success) {
+                            alert(res.message || "Đã xóa mềm thành công!");
+                            loadBookings();
+                        } else {
+                            alert("Không thể xóa: " + res.message);
+                        }
+                    })
+                    .catch(() => alert("Lỗi kết nối server!"));
+            }
+        }
+
+        // Enter để tìm
+        document.getElementById('searchInput')?.addEventListener('keypress', e => {
             if (e.key === 'Enter') applyFilters();
         });
 
+        // Khởi động
         document.addEventListener('DOMContentLoaded', () => {
             loadHotels();
             loadBookings();
