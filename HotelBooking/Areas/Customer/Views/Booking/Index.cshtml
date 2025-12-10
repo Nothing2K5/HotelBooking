@@ -82,39 +82,55 @@
             }
 
             var html = '';
+            var now = new Date(); // Lấy thời gian hiện tại
+
             bookings.forEach(function (booking) {
-                // Update: Hiển thị thêm thông tin Phòng
-                var roomInfo = `<span class="badge bg-light text-dark border me-1"><i class="fas fa-door-open"></i> Phòng ${booking.RoomNumber}</span>
-                                    <span class="badge bg-light text-dark border">${booking.RoomType === 'VIP' ? 'VIP' : 'Thường'}</span>`;
+                var roomInfo = `<span class="badge bg-light text-dark border me-1"><i class="fas fa-door-open"></i> Phòng ${booking.RoomNumber}</span> 
+                        <span class="badge bg-light text-dark border">${booking.RoomType === 'VIP' ? 'VIP' : 'Thường'}</span>`;
+
+                // --- MỚI: Logic hiển thị nút Review ---
+                // Parse ngày Checkout
+                var checkOutDate = booking.CheckOutDate.indexOf("/Date(") !== -1
+                    ? new Date(parseInt(booking.CheckOutDate.replace(/\/Date\((-?\d+)\)\//, '$1')))
+                    : new Date(booking.CheckOutDate);
+
+                // Điều kiện: Đã qua ngày trả phòng VÀ trạng thái là paid/confirmed
+                var isCompleted = (now > checkOutDate) && (booking.Status === 'paid' || booking.Status === 'confirmed');
+
+                var reviewBtn = '';
+                if (isCompleted) {
+                    reviewBtn = `<a href="/Customer/Review/Create?bookingId=${booking.Id}" class="btn btn-outline-warning btn-sm"><i class="fas fa-star"></i> Viết đánh giá</a>`;
+                }
+                // ---------------------------------------
 
                 html += `
-                    <div class="card mb-3 shadow-sm border-start border-4 ${getBorderColor(booking.Status)}">
-                        <div class="card-body">
-                            <div class="row align-items-center">
-                                <div class="col-md-8">
-                                    <h5 class="text-primary mb-1"><i class="fas fa-hotel"></i> ${booking.HotelName}</h5>
-                                    <div class="mb-2 text-muted small"><i class="fas fa-barcode"></i> ${booking.Code}</div>
+        <div class="card mb-3 shadow-sm border-start border-4 ${getBorderColor(booking.Status)}">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h5 class="text-primary mb-1"><i class="fas fa-hotel"></i> ${booking.HotelName}</h5>
+                        <div class="mb-2 text-muted small"><i class="fas fa-barcode"></i> ${booking.Code}</div>
+                        
+                        <div class="mb-2">${roomInfo}</div>
 
-                                    <div class="mb-2">${roomInfo}</div>
-
-                                    <p class="mb-1"><i class="far fa-calendar-alt text-success"></i> ${formatDate(booking.CheckInDate)} <i class="fas fa-arrow-right small text-muted"></i> ${formatDate(booking.CheckOutDate)}</p>
-                                    <p class="mb-0"><strong>Tổng tiền:</strong> <span class="text-danger h5 fw-bold">${booking.TotalAmount.toLocaleString()} VNĐ</span></p>
-                                </div>
-                                <div class="col-md-4 text-md-end mt-3 mt-md-0">
-                                    <div class="mb-3">${getStatusBadge(booking.Status)}</div>
-                                    <div class="btn-group">
-                                        <a href="/Customer/Booking/Details/${booking.Id}" class="btn btn-outline-primary btn-sm">Chi tiết</a>
-
-                                        ${(booking.Status === 'draft' || booking.Status === 'pending' || booking.Status === 'confirmed') ?
+                        <p class="mb-1"><i class="far fa-calendar-alt text-success"></i> ${formatDate(booking.CheckInDate)} <i class="fas fa-arrow-right small text-muted"></i> ${formatDate(booking.CheckOutDate)}</p>
+                        <p class="mb-0"><strong>Tổng tiền:</strong> <span class="text-danger h5 fw-bold">${booking.TotalAmount.toLocaleString()} VNĐ</span></p>
+                    </div>
+                    <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                        <div class="mb-3">${getStatusBadge(booking.Status)}</div>
+                        <div class="btn-group">
+                            <a href="/Customer/Booking/Details/${booking.Id}" class="btn btn-outline-primary btn-sm">Chi tiết</a>
+                            
+                            ${(booking.Status === 'draft' || booking.Status === 'pending') ?
                         `<a href="/Customer/Booking/Payment/${booking.Id}" class="btn btn-success btn-sm">Thanh toán</a>` : ''}
-
-                                        ${(booking.Status !== 'cancelled' && booking.Status !== 'completed' && booking.Status !== 'paid') ?
+                            
+                            ${reviewBtn}  ${(booking.Status !== 'cancelled' && !isCompleted && booking.Status !== 'paid') ?
                         `<button class="btn btn-outline-danger btn-sm" onclick="confirmCancel(${booking.Id})">Hủy</button>` : ''}
-                                    </div>
-                                </div>
-                            </div>
                         </div>
-                    </div>`;
+                    </div>
+                </div>
+            </div>
+        </div>`;
             });
             $("#bookingsList").html(html);
         }

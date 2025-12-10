@@ -189,30 +189,38 @@
                 $("#room_detail_container").html('<p class="text-danger">Không tìm thấy thông tin phòng</p>');
             }
 
-            // 4. Render Nút bấm
+            // 4. Render Nút bấm (Action Buttons)
             var btnHtml = "";
+            var now = new Date();
+            var checkOutDate = parseJsonDate(data.CheckOutDate);
 
-            // Thanh toán
-            if (data.Status === "draft" || data.Status === "pending" || data.Status === "confirmed") {
-                // Nếu confirmed (trả sau) thì có thể ko hiện nút thanh toán online nữa, tùy logic.
-                // Ở đây cho phép thanh toán online để chốt đơn luôn
-                if (data.Status !== "confirmed") {
-                    btnHtml += `<a href="/Customer/Booking/Payment/${data.Id}" class="btn btn-success mb-2"><i class="fas fa-credit-card"></i> Thanh toán ngay</a>`;
-                }
+            // Logic xác định đã hoàn thành chuyến đi chưa
+            var isCompleted = (now > checkOutDate) && (data.Status === 'paid' || data.Status === 'confirmed');
+
+            // Nút Thanh toán
+            if (data.Status === "draft" || data.Status === "pending") {
+                btnHtml += `<a href="/Customer/Booking/Payment/${data.Id}" class="btn btn-success mb-2 w-100"><i class="fas fa-credit-card"></i> Thanh toán ngay</a>`;
             }
 
-            // Hủy
-            if (data.Status !== "cancelled" && data.Status !== "completed" && data.Status !== "paid") {
-                // Kiểm tra hạn hủy client-side để hiển thị cảnh báo (Backend check lại lần nữa)
+            // --- MỚI: Nút Viết Đánh Giá ---
+            if (isCompleted) {
+                btnHtml += `<a href="/Customer/Review/Create?bookingId=${data.Id}" class="btn btn-warning mb-2 w-100 fw-bold shadow-sm">
+                        <i class="fas fa-star"></i> Viết đánh giá khách sạn
+                    </a>`;
+            }
+            // -----------------------------
+
+            // Nút Hủy (Chỉ hiện khi chưa hủy, chưa hoàn thành)
+            if (data.Status !== "cancelled" && !isCompleted) {
                 var deadline = parseJsonDate(data.FreeCancellationDeadline);
-                var isFree = new Date() < deadline;
+                var isFree = now < deadline;
 
-                btnHtml += `<button class="btn btn-outline-danger" onclick="confirmCancel(${data.Id}, ${isFree})">
-                                    <i class="fas fa-times"></i> Hủy đặt phòng
-                                </button>`;
+                btnHtml += `<button class="btn btn-outline-danger w-100" onclick="confirmCancel(${data.Id}, ${isFree})">
+                        <i class="fas fa-times"></i> Hủy đặt phòng
+                    </button>`;
             }
 
-            if (btnHtml === "") btnHtml = "<p class='text-muted text-center mb-0'>Đơn hàng đã hoàn tất hoặc bị hủy</p>";
+            if (btnHtml === "") btnHtml = "<p class='text-muted text-center mb-0'>Đơn hàng đã hoàn tất (Đã có đánh giá hoặc quá hạn)</p>";
             $("#div_Actions").html(btnHtml);
         }
 

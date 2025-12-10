@@ -3,20 +3,16 @@
   "WorkspaceRootPath": "D:\\ASP_NET_WORKSPACE\\HotelBooking\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{75EFFF97-BF1A-4F51-9734-E6E903D2D519}|HotelBooking\\HotelBooking.csproj|d:\\asp_net_workspace\\hotelbooking\\hotelbooking\\areas\\customer\\views\\booking\\cancel.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{75EFFF97-BF1A-4F51-9734-E6E903D2D519}|HotelBooking\\HotelBooking.csproj|solutionrelative:hotelbooking\\areas\\customer\\views\\booking\\cancel.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+      "AbsoluteMoniker": "D:0:0:{75EFFF97-BF1A-4F51-9734-E6E903D2D519}|HotelBooking\\HotelBooking.csproj|d:\\asp_net_workspace\\hotelbooking\\hotelbooking\\areas\\customer\\views\\booking\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{75EFFF97-BF1A-4F51-9734-E6E903D2D519}|HotelBooking\\HotelBooking.csproj|solutionrelative:hotelbooking\\areas\\customer\\views\\booking\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{75EFFF97-BF1A-4F51-9734-E6E903D2D519}|HotelBooking\\HotelBooking.csproj|D:\\ASP_NET_WORKSPACE\\HotelBooking\\hotelbooking\\areas\\admin\\controllers\\promocontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{75EFFF97-BF1A-4F51-9734-E6E903D2D519}|HotelBooking\\HotelBooking.csproj|solutionrelative:hotelbooking\\areas\\admin\\controllers\\promocontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{75EFFF97-BF1A-4F51-9734-E6E903D2D519}|HotelBooking\\HotelBooking.csproj|d:\\asp_net_workspace\\hotelbooking\\hotelbooking\\areas\\customer\\controllers\\loyaltycontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{75EFFF97-BF1A-4F51-9734-E6E903D2D519}|HotelBooking\\HotelBooking.csproj|solutionrelative:hotelbooking\\areas\\customer\\controllers\\loyaltycontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{75EFFF97-BF1A-4F51-9734-E6E903D2D519}|HotelBooking\\HotelBooking.csproj|D:\\ASP_NET_WORKSPACE\\HotelBooking\\hotelbooking\\areas\\admin\\controllers\\reviewcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{75EFFF97-BF1A-4F51-9734-E6E903D2D519}|HotelBooking\\HotelBooking.csproj|solutionrelative:hotelbooking\\areas\\admin\\controllers\\reviewcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{75EFFF97-BF1A-4F51-9734-E6E903D2D519}|HotelBooking\\HotelBooking.csproj|D:\\ASP_NET_WORKSPACE\\HotelBooking\\hotelbooking\\areas\\admin\\controllers\\hotelcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{75EFFF97-BF1A-4F51-9734-E6E903D2D519}|HotelBooking\\HotelBooking.csproj|solutionrelative:hotelbooking\\areas\\admin\\controllers\\hotelcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{75EFFF97-BF1A-4F51-9734-E6E903D2D519}|HotelBooking\\HotelBooking.csproj|d:\\asp_net_workspace\\hotelbooking\\hotelbooking\\areas\\customer\\controllers\\bookingcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{75EFFF97-BF1A-4F51-9734-E6E903D2D519}|HotelBooking\\HotelBooking.csproj|solutionrelative:hotelbooking\\areas\\customer\\controllers\\bookingcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -26,7 +22,7 @@
       "DocumentGroups": [
         {
           "DockedHeight": 303,
-          "SelectedChildIndex": 1,
+          "SelectedChildIndex": 3,
           "Children": [
             {
               "$type": "Bookmark",
@@ -34,52 +30,42 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "Cancel.cshtml",
-              "DocumentMoniker": "D:\\ASP_NET_WORKSPACE\\HotelBooking\\HotelBooking\\Areas\\Customer\\Views\\Booking\\Cancel.cshtml",
-              "RelativeDocumentMoniker": "HotelBooking\\Areas\\Customer\\Views\\Booking\\Cancel.cshtml",
-              "ToolTip": "D:\\ASP_NET_WORKSPACE\\HotelBooking\\HotelBooking\\Areas\\Customer\\Views\\Booking\\Cancel.cshtml",
-              "RelativeToolTip": "HotelBooking\\Areas\\Customer\\Views\\Booking\\Cancel.cshtml",
-              "ViewState": "AgIAANsAAAAAAAAAAAAowPcAAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-12-09T15:19:15.66Z",
+              "DocumentIndex": 2,
+              "Title": "BookingController.cs",
+              "DocumentMoniker": "D:\\ASP_NET_WORKSPACE\\HotelBooking\\HotelBooking\\Areas\\Customer\\Controllers\\BookingController.cs",
+              "RelativeDocumentMoniker": "HotelBooking\\Areas\\Customer\\Controllers\\BookingController.cs",
+              "ToolTip": "D:\\ASP_NET_WORKSPACE\\HotelBooking\\HotelBooking\\Areas\\Customer\\Controllers\\BookingController.cs",
+              "RelativeToolTip": "HotelBooking\\Areas\\Customer\\Controllers\\BookingController.cs",
+              "ViewState": "AgIAABcBAAAAAAAAAAAAAD0BAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-10T07:26:10.18Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "HotelController.cs",
-              "DocumentMoniker": "D:\\ASP_NET_WORKSPACE\\HotelBooking\\HotelBooking\\Areas\\Admin\\Controllers\\HotelController.cs",
-              "RelativeDocumentMoniker": "HotelBooking\\Areas\\Admin\\Controllers\\HotelController.cs",
-              "ToolTip": "D:\\ASP_NET_WORKSPACE\\HotelBooking\\HotelBooking\\Areas\\Admin\\Controllers\\HotelController.cs",
-              "RelativeToolTip": "HotelBooking\\Areas\\Admin\\Controllers\\HotelController.cs",
-              "ViewState": "AgIAAPQAAAAAAAAAAAAcwPMAAAAyAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-09T09:42:36.43Z"
-            },
-            {
-              "$type": "Document",
               "DocumentIndex": 1,
-              "Title": "PromoController.cs",
-              "DocumentMoniker": "D:\\ASP_NET_WORKSPACE\\HotelBooking\\HotelBooking\\Areas\\Admin\\Controllers\\PromoController.cs",
-              "RelativeDocumentMoniker": "HotelBooking\\Areas\\Admin\\Controllers\\PromoController.cs",
-              "ToolTip": "D:\\ASP_NET_WORKSPACE\\HotelBooking\\HotelBooking\\Areas\\Admin\\Controllers\\PromoController.cs",
-              "RelativeToolTip": "HotelBooking\\Areas\\Admin\\Controllers\\PromoController.cs",
-              "ViewState": "AgIAAAwAAAAAAAAAAAAwwBgAAAARAAAAAAAAAA==",
+              "Title": "LoyaltyController.cs",
+              "DocumentMoniker": "D:\\ASP_NET_WORKSPACE\\HotelBooking\\HotelBooking\\Areas\\Customer\\Controllers\\LoyaltyController.cs",
+              "RelativeDocumentMoniker": "HotelBooking\\Areas\\Customer\\Controllers\\LoyaltyController.cs",
+              "ToolTip": "D:\\ASP_NET_WORKSPACE\\HotelBooking\\HotelBooking\\Areas\\Customer\\Controllers\\LoyaltyController.cs",
+              "RelativeToolTip": "HotelBooking\\Areas\\Customer\\Controllers\\LoyaltyController.cs",
+              "ViewState": "AgIAAEwAAAAAAAAAAAAkwGAAAABUAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-09T09:42:22.598Z"
+              "WhenOpened": "2025-12-10T07:23:10.23Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "ReviewController.cs",
-              "DocumentMoniker": "D:\\ASP_NET_WORKSPACE\\HotelBooking\\HotelBooking\\Areas\\Admin\\Controllers\\ReviewController.cs",
-              "RelativeDocumentMoniker": "HotelBooking\\Areas\\Admin\\Controllers\\ReviewController.cs",
-              "ToolTip": "D:\\ASP_NET_WORKSPACE\\HotelBooking\\HotelBooking\\Areas\\Admin\\Controllers\\ReviewController.cs",
-              "RelativeToolTip": "HotelBooking\\Areas\\Admin\\Controllers\\ReviewController.cs",
-              "ViewState": "AgIAABEAAAAAAAAAAAAnwCAAAABLAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-09T09:42:18.761Z"
+              "DocumentIndex": 0,
+              "Title": "Index.cshtml",
+              "DocumentMoniker": "D:\\ASP_NET_WORKSPACE\\HotelBooking\\HotelBooking\\Areas\\Customer\\Views\\Booking\\Index.cshtml",
+              "RelativeDocumentMoniker": "HotelBooking\\Areas\\Customer\\Views\\Booking\\Index.cshtml",
+              "ToolTip": "D:\\ASP_NET_WORKSPACE\\HotelBooking\\HotelBooking\\Areas\\Customer\\Views\\Booking\\Index.cshtml",
+              "RelativeToolTip": "HotelBooking\\Areas\\Customer\\Views\\Booking\\Index.cshtml",
+              "ViewState": "AgIAAEsAAAAAAAAAAAAAAF8AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-12-10T05:19:28.388Z",
+              "EditorCaption": ""
             }
           ]
         }

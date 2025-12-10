@@ -242,16 +242,19 @@ namespace HotelBooking.Areas.Customer.Controllers
         {
             try
             {
-                var booking = _db.Bookings.FirstOrDefault(b => b.Id == model.BookingId && b.UserId == GetCurrentUserId());
+                var userId = GetCurrentUserId();
+                var booking = _db.Bookings.FirstOrDefault(b => b.Id == model.BookingId && b.UserId == userId);
 
                 if (booking == null)
                     return Json(new { success = false, message = "Không tìm thấy booking" });
 
                 if (model.PaymentMethod == "online")
                 {
+                    // 1. Cập nhật trạng thái Booking
                     booking.Status = "paid";
                     booking.UpdatedAt = DateTime.Now;
 
+                    // 2. Lưu lịch sử thanh toán
                     var payment = new Payment
                     {
                         BookingId = model.BookingId,
@@ -261,10 +264,42 @@ namespace HotelBooking.Areas.Customer.Controllers
                         CreatedAt = DateTime.Now
                     };
                     _db.Payments.InsertOnSubmit(payment);
-                    _db.SubmitChanges();
-                    // Trigger SQL sẽ tự động tích điểm
 
-                    return Json(new { success = true, message = "Thanh toán thành công!" });
+                    // 3. LOGIC TÍCH ĐIỂM & THĂNG HẠNG (Thay thế Trigger)
+                    var customer = _db.Customers.FirstOrDefault(c => c.UserId == userId);
+                    if (customer != null)
+                    {
+                        // Lấy hệ số nhân hiện tại (mặc định 1.0)
+                        decimal multiplier = customer.LoyaltyTier != null ? (customer.LoyaltyTier.Multiplier ?? 1.0m) : 1.0m;
+
+                        // Công thức: (Tổng tiền / 100,000) * Hệ số
+                        int pointsEarned = (int)((booking.TotalAmount / 100000) * multiplier);
+
+                        if (pointsEarned > 0)
+                        {
+                            customer.TotalPoints += pointsEarned;
+
+                            // Kiểm tra thăng hạng
+                            // Tìm hạng cao nhất mà khách đủ điểm đạt được
+                            var newTier = _db.LoyaltyTiers
+                                .Where(t => t.MinPoints <= customer.TotalPoints)
+                                .OrderByDescending(t => t.MinPoints)
+                                .FirstOrDefault();
+
+                            if (newTier != null)
+                            {
+                                // Nếu chưa có hạng hoặc hạng mới cao hơn hạng cũ (check ID hoặc MinPoints)
+                                if (customer.LoyaltyTierId == null || newTier.Id != customer.LoyaltyTierId)
+                                {
+                                    customer.LoyaltyTierId = newTier.Id;
+                                }
+                            }
+                        }
+                    }
+
+                    _db.SubmitChanges();
+
+                    return Json(new { success = true, message = "Thanh toán thành công! Bạn đã được cộng điểm tích lũy." });
                 }
                 else
                 {

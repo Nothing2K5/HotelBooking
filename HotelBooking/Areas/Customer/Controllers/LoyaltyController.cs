@@ -18,7 +18,8 @@ namespace HotelBooking.Areas.Customer.Controllers
         private int GetCurrentUserId()
         {
             var email = User.Identity.Name;
-            return _db.Users.First(u => u.Email == email).Id;
+            var user = _db.Users.FirstOrDefault(u => u.Email == email);
+            return user != null ? user.Id : 0;
         }
 
         // GET: Customer/Loyalty/Index
@@ -69,6 +70,38 @@ namespace HotelBooking.Areas.Customer.Controllers
                         allTiers
                     }
                 }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        // --- BỔ SUNG: API Lấy lịch sử điểm ---
+        [HttpGet]
+        public ActionResult GetPointsHistory()
+        {
+            try
+            {
+                var userId = GetCurrentUserId();
+
+                // Vì bảng LoyaltyPoints đã bị bỏ, ta truy xuất lịch sử dựa trên các Booking đã thanh toán (Paid)
+                // Công thức giả định: 100.000 VNĐ = 1 điểm (có thể nhân hệ số Tier nếu muốn phức tạp hơn)
+                var history = _db.Bookings
+                    .Where(b => b.UserId == userId && b.Status == "paid") // Chỉ lấy đơn đã thanh toán
+                    .OrderByDescending(b => b.UpdatedAt)
+                    .AsEnumerable() // Chuyển xử lý về Client để tính toán phức tạp nếu cần
+                    .Select(b => new
+                    {
+                        CreatedAt = b.UpdatedAt != DateTime.MinValue ? b.UpdatedAt : b.CheckOutDate,
+                        // Logic tính điểm hiển thị lại (cần khớp với logic lúc cộng điểm)
+                        Points = (int)(b.TotalAmount / 100000),
+                        Reason = "Tích điểm từ đơn đặt phòng",
+                        BookingCode = b.Code
+                    })
+                    .ToList();
+
+                return Json(new { success = true, data = history }, JsonRequestBehavior.AllowGet);
             }
             catch (Exception ex)
             {
