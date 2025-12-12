@@ -144,13 +144,23 @@ namespace HotelBooking.Controllers
             try
             {
                 var user = _db.Users.FirstOrDefault(u => u.Email == email);
-                if (user != null)
-                {
-                    // TODO: Gửi email reset password (simplified)
-                    return Json(new { success = true, message = "Đã gửi email hướng dẫn reset mật khẩu" });
-                }
-                // Không tiết lộ email có tồn tại hay không (bảo mật)
-                return Json(new { success = true, message = "Nếu email tồn tại, chúng tôi đã gửi hướng dẫn reset mật khẩu" });
+
+                if (user == null)
+                    return Json(new { success = false, message = "Email không tồn tại trong hệ thống" });
+
+                if (user.IsActive != true)
+                    return Json(new { success = false, message = "Tài khoản này đang bị khóa" });
+
+                // 1. Tạo mật khẩu mới ngẫu nhiên (Giả lập việc gửi email)
+                Random rand = new Random();
+                string newPassword = "Pass" + rand.Next(1000, 9999).ToString();
+
+                // 2. Cập nhật vào DB
+                user.Password = newPassword;
+                _db.SubmitChanges();
+
+                // 3. Trả về JSON chứa mật khẩu mới để hiển thị (Thay vì gửi email thật)
+                return Json(new { success = true, message = "Thành công! Mật khẩu mới của bạn là: " + newPassword });
             }
             catch (Exception ex)
             {

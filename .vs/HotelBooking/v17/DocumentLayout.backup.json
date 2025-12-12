@@ -3,12 +3,20 @@
   "WorkspaceRootPath": "D:\\ASP_NET_WORKSPACE\\HotelBooking\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{75EFFF97-BF1A-4F51-9734-E6E903D2D519}|HotelBooking\\HotelBooking.csproj|d:\\asp_net_workspace\\hotelbooking\\hotelbooking\\controllers\\searchcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{75EFFF97-BF1A-4F51-9734-E6E903D2D519}|HotelBooking\\HotelBooking.csproj|solutionrelative:hotelbooking\\controllers\\searchcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{75EFFF97-BF1A-4F51-9734-E6E903D2D519}|HotelBooking\\HotelBooking.csproj|d:\\asp_net_workspace\\hotelbooking\\hotelbooking\\views\\account\\forgotpassword.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{75EFFF97-BF1A-4F51-9734-E6E903D2D519}|HotelBooking\\HotelBooking.csproj|solutionrelative:hotelbooking\\views\\account\\forgotpassword.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{75EFFF97-BF1A-4F51-9734-E6E903D2D519}|HotelBooking\\HotelBooking.csproj|D:\\ASP_NET_WORKSPACE\\HotelBooking\\hotelbooking\\views\\search\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{75EFFF97-BF1A-4F51-9734-E6E903D2D519}|HotelBooking\\HotelBooking.csproj|solutionrelative:hotelbooking\\views\\search\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+      "AbsoluteMoniker": "D:0:0:{75EFFF97-BF1A-4F51-9734-E6E903D2D519}|HotelBooking\\HotelBooking.csproj|d:\\asp_net_workspace\\hotelbooking\\hotelbooking\\controllers\\accountcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{75EFFF97-BF1A-4F51-9734-E6E903D2D519}|HotelBooking\\HotelBooking.csproj|solutionrelative:hotelbooking\\controllers\\accountcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{75EFFF97-BF1A-4F51-9734-E6E903D2D519}|HotelBooking\\HotelBooking.csproj|d:\\asp_net_workspace\\hotelbooking\\hotelbooking\\views\\shared\\_layout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{75EFFF97-BF1A-4F51-9734-E6E903D2D519}|HotelBooking\\HotelBooking.csproj|solutionrelative:hotelbooking\\views\\shared\\_layout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{75EFFF97-BF1A-4F51-9734-E6E903D2D519}|HotelBooking\\HotelBooking.csproj|d:\\asp_net_workspace\\hotelbooking\\hotelbooking\\views\\home\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{75EFFF97-BF1A-4F51-9734-E6E903D2D519}|HotelBooking\\HotelBooking.csproj|solutionrelative:hotelbooking\\views\\home\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     }
   ],
   "DocumentGroupContainers": [
@@ -18,7 +26,7 @@
       "DocumentGroups": [
         {
           "DockedHeight": 303,
-          "SelectedChildIndex": 1,
+          "SelectedChildIndex": 4,
           "Children": [
             {
               "$type": "Bookmark",
@@ -26,28 +34,55 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "SearchController.cs",
-              "DocumentMoniker": "D:\\ASP_NET_WORKSPACE\\HotelBooking\\HotelBooking\\Controllers\\SearchController.cs",
-              "RelativeDocumentMoniker": "HotelBooking\\Controllers\\SearchController.cs",
-              "ToolTip": "D:\\ASP_NET_WORKSPACE\\HotelBooking\\HotelBooking\\Controllers\\SearchController.cs",
-              "RelativeToolTip": "HotelBooking\\Controllers\\SearchController.cs",
-              "ViewState": "AgIAABAAAAAAAAAAAAAmwHAAAAAAAAAAAAAAAA==",
+              "DocumentIndex": 1,
+              "Title": "AccountController.cs",
+              "DocumentMoniker": "D:\\ASP_NET_WORKSPACE\\HotelBooking\\HotelBooking\\Controllers\\AccountController.cs",
+              "RelativeDocumentMoniker": "HotelBooking\\Controllers\\AccountController.cs",
+              "ToolTip": "D:\\ASP_NET_WORKSPACE\\HotelBooking\\HotelBooking\\Controllers\\AccountController.cs",
+              "RelativeToolTip": "HotelBooking\\Controllers\\AccountController.cs",
+              "ViewState": "AgIAAI4AAAAAAAAAAADwv6gAAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-12T11:23:03.695Z",
+              "WhenOpened": "2025-12-12T14:06:47.726Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "Index.cshtml",
-              "DocumentMoniker": "D:\\ASP_NET_WORKSPACE\\HotelBooking\\HotelBooking\\Views\\Search\\Index.cshtml",
-              "RelativeDocumentMoniker": "HotelBooking\\Views\\Search\\Index.cshtml",
-              "ToolTip": "D:\\ASP_NET_WORKSPACE\\HotelBooking\\HotelBooking\\Views\\Search\\Index.cshtml",
-              "RelativeToolTip": "HotelBooking\\Views\\Search\\Index.cshtml",
-              "ViewState": "AgIAAO4AAAAAAAAAAAAowAoBAAAAAAAAAAAAAA==",
+              "DocumentIndex": 2,
+              "Title": "_Layout.cshtml",
+              "DocumentMoniker": "D:\\ASP_NET_WORKSPACE\\HotelBooking\\HotelBooking\\Views\\Shared\\_Layout.cshtml",
+              "RelativeDocumentMoniker": "HotelBooking\\Views\\Shared\\_Layout.cshtml",
+              "ToolTip": "D:\\ASP_NET_WORKSPACE\\HotelBooking\\HotelBooking\\Views\\Shared\\_Layout.cshtml",
+              "RelativeToolTip": "HotelBooking\\Views\\Shared\\_Layout.cshtml",
+              "ViewState": "AgIAAGkAAAAAAAAAAAAAAH0AAAAcAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-12-12T11:19:52.288Z"
+              "WhenOpened": "2025-12-12T14:01:41.162Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "Index.cshtml",
+              "DocumentMoniker": "D:\\ASP_NET_WORKSPACE\\HotelBooking\\HotelBooking\\Views\\Home\\Index.cshtml",
+              "RelativeDocumentMoniker": "HotelBooking\\Views\\Home\\Index.cshtml",
+              "ToolTip": "D:\\ASP_NET_WORKSPACE\\HotelBooking\\HotelBooking\\Views\\Home\\Index.cshtml",
+              "RelativeToolTip": "HotelBooking\\Views\\Home\\Index.cshtml",
+              "ViewState": "AgIAABUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-12-12T14:01:22.035Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "ForgotPassword.cshtml",
+              "DocumentMoniker": "D:\\ASP_NET_WORKSPACE\\HotelBooking\\HotelBooking\\Views\\Account\\ForgotPassword.cshtml",
+              "RelativeDocumentMoniker": "HotelBooking\\Views\\Account\\ForgotPassword.cshtml",
+              "ToolTip": "D:\\ASP_NET_WORKSPACE\\HotelBooking\\HotelBooking\\Views\\Account\\ForgotPassword.cshtml",
+              "RelativeToolTip": "HotelBooking\\Views\\Account\\ForgotPassword.cshtml",
+              "ViewState": "AgIAABwAAAAAAAAAAAAowFMAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-12-12T13:07:05.631Z",
+              "EditorCaption": ""
             }
           ]
         }
