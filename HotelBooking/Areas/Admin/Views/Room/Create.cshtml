@@ -5,80 +5,65 @@
 
 <div class="container-fluid">
     <h2 class="mb-4">Thêm phòng mới</h2>
-    <div class="card">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">Thông tin phòng</h5>
-        </div>
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white"><h5 class="mb-0">Thông tin phòng</h5></div>
         <div class="card-body">
+            <div id="success-message" class="alert alert-success alert-dismissible fade show d-none">
+                <span>Thêm phòng thành công!</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <div id="error-message" class="alert alert-danger alert-dismissible fade show d-none">
+                <span></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
             <form id="roomForm">
-                <div id="success-message" class="alert alert-success alert-dismissible fade show" style="display:none;" role="alert">
-                    <span></span>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-                <div id="error-message" class="alert alert-danger alert-dismissible fade show" style="display:none;" role="alert">
-                    <span></span>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Khách sạn <span class="text-danger">*</span></label>
-                        <select class="form-select" name="HotelId" id="HotelId" required>
-                            <option value="">-- Chọn khách sạn --</option>
-                        </select>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label>Khách sạn <span class="text-danger">*</span></label>
+                        <select class="form-select" id="HotelId" required><option value="">-- Chọn khách sạn --</option></select>
                     </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Mã phòng (Code) <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="Code" id="Code" placeholder="VD: DLX, STD, SUI" maxlength="10" required />
+                    <div class="col-md-6">
+                        <label>Mã loại phòng (Code) <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="Code" placeholder="VD: VIP, STD, DLX" required />
                     </div>
                 </div>
 
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Tên loại phòng <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="Name" id="Name" placeholder="Ví dụ: Deluxe King, Suite Ocean View" required />
+                <div class="row g-3 mt-1">
+                    <div class="col-md-6">
+                        <label>Số phòng <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="RoomNumber" placeholder="VD: 2301, 1102" required />
+                        <small class="text-muted">Không được trùng trong cùng khách sạn</small>
                     </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Sức chứa (người) <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" name="Capacity" id="Capacity" min="1" max="10" value="2" required />
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Giá mỗi đêm (VND) <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" name="PricePerNight" id="PricePerNight" min="0" step="10000" placeholder="1500000" required />
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Tổng số phòng cùng loại <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" name="TotalRooms" id="TotalRooms" min="1" max="200" value="10" required />
+                    <div class="col-md-6">
+                        <label>Sức chứa (người) <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="Capacity" value="2" min="1" required />
                     </div>
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Mô tả phòng (tùy chọn)</label>
-                    <textarea class="form-control" name="Description" id="Description" rows="4" placeholder="Ví dụ: Phòng hướng biển, có ban công riêng..."></textarea>
-                </div>
-
-                <!-- PHẦN THÊM NHIỀU URL ẢNH -->
-                <div class="mb-4">
-                    <label class="form-label d-flex justify-content-between align-items-center">
-                        <span>Hình ảnh phòng <small class="text-muted">(tùy chọn, nhập link ảnh trực tiếp)</small></span>
-                        <button type="button" class="btn btn-sm btn-outline-primary" id="addImageUrl">
-                            <i class="fas fa-plus"></i> Thêm ảnh
-                        </button>
-                    </label>
-                    <div id="imageUrlContainer">
-                        <!-- Các ô nhập link sẽ được thêm động ở đây -->
+                <div class="row g-3 mt-1">
+                    <div class="col-md-6">
+                        <label>Giá mỗi đêm (VNĐ) <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="PricePerNight" placeholder="1500000" required />
                     </div>
-                    <small class="text-muted">Bạn có thể dán link từ ImgBB, PostImage, Cloudinary, v.v.</small>
+                    <div class="col-md-6">
+                        <label>Mô tả (tùy chọn)</label>
+                        <input type="text" class="form-control" id="Description" placeholder="Phòng view biển, ban công..." />
+                    </div>
                 </div>
 
                 <div class="mt-4">
-                    <button type="submit" class="btn btn-success btn-lg" id="btnSubmit">
-                        <i class="fas fa-save"></i> Thêm phòng
-                    </button>
-                    <a href="@Url.Action("Index")" class="btn btn-secondary btn-lg">Quay lại danh sách</a>
+                    <label class="d-flex justify-content-between align-items-center">
+                        <span>Hình ảnh phòng <small class="text-muted">(dán link ảnh trực tiếp)</small></span>
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="addImage">+ Thêm ảnh</button>
+                    </label>
+                    <div id="imageContainer" class="mt-2"></div>
+                    <small class="text-muted">Gợi ý: dùng <a href="https://imgbb.com" target="_blank">ImgBB</a> hoặc link Unsplash có đuôi .jpg</small>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-success btn-lg px-5" id="btnSave">Thêm phòng</button>
+                    <a href="@Url.Action("Index")" class="btn btn-secondary btn-lg px-5">Quay lại</a>
                 </div>
             </form>
         </div>
@@ -87,86 +72,68 @@
 
 @section Scripts {
     <script>
-        $(document).ready(function () {
-            // Load danh sách khách sạn
-            $.get('@Url.Action("GetHotelsForDropdown", "Room")', function (res) {
-                if (res.success) {
-                    const select = $('#HotelId');
-                    res.data.forEach(h => {
-                        select.append(`<option value="${h.Id}">${h.Name}</option>`);
-                    });
-                }
-            });
+$(function () {
+    $.get('@Url.Action("GetHotelsForDropdown")', res => {
+        if (res.success) res.data.forEach(h => $('#HotelId').append(`<option value="${h.Id}">${h.Name}</option>`));
+    });
 
-            // Thêm ô nhập URL ảnh
-            let imageIndex = 0;
-            $('#addImageUrl').click(function () {
-                imageIndex++;
-                const html = `
-                    <div class="input-group mb-2 image-url-item">
-                        <input type="url" class="form-control" placeholder="https://example.com/image.jpg" name="imageUrls" />
-                        <button type="button" class="btn btn-outline-danger remove-image-url">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>`;
-                $('#imageUrlContainer').append(html);
-            });
+    $('#addImage').click(() => {
+        $('#imageContainer').append(`
+            <div class="input-group mb-2">
+                <input type="url" class="form-control" placeholder="https://i.ibb.co/...jpg hoặc https://images.unsplash.com/...jpg" />
+                <button type="button" class="btn btn-outline-danger remove-img">X</button>
+            </div>`);
+    });
 
-            // Xóa ô nhập ảnh
-            $(document).on('click', '.remove-image-url', function () {
-                $(this).closest('.image-url-item').remove();
-            });
+    $(document).on('click', '.remove-img', function() { $(this).closest('.input-group').remove(); });
 
-            // Submit form
-            $('#roomForm').submit(function (e) {
-                e.preventDefault();
+    $('#roomForm').submit(function (e) {
+        e.preventDefault();
 
-                // Thu thập danh sách URL ảnh (chỉ lấy những ô có giá trị)
-                const imageUrls = [];
-                $('#imageUrlContainer input[name="imageUrls"]').each(function () {
-                    const val = $(this).val().trim();
-                    if (val && val.startsWith('http')) {
-                        imageUrls.push(val);
-                    }
-                });
-
-                const formData = {
-                    HotelId: $('#HotelId').val(),
-                    Code: $('#Code').val().trim(),
-                    Name: $('#Name').val().trim(),
-                    Description: $('#Description').val().trim() || null,
-                    Capacity: parseInt($('#Capacity').val()),
-                    PricePerNight: parseFloat($('#PricePerNight').val()),
-                    TotalRooms: parseInt($('#TotalRooms').val()),
-                    ImageUrls: imageUrls.length > 0 ? imageUrls : null   // gửi mảng URL
-                };
-
-                $('#btnSubmit').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Đang lưu...');
-
-                $.ajax({
-                    url: '@Url.Action("CreateRoom", "Room")',
-                    type: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify(formData),
-                    success: function (res) {
-                        if (res.success) {
-                            $('#success-message span').text(res.message || 'Thêm phòng và hình ảnh thành công!');
-                            $('#success-message').show();
-                            setTimeout(() => { location.href = '@Url.Action("Index")'; }, 1500);
-                        } else {
-                            $('#error-message span').text(res.message);
-                            $('#error-message').show();
-                        }
-                    },
-                    error: function () {
-                        $('#error-message span').text('Lỗi kết nối server');
-                        $('#error-message').show();
-                    },
-                    complete: function () {
-                        $('#btnSubmit').prop('disabled', false).html('<i class="fas fa-save"></i> Thêm phòng');
-                    }
-                });
-            });
+        const imageUrls = [];
+        $('#imageContainer input').each(function () {
+            const url = $(this).val().trim();
+            if (url && url.match(/\.(jpg|jpeg|png)$/i) || url.includes('unsplash.com')) {
+                imageUrls.push(url);
+            }
         });
+
+        const data = {
+            HotelId: $('#HotelId').val(),
+            Code: $('#Code').val().trim().toUpperCase(),
+            RoomNumber: $('#RoomNumber').val().trim(),
+            Description: $('#Description').val().trim() || null,
+            Capacity: +$('#Capacity').val(),
+            PricePerNight: +$('#PricePerNight').val(),
+            ImageUrls: imageUrls.length ? imageUrls : null
+        };
+
+        if (!data.HotelId || !data.Code || !data.RoomNumber || !data.Capacity || !data.PricePerNight) {
+            $('#error-message span').text('Vui lòng điền đầy đủ các trường bắt buộc');
+            $('#error-message').removeClass('d-none');
+            return;
+        }
+
+        $('#btnSave').prop('disabled', true).html('Đang lưu...');
+
+        $.ajax({
+            url: '@Url.Action("CreateRoom")',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: res => {
+                if (res.success) {
+                    $('#success-message').removeClass('d-none');
+                    setTimeout(() => location.href = '@Url.Action("Index")', 1500);
+                } else {
+                    $('#error-message span').text(res.message);
+                    $('#error-message').removeClass('d-none');
+                }
+            },
+            error: () => $('#error-message span').text('Lỗi server').parent().removeClass('d-none'),
+            complete: () => $('#btnSave').prop('disabled', false).html('Thêm phòng')
+        });
+    });
+});
     </script>
 }

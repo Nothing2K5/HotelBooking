@@ -1,4 +1,5 @@
 ﻿using HotelBooking.Models;
+using HotelBooking.ViewModels;
 using System;
 using System.Linq;
 using System.Web.Mvc;
@@ -76,33 +77,39 @@ namespace HotelBooking.Areas.Customer.Controllers
         }
 
         // POST: Customer/Profile/UpdateProfile - AJAX
-        //[HttpPost]
-        //public ActionResult UpdateProfile(ProfileEditVM model)
-        //{
-        //    try
-        //    {
-        //        if (!ModelState.IsValid)
-        //            return Json(new { success = false, message = "Dữ liệu không hợp lệ" });
+        [HttpPost]
+        public ActionResult UpdateProfile(ProfileEditVM model)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    var errors = string.Join(", ", ModelState.Values
+                                        .SelectMany(v => v.Errors)
+                                        .Select(e => e.ErrorMessage));
+                    return Json(new { success = false, message = errors });
+                }
 
-        //        var userId = GetCurrentUserId();
-        //        var customer = _db.Customers.FirstOrDefault(c => c.UserId == userId);
+                var userId = GetCurrentUserId();
+                var customer = _db.Customers.FirstOrDefault(c => c.UserId == userId);
 
-        //        if (customer != null)
-        //        {
-        //            customer.FullName = model.FullName;
-        //            customer.Phone = model.Phone;
-        //            _db.SubmitChanges();
+                if (customer != null)
+                {
+                    customer.FullName = model.FullName;
+                    customer.Phone = model.Phone;
 
-        //            return Json(new { success = true, message = "Cập nhật thành công!" });
-        //        }
+                    _db.SubmitChanges();
 
-        //        return Json(new { success = false, message = "Không tìm thấy thông tin" });
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return Json(new { success = false, message = "Lỗi: " + ex.Message });
-        //    }
-        //}
+                    return Json(new { success = true, message = "Cập nhật thông tin thành công!" });
+                }
+
+                return Json(new { success = false, message = "Không tìm thấy thông tin khách hàng" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi hệ thống: " + ex.Message });
+            }
+        }
 
         // GET: Customer/Profile/ChangePassword
         public ActionResult ChangePassword()
@@ -154,7 +161,7 @@ namespace HotelBooking.Areas.Customer.Controllers
                 // Check active bookings
                 var hasActiveBookings = _db.Bookings.Any(b => b.UserId == userId &&
                                                               b.Status != "cancelled" &&
-                                                              b.Status != "completed");
+                                                              b.Status != "confirmed");
                 if (hasActiveBookings)
                     return Json(new { success = false, message = "Không thể xóa tài khoản khi còn booking đang hoạt động" });
 

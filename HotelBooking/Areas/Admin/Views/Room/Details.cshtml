@@ -1,19 +1,14 @@
 ﻿@{
-    ViewBag.Title = "Chi tiết loại phòng";
+    ViewBag.Title = "Chi tiết phòng";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
 <div class="container-fluid mt-4">
     <div class="card shadow-lg border-0">
         <div class="card-header bg-gradient bg-primary text-white d-flex justify-content-between align-items-center py-3">
-            <h4 class="mb-0">
-                <i class="fas fa-bed me-2"></i>Chi tiết loại phòng
-            </h4>
-            <a href="@Url.Action("Index")" class="btn btn-light btn-sm">
-                <i class="fas fa-arrow-left me-1"></i>Quay lại
-            </a>
+            <h4 class="mb-0">Chi tiết phòng</h4>
+            <a href="@Url.Action("Index")" class="btn btn-light btn-sm">Quay lại</a>
         </div>
-
         <div class="card-body p-0" id="app">
             <div class="text-center py-5 bg-light">
                 <div class="spinner-border text-primary" style="width:3.5rem;height:3.5rem;"></div>
@@ -23,187 +18,126 @@
     </div>
 </div>
 
+<style>
+    .cursor-pointer {
+        cursor: pointer;
+        transition: .2s
+    }
+
+        .cursor-pointer:hover {
+            opacity: .9;
+            transform: scale(1.05)
+        }
+
+    .border-3 {
+        border-width: 3px !important;
+    }
+
+    .carousel-control-prev, .carousel-control-next {
+        width: 5%;
+    }
+</style>
+
 @section scripts {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-    // LẤY ID TỪ URL 
-    function getRoomIdFromUrl() {
-        const params = new URLSearchParams(window.location.search);
-        const idFromQuery = params.get('id');
-        if (idFromQuery && !isNaN(idFromQuery)) return parseInt(idFromQuery);
+        const getRoomIdFromUrl = () => {
+            const params = new URLSearchParams(window.location.search);
+            let id = params.get('id');
+            if (id) return parseInt(id);
+            const match = window.location.pathname.match(/\/Details\/?(\d+)$/i);
+            return match ? parseInt(match[1]) : null;
+        };
 
-        const match = window.location.pathname.match(/\/Details\/?(\d*)$/i);
-        if (match && match[1]) return parseInt(match[1]);
+        const roomId = getRoomIdFromUrl();
 
-        return null;
-    }
+        document.addEventListener("DOMContentLoaded", () => {
+            if (!roomId) return showError("ID không hợp lệ");
 
-    const roomId = getRoomIdFromUrl();
+            fetch(`/Admin/Room/GetRoomDetails?id=${roomId}`)
+                .then(r => r.json())
+                .then(res => {
+                    if (!res.success) return showError(res.message);
+                    renderRoom(res.Room, res.RoomImages || []);
+                })
+                .catch(() => showError("Lỗi kết nối server"));
+        });
 
-    document.addEventListener("DOMContentLoaded", function () {
-        if (!roomId || roomId <= 0) {
-            showError("ID phòng không hợp lệ");
-            return;
+        function showError(msg) {
+            document.getElementById('app').innerHTML = `
+                <div class="text-center py-5">
+                    <i class="fas fa-exclamation-triangle text-danger" style="font-size:5rem;"></i>
+                    <h3 class="text-danger mt-4">${msg}</h3>
+                    <a href="@Url.Action("Index")" class="btn btn-outline-primary mt-3">Quay lại danh sách</a>
+                </div>`;
         }
 
-        fetch(`/Admin/Room/GetRoomDetails?id=${roomId}`)
-            .then(r => r.json())
-            .then(res => {
-                if (!res.success) {
-                    showError(res.message || "Không tìm thấy phòng");
-                    return;
-                }
-                renderRoom(res.Room, res.RoomImages);
-            })
-            .catch(err => {
-                console.error("Lỗi fetch:", err);
-                showError("Lỗi kết nối server");
-            });
-    });
+        function renderRoom(r, imgs) {
+            const hasImg = imgs.length > 0;
 
-    function showError(message) {
-        document.getElementById('app').innerHTML = `
-            <div class="text-center py-5">
-                <i class="fas fa-exclamation-triangle text-danger" style="font-size:5rem; opacity:0.8;"></i>
-                <h3 class="text-danger mt-4">${message}</h3>
-                <a href="@Url.Action("Index")" class="btn btn-outline-primary mt-3">
-                    <i class="fas fa-arrow-left"></i> Quay lại danh sách
-                </a>
-            </div>`;
-    }
-
-    function renderRoom(r, imgs) {
-        const hasImage = imgs && imgs.length > 0;
-
-        const imageHtml = hasImage ? `
-            <!-- Carousel chính -->
-            <div id="roomCarousel" class="carousel slide rounded overflow-hidden shadow-lg mb-4" data-bs-ride="false">
-                <div class="carousel-inner">
-                    ${imgs.map((img, i) => `
-                        <div class="carousel-item ${i === 0 ? 'active' : ''}">
-                            <img src="${img.Url}" class="d-block w-100"
-                                 style="height:520px; object-fit:cover;"
-                                 alt="${img.AltText || 'Hình ảnh phòng'}">
-                        </div>
-                    `).join('')}
+            const carousel = hasImg ? `
+                <div id="roomCarousel" class="carousel slide rounded overflow-hidden shadow-lg mb-4">
+                    <div class="carousel-inner">
+                        ${imgs.map((img, i) => `
+                            <div class="carousel-item ${i===0?'active':''}">
+                                <img src="${img.Url}" class="d-block w-100" style="height:520px;object-fit:cover;" alt="${img.AltText}">
+                            </div>`).join('')}
+                    </div>
+                    ${imgs.length > 1 ? `
+                    <button class="carousel-control-prev" type="button" data-bs-target="#roomCarousel" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon"></span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#roomCarousel" data-bs-slide="next">
+                        <span class="carousel-control-next-icon"></span>
+                    </button>` : ''}
                 </div>
-
                 ${imgs.length > 1 ? `
-                <button class="carousel-control-prev" type="button" data-bs-target="#roomCarousel" data-bs-slide="prev">
-                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                    <span class="visually-hidden">Previous</span>
-                </button>
-                <button class="carousel-control-next" type="button" data-bs-target="#roomCarousel" data-bs-slide="next">
-                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                    <span class="visually-hidden">Next</span>
-                </button>
-                ` : ''}
-            </div>
+                <div class="row g-3 justify-content-center">
+                    ${imgs.map((img, i) => `
+                        <div class="col-3 col-md-2">
+                            <img src="${img.Url}" class="img-fluid rounded thumbnail-img cursor-pointer shadow-sm ${i===0?'border-primary border-3':'border-secondary'}"
+                                 style="height:90px;object-fit:cover;" onclick="selectThumbnail(this,${i})">
+                        </div>`).join('')}
+                </div>` : ''}
+            ` : `
+                <div class="text-center py-5 bg-light rounded shadow">
+                    <img src="/Content/no-image.png" class="img-fluid" style="max-height:480px;opacity:0.5;">
+                    <p class="text-muted fs-4 mt-4">Chưa có hình ảnh</p>
+                </div>`;
 
-            <!-- Thumbnail nhỏ -->
-            ${imgs.length > 1 ? `
-            <div class="row g-3 justify-content-center">
-                ${imgs.map((img, i) => `
-                    <div class="col-3 col-md-2">
-                        <img src="${img.Url}"
-                             class="img-fluid rounded thumbnail-img cursor-pointer shadow-sm
-                                    ${i === 0 ? 'border-primary border-3' : 'border-secondary'}"
-                             style="height:90px; object-fit:cover;"
-                             onclick="selectThumbnail(this, ${i})"
-                             alt="Thumbnail ${i + 1}">
-                    </div>
-                `).join('')}
-            </div>
-            ` : ''}
-        ` : `
-            <div class="text-center py-5 bg-light rounded shadow">
-                <img src="/Content/no-image.png" class="img-fluid" style="max-height:480px; opacity:0.5;">
-                <p class="text-muted fs-4 mt-4">Chưa có hình ảnh</p>
-            </div>
-        `;
-
-        const html = `
-            <div class="row g-0">
-                <!-- Ảnh bên trái -->
-                <div class="col-lg-8 p-4 bg-white">
-                    ${imageHtml}
-                </div>
-
-                <!-- Thông tin bên phải -->
-                <div class="col-lg-4 bg-light p-4 border-start border-primary border-5">
-                    <h2 class="text-primary fw-bold mb-3">${r.Name}</h2>
-
-                    <div class="bg-white p-4 rounded shadow-sm mb-4 text-center">
-                        <h3 class="text-danger fw-bold mb-1">
-                            ${Number(r.PricePerNight).toLocaleString('vi-VN')} ₫
-                        </h3>
-                        <small class="text-muted">Giá mỗi đêm</small>
-                    </div>
-
-                    <ul class="list-group list-group-flush mb-4">
-                        <li class="list-group-item d-flex justify-content-between py-3">
-                            <span><i class="fas fa-tag text-primary me-2"></i> Mã phòng</span>
-                            <strong>${r.Code}</strong>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between py-3">
-                            <span><i class="fas fa-hotel text-primary me-2"></i> Khách sạn</span>
-                            <strong>${r.Hotel.Name}</strong>
-                        </li>
-                        <li class="list-group-item py-3">
-                            <div class="d-flex justify-content-between">
-                                <span><i class="fas fa-map-marker-alt text-primary me-2"></i> Địa chỉ</span>
-                            </div>
-                            <small class="text-muted">${r.Hotel.Address}, ${r.Hotel.City}</small>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between py-3">
-                            <span><i class="fas fa-users text-primary me-2"></i> Sức chứa</span>
-                            <strong>${r.Capacity} người</strong>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between py-3">
-                            <span><i class="fas fa-door-open text-primary me-2"></i> Số lượng phòng</span>
-                            <strong>${r.TotalRooms} phòng</strong>
-                        </li>
-                    </ul>
-
-                    ${r.Description ? `
-                    <div class="mt-4 bg-white p-3 rounded shadow-sm">
-                        <h6 class="text-primary mb-3"><i class="fas fa-info-circle"></i> Mô tả chi tiết</h6>
-                        <p class="small text-muted mb-0" style="line-height:1.6;">
-                            ${r.Description.replace(/\n/g, '<br>')}
-                        </p>
-                    </div>` : ''}
-
-                    <div class="mt-5">
-                        <a href="@Url.Action("Edit", "Room")?id=${r.Id}"
-                           class="btn btn-warning btn-lg w-100 shadow-sm">
-                            <i class="fas fa-edit me-2"></i>Chỉnh sửa phòng
+            document.getElementById('app').innerHTML = `
+                <div class="row g-0">
+                    <div class="col-lg-8 p-4 bg-white">${carousel}</div>
+                    <div class="col-lg-4 bg-light p-4 border-start border-primary border-5">
+                        <h2 class="text-primary fw-bold mb-3">Phòng ${r.Name}</h2>
+                        <div class="bg-white p-4 rounded shadow-sm mb-4 text-center">
+                            <h3 class="text-danger fw-bold text-danger mb-1">${Number(r.PricePerNight).toLocaleString('vi-VN')} ₫</h3>
+                            <small class="text-muted">Giá mỗi đêm</small>
+                        </div>
+                        <ul class="list-group list-group-flush mb-4">
+                            <li class="list-group-item d-flex justify-content-between py-3"><span>Mã phòng</span><strong>${r.Code}</strong></li>
+                            <li class="list-group-item d-flex justify-content-between py-3"><span>Khách sạn</span><strong>${r.Hotel.Name}</strong></li>
+                            <li class="list-group-item py-3"><span>Địa chỉ</span><small class="text-muted d-block">${r.Hotel.Address}, ${r.Hotel.City}</small></li>
+                            <li class="list-group-item d-flex justify-content-between py-3"><span>Sức chứa</span><strong>${r.Capacity} người</strong></li>
+                            <li class="list-group-item d-flex justify-content-between py-3"><span>Trạng thái</span>
+                                <span class="badge bg-${r.Status==='available'?'success':'warning'}">${r.Status || 'available'}</span>
+                            </li>
+                        </ul>
+                        ${r.Description ? `<div class="bg-white p-3 rounded shadow-sm mb-4">
+                            <h6 class="text-primary mb-3">Mô tả</h6>
+                            <p class="small text-muted" style="line-height:1.6;">${r.Description.replace(/\n/g,'<br>')}</p>
+                        </div>` : ''}
+                        <a href="@Url.Action("Edit","Room")?id=${r.Id}" class="btn btn-warning btn-lg w-100 shadow-sm">
+                            Chỉnh sửa phòng
                         </a>
                     </div>
-                </div>
-            </div>
-        `;
+                </div>`;
+        }
 
-        document.getElementById('app').innerHTML = html;
-    }
-
-    // Chọn ảnh từ thumbnail
-    function selectThumbnail(el, index) {
-        const carousel = bootstrap.Carousel.getOrCreateInstance(document.getElementById('roomCarousel'));
-        carousel.to(index);
-
-        document.querySelectorAll('.thumbnail-img').forEach(t => {
-            t.classList.remove('border-primary', 'border-3');
-            t.classList.add('border-secondary');
-        });
-        el.classList.remove('border-secondary');
-        el.classList.add('border-primary', 'border-3');
-    }
+        function selectThumbnail(el, idx) {
+            bootstrap.Carousel.getOrCreateInstance(document.getElementById('roomCarousel')).to(idx);
+            document.querySelectorAll('.thumbnail-img').forEach(t => t.classList.remove('border-primary','border-3'));
+            el.classList.add('border-primary','border-3');
+        }
     </script>
 }
-
-<style>
-    .cursor-pointer { cursor: pointer; transition: all 0.2s ease; }
-    .cursor-pointer:hover { opacity: 0.9; transform: scale(1.05); }
-    .border-3 { border-width: 3px !important; }
-    .carousel-control-prev, .carousel-control-next { width: 5%; }
-</style>

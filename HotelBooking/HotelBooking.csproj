@@ -135,6 +135,7 @@
     <Compile Include="Areas\Customer\Controllers\BookingController.cs" />
     <Compile Include="Areas\Customer\Controllers\LoyaltyController.cs" />
     <Compile Include="Areas\Customer\Controllers\ProfileController.cs" />
+    <Compile Include="Areas\Customer\Controllers\PromotionController.cs" />
     <Compile Include="Areas\Customer\Controllers\ReviewController.cs" />
     <Compile Include="Areas\Customer\CustomerAreaRegistration.cs" />
     <Compile Include="Controllers\AccountController.cs" />
@@ -157,6 +158,7 @@
     <Compile Include="ViewModels\HotelSearchVM.cs" />
     <Compile Include="ViewModels\LoginVM.cs" />
     <Compile Include="ViewModels\PaymentVM.cs" />
+    <Compile Include="ViewModels\ProfileEditVM.cs" />
     <Compile Include="ViewModels\RegisterVM.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -226,6 +228,7 @@
     </Content>
     <Content Include="Areas\Customer\Views\Review\Create.cshtml" />
     <Content Include="Areas\Customer\Views\Review\Edit.cshtml" />
+    <Content Include="Areas\Customer\Views\Promotion\Index.cshtml" />
     <None Include="Models\Database.dbml.layout">
       <DependentUpon>Database.dbml</DependentUpon>
     </None>

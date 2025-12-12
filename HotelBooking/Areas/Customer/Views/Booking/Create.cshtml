@@ -36,6 +36,15 @@
                         </div>
 
                         <div class="mb-3">
+                            <label for="promoCode" class="form-label fw-bold">Mã khuyến mãi (nếu có)</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="promoCode" placeholder="Nhập mã giảm giá..." />
+                                <button class="btn btn-outline-primary" type="button" id="btnApplyPromo">Áp dụng</button>
+                            </div>
+                            <small id="promoMessage" class="mt-1" style="display:none;"></small>
+                        </div>
+
+                        <div class="mb-3">
                             <label for="note" class="form-label fw-bold">Yêu cầu đặc biệt</label>
                             <textarea class="form-control" id="note" rows="3" placeholder="Ví dụ: Nhận phòng trễ, giường đôi..."></textarea>
                         </div>
@@ -51,7 +60,7 @@
         <div class="col-md-4">
             <div class="card shadow-sm sticky-top" style="top: 20px;">
                 <div class="card-header bg-light">
-                    <h5 class="mb-0">Tóm tắt</h5>
+                    <h5 class="mb-0">Tóm tắt chi phí</h5>
                 </div>
                 <div class="card-body" id="bookingSummary">
                     <div class="text-center py-3">
@@ -65,10 +74,13 @@
 
 @section scripts {
     <script>
-        // Lấy ID từ ViewBag (được set trong Controller action Create)
         var roomId = parseInt($("#roomId").val());
         var hotelId = parseInt($("#hotelId").val());
         var roomPrice = 0;
+
+        // Biến lưu thông tin giảm giá
+        var discountAmount = 0;
+        var appliedPromoCode = "";
 
         $(document).ready(function () {
             // Setup Datepicker limits
@@ -83,11 +95,17 @@
             loadRoomInfo();
 
             $("#checkInDate, #checkOutDate").change(function () {
-                // Logic ràng buộc ngày
                 if (this.id === 'checkInDate') {
                     $("#checkOutDate").attr('min', $(this).val());
                 }
+                // Khi đổi ngày, reset promo code vì giá thay đổi
+                resetPromo();
                 updateSummary();
+            });
+
+            // Sự kiện bấm nút áp dụng mã
+            $("#btnApplyPromo").click(function () {
+                applyPromoCode();
             });
 
             $("#bookingForm").submit(function (e) {
@@ -95,6 +113,13 @@
                 createBooking();
             });
         });
+
+        function resetPromo() {
+            discountAmount = 0;
+            appliedPromoCode = "";
+            $("#promoCode").val('');
+            $("#promoMessage").hide().removeClass('text-success text-danger');
+        }
 
         function loadRoomInfo() {
             $.ajax({
@@ -104,12 +129,9 @@
                 success: function (response) {
                     if (response.success) {
                         roomPrice = response.room.PricePerNight;
-                        // Update Max Capacity
                         $("#guests").attr('max', response.room.Capacity);
                         $("#maxCapacity").text(response.room.Capacity);
 
-                        // Render Summary ban đầu
-                        // Chú ý: response.room.Type là VIP/Normal, RoomNumber là số phòng
                         var typeLabel = response.room.Type === 'VIP' ? 'VIP' : 'Thường';
 
                         var html = `
@@ -117,7 +139,6 @@
                                 <hr/>
                                 <p class="mb-1"><strong>Phòng:</strong> ${response.room.RoomNumber}</p>
                                 <p class="mb-1"><strong>Loại:</strong> ${typeLabel}</p>
-                                <p class="mb-1"><strong>Sức chứa:</strong> ${response.room.Capacity} người</p>
                                 <p class="mb-3"><strong>Giá:</strong> ${roomPrice.toLocaleString()} ₫/đêm</p>
                                 <div id="priceCalculation"></div>
                             `;
@@ -131,6 +152,7 @@
             });
         }
 
+        // Hàm tính toán và hiển thị Tóm tắt
         function updateSummary() {
             var checkIn = new Date($("#checkInDate").val());
             var checkOut = new Date($("#checkOutDate").val());
@@ -144,7 +166,10 @@
             var nights = Math.ceil(timeDiff / (1000 * 3600 * 24));
 
             if (nights > 0 && roomPrice > 0) {
-                var total = roomPrice * nights;
+                var subtotal = roomPrice * nights;
+                var total = subtotal - discountAmount;
+                if (total < 0) total = 0;
+
                 var html = `
                         <div class="bg-light p-2 rounded">
                             <div class="d-flex justify-content-between mb-1">
@@ -153,8 +178,21 @@
                             </div>
                             <div class="d-flex justify-content-between mb-1">
                                 <span>Tạm tính:</span>
-                                <span>${total.toLocaleString()} ₫</span>
+                                <span>${subtotal.toLocaleString()} ₫</span>
                             </div>
+                    `;
+
+                // Hiển thị dòng giảm giá nếu có
+                if (discountAmount > 0) {
+                    html += `
+                            <div class="d-flex justify-content-between mb-1 text-success">
+                                <span>Giảm giá:</span>
+                                <span>-${discountAmount.toLocaleString()} ₫</span>
+                            </div>
+                        `;
+                }
+
+                html += `
                             <hr class="my-2"/>
                             <div class="d-flex justify-content-between align-items-center">
                                 <span class="fw-bold">Tổng cộng:</span>
@@ -164,6 +202,66 @@
                     `;
                 $("#priceCalculation").html(html);
             }
+        }
+
+        // Logic gọi API kiểm tra mã
+        function applyPromoCode() {
+            var code = $("#promoCode").val().trim();
+            if (!code) {
+                alert("Vui lòng nhập mã.");
+                return;
+            }
+
+            // Tính tạm subtotal hiện tại để tính % giảm giá nếu cần
+            var checkIn = new Date($("#checkInDate").val());
+            var checkOut = new Date($("#checkOutDate").val());
+            var nights = Math.ceil((checkOut - checkIn) / (1000 * 3600 * 24));
+            var subtotal = roomPrice * nights;
+
+            if (nights <= 0) {
+                alert("Vui lòng chọn ngày hợp lệ trước.");
+                return;
+            }
+
+            $.ajax({
+                type: "POST",
+                url: '/Customer/Booking/ValidatePromo',
+                data: JSON.stringify({ code: code }),
+                contentType: "application/json; charset=utf-8",
+                success: function (response) {
+                    if (response.success) {
+                        var promo = response.promo;
+
+                        // Tính tiền giảm
+                        if (promo.Type === 'percent') {
+                            discountAmount = subtotal * (promo.Value / 100);
+                        } else {
+                            discountAmount = promo.Value;
+                        }
+
+                        // Giới hạn không giảm quá subtotal
+                        if (discountAmount > subtotal) discountAmount = subtotal;
+
+                        appliedPromoCode = promo.Code;
+
+                        $("#promoMessage")
+                            .text(`Áp dụng thành công! Giảm ${discountAmount.toLocaleString()} ₫`)
+                            .removeClass('text-danger').addClass('text-success').show();
+
+                        updateSummary();
+                    } else {
+                        discountAmount = 0;
+                        appliedPromoCode = "";
+                        $("#promoMessage")
+                            .text(response.message)
+                            .removeClass('text-success').addClass('text-danger').show();
+                        updateSummary();
+                    }
+                },
+                error: function () {
+                    alert("Lỗi khi kiểm tra mã.");
+                }
+            });
         }
 
         function createBooking() {
@@ -181,7 +279,8 @@
                 CheckInDate: $("#checkInDate").val(),
                 CheckOutDate: $("#checkOutDate").val(),
                 Guests: guests,
-                Note: $("#note").val()
+                Note: $("#note").val(),
+                PromoCode: appliedPromoCode // Gửi mã đã validate lên server
             };
 
             var btn = $("button[type=submit]");

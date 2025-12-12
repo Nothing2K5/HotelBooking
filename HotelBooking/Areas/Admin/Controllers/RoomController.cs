@@ -15,13 +15,16 @@ namespace HotelBooking.Areas.Admin.Controllers
             _db = new DatabaseDataContext();
         }
 
-        // GET: Admin/Room/Index
-        public ActionResult Index()
+        // ============================= TẤT CẢ CÁI CŨ CỦA BẠN GIỮ NGUYÊN =============================
+        public ActionResult Index() => View();
+        public ActionResult Create() => View();
+        public ActionResult Edit(int id)
         {
+            ViewBag.RoomId = id;   
             return View();
         }
+        public ActionResult Details(int id) => View();
 
-        // GET: Admin/Room/GetAllRooms - AJAX (ĐÃ SỬA THEO DB MỚI)
         [HttpGet]
         public ActionResult GetAllRooms(string keyword = null)
         {
@@ -35,14 +38,13 @@ namespace HotelBooking.Areas.Admin.Controllers
                                 r.Id,
                                 HotelName = h.Name,
                                 r.Code,
-                                r.RoomNumber,           // ← Dùng RoomNumber thay Name
+                                r.RoomNumber,
                                 r.Description,
                                 r.Capacity,
                                 r.PricePerNight,
-                                r.Status,               // Có thể là "available", "maintenance",...
+                                r.Status,
                                 r.IsActive
                             };
-
                 if (!string.IsNullOrEmpty(keyword))
                 {
                     keyword = keyword.Trim().ToLower();
@@ -51,12 +53,7 @@ namespace HotelBooking.Areas.Admin.Controllers
                         x.RoomNumber.ToLower().Contains(keyword) ||
                         x.Code.ToLower().Contains(keyword));
                 }
-
-                var result = query
-                    .OrderBy(x => x.HotelName)
-                    .ThenBy(x => x.RoomNumber)
-                    .ToList();
-
+                var result = query.OrderBy(x => x.HotelName).ThenBy(x => x.RoomNumber).ToList();
                 return Json(new { success = true, data = result }, JsonRequestBehavior.AllowGet);
             }
             catch (Exception ex)
@@ -65,13 +62,6 @@ namespace HotelBooking.Areas.Admin.Controllers
             }
         }
 
-        // GET: Admin/Room/Create
-        public ActionResult Create()
-        {
-            return View();
-        }
-
-        // GET: Admin/Room/GetHotelsForDropdown
         [HttpGet]
         public ActionResult GetHotelsForDropdown()
         {
@@ -90,7 +80,7 @@ namespace HotelBooking.Areas.Admin.Controllers
             }
         }
 
-        // POST: Admin/Room/CreateRoom - AJAX (CẬP NHẬT THEO DB MỚI)
+        // ============================= CREATE ROOM – SỬA CHỖ LƯU ẢNH =============================
         [HttpPost]
         public ActionResult CreateRoom(Room model, List<string> ImageUrls = null)
         {
@@ -105,15 +95,12 @@ namespace HotelBooking.Areas.Admin.Controllers
                     return Json(new { success = false, message = "Vui lòng điền đầy đủ các trường bắt buộc." });
                 }
 
-                // Kiểm tra trùng RoomNumber trong cùng khách sạn
                 bool exists = _db.Rooms.Any(r =>
                     r.HotelId == model.HotelId &&
                     r.RoomNumber.Trim().ToLower() == model.RoomNumber.Trim().ToLower());
-
                 if (exists)
                     return Json(new { success = false, message = "Số phòng đã tồn tại trong khách sạn này!" });
 
-                // Chuẩn hóa
                 model.Code = model.Code.Trim().ToUpper();
                 model.RoomNumber = model.RoomNumber.Trim();
                 model.Description = string.IsNullOrWhiteSpace(model.Description) ? null : model.Description.Trim();
@@ -125,20 +112,30 @@ namespace HotelBooking.Areas.Admin.Controllers
                 _db.Rooms.InsertOnSubmit(model);
                 _db.SubmitChanges();
 
-                // Thêm ảnh
-                if (ImageUrls != null && ImageUrls.Any(u => !string.IsNullOrWhiteSpace(u)))
+                // === ĐOẠN SỬA DUY NHẤT TRONG CREATE ===
+                if (ImageUrls != null && ImageUrls.Count > 0)
                 {
-                    var validUrls = ImageUrls.Where(u => !string.IsNullOrWhiteSpace(u)).Select(u => u.Trim()).Distinct();
-                    var images = validUrls.Select(url => new RoomImage
-                    {
-                        RoomId = model.Id,
-                        Url = url,
-                        AltText = $"Phòng {model.RoomNumber}"
-                    }).ToList();
+                    var validUrls = ImageUrls
+                        .Where(u => !string.IsNullOrWhiteSpace(u))
+                        .Select(u => u.Trim())
+                        .Where(u => u.StartsWith("http"))
+                        .Distinct()
+                        .ToList();
 
-                    _db.RoomImages.InsertAllOnSubmit(images);
-                    _db.SubmitChanges();
+                    if (validUrls.Any())
+                    {
+                        var images = validUrls.Select(url => new RoomImage
+                        {
+                            RoomId = model.Id,
+                            Url = url,
+                            AltText = $"Phòng {model.RoomNumber}"
+                        }).ToList();
+
+                        _db.RoomImages.InsertAllOnSubmit(images);
+                        _db.SubmitChanges();
+                    }
                 }
+                // ======================================
 
                 return Json(new { success = true, message = "Thêm phòng thành công!" });
             }
@@ -148,7 +145,7 @@ namespace HotelBooking.Areas.Admin.Controllers
             }
         }
 
-        // GET: Admin/Room/Edit/5 + GetRoomById (CẬP NHẬT)
+        // ============================= GET ROOM BY ID =============================
         [HttpGet]
         public ActionResult GetRoomById(int id)
         {
@@ -183,7 +180,7 @@ namespace HotelBooking.Areas.Admin.Controllers
             }
         }
 
-        // POST: Admin/Room/UpdateRoom (CẬP NHẬT)
+        // ============================= UPDATE ROOM – SỬA 2 CHỖ =============================
         [HttpPost]
         public ActionResult UpdateRoom(Room model, List<string> NewImageUrls = null)
         {
@@ -198,7 +195,6 @@ namespace HotelBooking.Areas.Admin.Controllers
                     r.Id != model.Id &&
                     r.HotelId == model.HotelId &&
                     r.RoomNumber.Trim().ToLower() == model.RoomNumber.Trim().ToLower());
-
                 if (exists)
                     return Json(new { success = false, message = "Số phòng đã tồn tại!" });
 
@@ -208,25 +204,32 @@ namespace HotelBooking.Areas.Admin.Controllers
                 room.Description = string.IsNullOrWhiteSpace(model.Description) ? null : model.Description.Trim();
                 room.Capacity = model.Capacity;
                 room.PricePerNight = model.PricePerNight;
-                room.Status = model.Status;
+                room.Status = model.Status ?? "available";  // ← Thêm dòng này để Edit đổi được trạng thái
                 room.UpdatedAt = DateTime.Now;
 
-                // Thêm ảnh mới
-                if (NewImageUrls != null && NewImageUrls.Any())
+                // === SỬA CHỖ LƯU ẢNH MỚI TRONG EDIT ===
+                if (NewImageUrls != null && NewImageUrls.Count > 0)
                 {
-                    var newImages = NewImageUrls
+                    var validUrls = NewImageUrls
                         .Where(u => !string.IsNullOrWhiteSpace(u))
                         .Select(u => u.Trim())
+                        .Where(u => u.StartsWith("http"))
                         .Distinct()
-                        .Select(url => new RoomImage
+                        .ToList();
+
+                    if (validUrls.Any())
+                    {
+                        var newImages = validUrls.Select(url => new RoomImage
                         {
                             RoomId = room.Id,
                             Url = url,
                             AltText = $"Phòng {room.RoomNumber}"
                         }).ToList();
 
-                    _db.RoomImages.InsertAllOnSubmit(newImages);
+                        _db.RoomImages.InsertAllOnSubmit(newImages);
+                    }
                 }
+                // ======================================
 
                 _db.SubmitChanges();
                 return Json(new { success = true, message = "Cập nhật thành công!" });
@@ -237,7 +240,7 @@ namespace HotelBooking.Areas.Admin.Controllers
             }
         }
 
-        // Xóa ảnh, Xóa phòng (soft delete), Details → giữ nguyên logic, chỉ sửa nhỏ
+        // ============================= CÁC HÀM KHÁC GIỮ NGUYÊN =============================
         [HttpPost]
         public ActionResult DeleteRoomImage(int id)
         {
@@ -262,7 +265,6 @@ namespace HotelBooking.Areas.Admin.Controllers
                 var room = _db.Rooms.FirstOrDefault(r => r.Id == id);
                 if (room != null)
                 {
-                    // Kiểm tra có booking đang active không (nếu cần)
                     room.IsActive = false;
                     room.DeletedAt = DateTime.Now;
                     _db.SubmitChanges();
@@ -276,7 +278,50 @@ namespace HotelBooking.Areas.Admin.Controllers
             }
         }
 
-        public ActionResult Edit(int id) => View();
-        public ActionResult Details(int id) => View();
+        [HttpGet]
+        public ActionResult GetRoomDetails(int id)
+        {
+            try
+            {
+                var room = _db.Rooms
+                    .Where(r => r.Id == id && r.IsActive == true && r.DeletedAt == null)
+                    .Select(r => new
+                    {
+                        r.Id,
+                        r.Code,
+                        Name = r.RoomNumber,
+                        r.Description,
+                        r.Capacity,
+                        r.PricePerNight,
+                        r.Status,
+                        Hotel = new
+                        {
+                            r.Hotel.Name,
+                            r.Hotel.Address,
+                            r.Hotel.City
+                        }
+                    })
+                    .FirstOrDefault();
+
+                if (room == null)
+                    return Json(new { success = false, message = "Không tìm thấy phòng hoặc đã bị xóa." }, JsonRequestBehavior.AllowGet);
+
+                var roomImages = _db.RoomImages
+                    .Where(i => i.RoomId == id)
+                    .Select(i => new
+                    {
+                        i.Id,
+                        i.Url,
+                        AltText = i.AltText ?? "Phòng " + room.Name
+                    })
+                    .ToList();
+
+                return Json(new { success = true, Room = room, RoomImages = roomImages }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
     }
 }

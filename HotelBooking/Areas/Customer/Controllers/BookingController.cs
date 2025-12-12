@@ -118,6 +118,40 @@ namespace HotelBooking.Areas.Customer.Controllers
             }
         }
 
+        [HttpPost]
+        public ActionResult ValidatePromo(string code)
+        {
+            try
+            {
+                var promo = _db.Promotions.FirstOrDefault(p => p.Code == code && p.IsActive == true);
+
+                if (promo == null)
+                    return Json(new { success = false, message = "Mã khuyến mãi không tồn tại" });
+
+                if (promo.StartDate.HasValue && DateTime.Now < promo.StartDate)
+                    return Json(new { success = false, message = "Mã khuyến mãi chưa đến ngày áp dụng" });
+
+                if (promo.EndDate.HasValue && DateTime.Now > promo.EndDate)
+                    return Json(new { success = false, message = "Mã khuyến mãi đã hết hạn" });
+
+                // Trả về thông tin giảm giá để Client tính toán hiển thị
+                return Json(new
+                {
+                    success = true,
+                    promo = new
+                    {
+                        promo.Code,
+                        promo.Type, // 'percent' hoặc 'amount'
+                        promo.Value
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+
         // POST: Customer/Booking/CreateBooking - AJAX
         [HttpPost]
         public ActionResult CreateBooking(BookingCreateVM model)
@@ -150,8 +184,37 @@ namespace HotelBooking.Areas.Customer.Controllers
 
                 var nights = (model.CheckOutDate - model.CheckInDate).Days;
                 var subtotal = room.PricePerNight * nights;
+                var totalAmount = subtotal;
+                int? promoId = null;
 
-                // Tạo Booking (Cấu trúc mới không có BookingItems)
+                // --- SỬA ĐOẠN NÀY ---
+                if (!string.IsNullOrEmpty(model.PromoCode))
+                {
+                    // 1. Chuẩn hóa chuỗi: Xóa khoảng trắng thừa và viết hoa
+                    var cleanCode = model.PromoCode.Trim().ToUpper();
+
+                    // 2. Tìm trong DB
+                    var promo = _db.Promotions.FirstOrDefault(p => p.Code == cleanCode && p.IsActive == true);
+
+                    // 3. Kiểm tra hạn sử dụng
+                    if (promo != null &&
+                        (!promo.StartDate.HasValue || DateTime.Now >= promo.StartDate) &&
+                        (!promo.EndDate.HasValue || DateTime.Now <= promo.EndDate))
+                    {
+                        promoId = promo.Id;
+                        decimal discountAmount = 0;
+
+                        if (promo.Type == "percent")
+                            discountAmount = subtotal * (promo.Value / 100);
+                        else
+                            discountAmount = promo.Value;
+
+                        totalAmount = subtotal - discountAmount;
+                        if (totalAmount < 0) totalAmount = 0;
+                    }
+                }
+                // --------------------
+
                 var booking = new Booking
                 {
                     UserId = userId,
@@ -162,11 +225,15 @@ namespace HotelBooking.Areas.Customer.Controllers
                     CheckInDate = model.CheckInDate,
                     CheckOutDate = model.CheckOutDate,
                     Guests = model.Guests,
-                    PricePerNight = room.PricePerNight, // Cột mới
-                    Nights = nights,                    // Cột mới
-                    SubTotal = subtotal,                // Cột mới
-                    TotalAmount = subtotal,             // Logic khuyến mãi tính sau
-                    FreeCancellationDeadline = model.CheckInDate.AddDays(-3), // Deadline hủy = CheckIn - 3 ngày
+                    PricePerNight = room.PricePerNight,
+                    Nights = nights,
+                    SubTotal = subtotal,
+
+                    // Cập nhật các trường mới tính toán
+                    TotalAmount = totalAmount,
+                    PromotionId = promoId,
+
+                    FreeCancellationDeadline = model.CheckInDate.AddDays(-3),
                     CreatedAt = DateTime.Now,
                     UpdatedAt = DateTime.Now,
                     Note = model.Note

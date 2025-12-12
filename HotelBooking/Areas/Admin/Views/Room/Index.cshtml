@@ -17,16 +17,25 @@
             </div>
         </div>
 
-        <div class="row mt-3">
-            <!-- ĐÃ THAY ĐỔI: Ô tìm kiếm thay cho dropdown -->
-            <div class="col-md-4 mb-3">
-                <label for="searchHotel">Tìm kiếm khách sạn:</label>
-                <input type="text" class="form-control" id="searchHotel" placeholder="Nhập tên khách sạn (ví dụ: Sông Hàn, Phú Quốc...)">
-            </div>
-            <div class="col-md-8 mb-3 text-end">
-                <a href="/Admin/Room/Create" class="btn btn-success">+ Thêm phòng</a>
+       <div class="row mt-3 g-3 align-items-end">
+    <!-- Ô tìm kiếm: chiếm 2/3 chiều rộng trên màn lớn, full trên mobile -->
+    <div class="col-lg-9 col-md-8 col-12">
+        <label for="searchHotel" class="form-label">Tìm kiếm khách sạn:</label>
+        <input type="text" 
+               class="form-control" 
+               id="searchHotel" 
+               placeholder="Nhập tên khách sạn (ví dụ: Sông Hàn, Phú Quốc...)">
+    </div>
+
+    <!-- Nút thêm: căn phải, thẳng hàng đáy với input -->
+    <div class="col-lg-3 col-md-4 col-12">
+            <div class="d-flex justify-content-end">
+                <a href="/Admin/Room/Create" class="btn btn-success w-100 w-md-auto">
+                    + Thêm phòng
+                </a>
             </div>
         </div>
+    </div>
 
         <!-- BẢNG + PHÂN TRANG DƯỚI BẢNG (đồng bộ hoàn toàn với các trang khác) -->
         <div class="card shadow-sm mt-4">

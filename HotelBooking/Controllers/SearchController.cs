@@ -27,43 +27,42 @@ namespace HotelBooking.Controllers
         {
             try
             {
-                if (!ModelState.IsValid)
-                    return Json(new { success = false, message = "Dữ liệu không hợp lệ" });
+                // Lấy giá trị location an toàn (nếu model == null hoặc Location null)
+                var location = model?.Location?.Trim() ?? string.Empty;
 
-                if (model.CheckOutDate <= model.CheckInDate)
-                    return Json(new { success = false, message = "Ngày trả phòng phải sau ngày nhận phòng" });
-
-                // Lấy danh sách Hotel phù hợp địa điểm
+                // Lấy danh sách Hotel phù hợp địa điểm (nếu location rỗng -> trả tất cả các hotel active)
                 var query = _db.Hotels.Where(h => h.IsActive &&
-                           (h.City.Contains(model.Location) ||
-                            h.Name.Contains(model.Location) ||
-                            h.Address.Contains(model.Location)));
+                           (string.IsNullOrEmpty(location) ||
+                            h.City.Contains(location) ||
+                            h.Name.Contains(location) ||
+                            h.Address.Contains(location)));
 
-                // Lọc Hotel có ít nhất 1 phòng trống
-                var availableHotels = query.ToList().Where(h =>
-                    h.Rooms.Any(r =>
-                        r.IsActive == true &&
-                        !r.Bookings.Any(b =>
-                            b.Status != "cancelled" &&
-                            (
-                                model.CheckInDate < b.CheckOutDate &&
-                                model.CheckOutDate > b.CheckInDate
-                            )
-                        )
-                    )
-                ).Select(h => new
-                {
-                    h.Id,
-                    h.Name,
-                    h.Address,
-                    h.City,
-                    h.Country,
-                    h.StarRating,
-                    h.Description,
-                    ImageUrl = h.HotelImages.Any() ? h.HotelImages.FirstOrDefault().Url : null,
-                    // Giá thấp nhất
-                    MinPrice = h.Rooms.Where(r => r.IsActive == true).Any() ? h.Rooms.Where(r => r.IsActive == true).Min(r => (decimal?)r.PricePerNight) : 0
-                }).ToList();
+                // Lọc Hotel có ít nhất 1 phòng active (không kiểm tra booking theo ngày nữa)
+                var availableHotels = query
+                    .Where(h => h.Rooms.Any(r => r.IsActive == true))
+                    .Select(h => new
+                    {
+                        h.Id,
+                        h.Name,
+                        h.Address,
+                        h.City,
+                        h.Country,
+                        h.StarRating,
+                        h.Description,
+                        ImageUrl = h.HotelImages.Any() ? h.HotelImages.FirstOrDefault().Url : null,
+                        // Giá thấp nhất trên các phòng active
+                        MinPrice = h.Rooms.Where(r => r.IsActive == true).Any()
+                                    ? h.Rooms.Where(r => r.IsActive == true).Min(r => (decimal?)r.PricePerNight)
+                                    : 0,
+
+                        // Tính rating từ Reviews (nếu có)
+                        AvgRating = h.Bookings.SelectMany(b => b.Reviews).Any()
+                                    ? h.Bookings.SelectMany(b => b.Reviews).Average(r => (decimal?)r.Rating)
+                                    : null,
+
+                        ReviewCount = h.Bookings.SelectMany(b => b.Reviews).Count(r => r.DeletedAt == null)
+                    })
+                    .ToList();
 
                 return Json(new { success = true, hotels = availableHotels });
             }
@@ -93,15 +92,12 @@ namespace HotelBooking.Controllers
                         ImageUrl = h.HotelImages.Any() ? h.HotelImages.FirstOrDefault().Url : null,
                         MinPrice = h.Rooms.Any() ? h.Rooms.Min(r => (decimal?)r.PricePerNight) : 0,
 
-                        // --- SỬA LỖI TẠI ĐÂY ---
-                        // Cũ (Lỗi): h.Reviews...
-                        // Mới: Đi từ Hotel -> Bookings -> Reviews
+                        // Đi từ Hotel -> Bookings -> Reviews
                         AvgRating = h.Bookings.SelectMany(b => b.Reviews).Any()
                                     ? h.Bookings.SelectMany(b => b.Reviews).Average(r => (decimal?)r.Rating)
                                     : null,
 
                         ReviewCount = h.Bookings.SelectMany(b => b.Reviews).Count(r => r.DeletedAt == null)
-                        // -----------------------
                     })
                     .ToList();
 
