@@ -38,6 +38,12 @@ namespace HotelBooking.Controllers
                         h.Country,
                         h.StarRating,
                         h.Description,
+                        // --- BỔ SUNG ĐOẠN NÀY ---
+                        // Tính giá thấp nhất từ các phòng đang hoạt động của khách sạn này
+                        MinPrice = h.Rooms
+                                    .Where(r => r.IsActive == true)
+                                    .Min(r => (decimal?)r.PricePerNight),
+                        // ------------------------
                         Images = h.HotelImages.Select(img => new
                         {
                             img.Url,

@@ -1,29 +1,48 @@
-﻿
-@{
-    ViewBag.Title = "Săn Khuyến Mãi";
+﻿@{
+    ViewBag.Title = "Ưu đãi & Khuyến mãi";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="container py-4">
-    <div class="text-center mb-5">
-        <h2 class="fw-bold text-primary"><i class="fas fa-gift"></i> Kho Mã Khuyến Mãi</h2>
-        <p class="text-muted">Tìm kiếm và áp dụng ngay để tiết kiệm chi phí cho chuyến đi của bạn</p>
+<!-- Page Header -->
+<div class="container-fluid page-header py-5 mb-5" style="background: linear-gradient(rgba(15, 23, 43, 0.7), rgba(15, 23, 43, 0.7)), url('/Content/img/carousel-2.jpg') center/cover;">
+    <div class="container py-5">
+        <h1 class="display-3 text-white mb-3 animated slideInDown">Ưu đãi đặc biệt</h1>
+        <nav aria-label="breadcrumb animated slideInDown">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a class="text-white" href="/">Trang chủ</a></li>
+                <li class="breadcrumb-item text-white active">Ưu đãi</li>
+            </ol>
+        </nav>
+    </div>
+</div>
 
-        <div class="row justify-content-center mt-4">
-            <div class="col-md-6">
-                <div class="input-group input-group-lg shadow-sm">
-                    <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
-                    <input type="text" id="searchBox" class="form-control border-start-0" placeholder="Nhập mã hoặc tên chương trình...">
+<!-- Promotions -->
+<div class="container-xxl py-5">
+    <div class="container">
+        <div class="text-center wow fadeInUp mb-5" data-wow-delay="0.1s">
+            <h6 class="section-title text-center text-primary text-uppercase">Khuyến mãi Hot</h6>
+            <h1 class="mb-3">Ưu đãi <span class="text-primary text-uppercase">không thể bỏ lỡ</span></h1>
+            <p class="text-muted">Tìm kiếm và áp dụng ngay để tiết kiệm chi phí cho chuyến đi của bạn</p>
+
+            <div class="row justify-content-center mt-4">
+                <div class="col-md-6">
+                    <div class="input-group input-group-lg shadow-sm">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="fa fa-search text-muted"></i>
+                        </span>
+                        <input type="text" id="searchBox" class="form-control border-start-0" placeholder="Nhập mã hoặc tên chương trình...">
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div id="loading" class="text-center my-5">
-        <div class="spinner-border text-primary" role="status"></div>
-    </div>
+        <div id="loading" class="text-center my-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
 
-    <div class="row g-4" id="promoList">
+        <div class="row g-4" id="promoList"></div>
     </div>
 </div>
 
@@ -71,16 +90,16 @@
         function renderPromotions(list) {
             if (!list || list.length === 0) {
                 $("#promoList").html(`
-                    <div class="col-12 text-center py-5">
-                        <i class="fas fa-ticket-alt fa-3x text-muted mb-3"></i>
-                        <h5 class="text-muted">Không tìm thấy mã khuyến mãi nào phù hợp.</h5>
-                    </div>
-                `);
+                            <div class="col-12 text-center py-5">
+                                <i class="fa fa-ticket-alt fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">Không tìm thấy mã khuyến mãi nào phù hợp.</h5>
+                            </div>
+                        `);
                 return;
             }
 
             var html = '';
-            list.forEach(function (p) {
+            list.forEach(function (p, index) {
                 // Format giá trị giảm
                 var valueDisplay = "";
                 if (p.Type === "percent") {
@@ -92,52 +111,54 @@
                 var endDate = p.EndDate ? new Date(parseInt(p.EndDate.replace(/\/Date\((-?\d+)\)\//, '$1'))).toLocaleDateString('vi-VN') : 'Vô thời hạn';
 
                 html += `
-                <div class="col-lg-4 col-md-6">
-                    <div class="card h-100 shadow-sm border-0 coupon-card">
-                        <div class="card-body d-flex flex-column">
-                            <div class="text-center py-3 bg-light rounded-3 mb-3 border border-2 border-dashed">
-                                <div class="text-primary">${valueDisplay}</div>
-                            </div>
+                        <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="${0.1 + index * 0.2}s">
+                            <div class="card h-100 shadow-sm border-0 coupon-card">
+                                <div class="card-body d-flex flex-column p-4">
+                                    <div class="text-center py-3 bg-light rounded-3 mb-3 border border-2 border-dashed">
+                                        <div class="text-primary">${valueDisplay}</div>
+                                    </div>
 
-                            <h5 class="card-title fw-bold text-dark">${p.Code}</h5>
-                            <p class="card-text text-secondary flex-grow-1">${p.Description || 'Áp dụng cho mọi đơn đặt phòng.'}</p>
+                                    <h5 class="card-title fw-bold text-dark mb-2">${p.Code}</h5>
+                                    <p class="card-text text-secondary flex-grow-1">${p.Description || 'Áp dụng cho mọi đơn đặt phòng.'}</p>
 
-                            <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
-                                <small class="text-muted"><i class="far fa-clock"></i> Hạn: ${endDate}</small>
-                                <button class="btn btn-outline-primary btn-sm btn-copy" onclick="copyCode('${p.Code}')">
-                                    <i class="far fa-copy"></i> Sao chép
-                                </button>
+                                    <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+                                        <small class="text-muted">
+                                            <i class="fa fa-clock me-1"></i>Hạn: ${endDate}
+                                        </small>
+                                        <button class="btn btn-outline-primary btn-sm btn-copy" onclick="copyCode('${p.Code}')">
+                                            <i class="fa fa-copy me-1"></i>Sao chép
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                </div>`;
+                        </div>`;
             });
 
             $("#promoList").html(html);
         }
 
         function copyCode(code) {
-            navigator.clipboard.writeText(code).then(function() {
+            navigator.clipboard.writeText(code).then(function () {
                 // Hiệu ứng thông báo copy thành công (Toast đơn giản)
                 var toast = document.createElement("div");
                 toast.className = "position-fixed bottom-0 end-0 p-3";
                 toast.style.zIndex = "11";
                 toast.innerHTML = `
-                    <div class="toast show bg-success text-white align-items-center" role="alert" aria-live="assertive" aria-atomic="true">
-                        <div class="d-flex">
-                            <div class="toast-body">
-                                <i class="fas fa-check-circle"></i> Đã sao chép mã: <strong>${code}</strong>
+                            <div class="toast show bg-success text-white align-items-center" role="alert">
+                                <div class="d-flex">
+                                    <div class="toast-body">
+                                        <i class="fa fa-check-circle me-2"></i>Đã sao chép mã: <strong>${code}</strong>
+                                    </div>
+                                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                                </div>
                             </div>
-                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-                        </div>
-                    </div>
-                `;
+                        `;
                 document.body.appendChild(toast);
 
                 setTimeout(() => {
                     toast.remove();
                 }, 3000);
-            }, function(err) {
+            }, function (err) {
                 alert('Không thể sao chép mã: ' + err);
             });
         }
@@ -145,15 +166,30 @@
 
     <style>
         .coupon-card {
-            transition: transform 0.2s;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
 
             .coupon-card:hover {
                 transform: translateY(-5px);
+                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15) !important;
             }
 
         .border-dashed {
             border-style: dashed !important;
+        }
+
+        .btn-copy {
+            transition: all 0.3s;
+        }
+
+            .btn-copy:hover {
+                transform: scale(1.05);
+            }
+
+        .section-title {
+            position: relative;
+            display: inline-block;
+            letter-spacing: 2px;
         }
     </style>
 }

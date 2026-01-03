@@ -1,59 +1,97 @@
 ﻿@{
-    ViewBag.Title = "Hồ sơ của tôi";
+    ViewBag.Title = "Thông tin cá nhân";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h2>Hồ sơ của tôi</h2>
-
-<div class="row">
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-header">
-                <h4>Thông tin cá nhân</h4>
-            </div>
-            <div class="card-body">
-                <form id="profileForm">
-                    <div id="success-message" class="alert alert-success" style="display:none;"></div>
-                    <div id="error-message" class="alert alert-danger" style="display:none;"></div>
-
-                    <div class="form-group mb-3">
-                        <label>Email</label>
-                        <input type="text" class="form-control" id="email" readonly />
-                    </div>
-
-                    <div class="form-group mb-3">
-                        <label for="fullName">Họ tên</label>
-                        <input type="text" class="form-control" id="fullName" required />
-                    </div>
-
-                    <div class="form-group mb-3">
-                        <label for="phone">Số điện thoại</label>
-                        <input type="tel" class="form-control" id="phone" />
-                    </div>
-
-                    <button type="submit" class="btn btn-primary">Cập nhật thông tin</button>
-                </form>
-            </div>
-        </div>
-
-        <div class="card mt-3">
-            <div class="card-header">
-                <h4>Bảo mật</h4>
-            </div>
-            <div class="card-body">
-                <a href="/Customer/Profile/ChangePassword" class="btn btn-warning">Đổi mật khẩu</a>
-                <a href="/Customer/Profile/Delete" class="btn btn-danger">Xóa tài khoản</a>
-            </div>
-        </div>
+<!-- Page Header -->
+<div class="container-fluid page-header py-5 mb-5" style="background: linear-gradient(rgba(15, 23, 43, 0.7), rgba(15, 23, 43, 0.7)), url('/Content/img/carousel-1.jpg') center/cover;">
+    <div class="container py-5">
+        <h1 class="display-3 text-white mb-3 animated slideInDown">Thông tin cá nhân</h1>
+        <nav aria-label="breadcrumb animated slideInDown">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a class="text-white" href="/">Trang chủ</a></li>
+                <li class="breadcrumb-item text-white active">Thông tin cá nhân</li>
+            </ol>
+        </nav>
     </div>
+</div>
 
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-header">
-                <h5>Loyalty Points</h5>
+<!-- Profile Content -->
+<div class="container-xxl py-5">
+    <div class="container">
+        <div class="row g-5">
+            <!-- Left Sidebar -->
+            <div class="col-lg-4">
+                <div class="text-center mb-4 wow fadeInLeft" data-wow-delay="0.1s">
+                    <div class="avatar-large mx-auto mb-3" id="avatarDisplay">
+                        <span id="avatarLetter">U</span>
+                    </div>
+                    <h4 id="displayName">Loading...</h4>
+                    <p class="text-muted" id="displayEmail">...</p>
+                </div>
+
+                <!-- Loyalty Card -->
+                <div class="card border-0 shadow-sm p-4 mb-3 wow fadeInLeft" data-wow-delay="0.2s">
+                    <h6 class="mb-3">
+                        <i class="fa fa-trophy text-warning me-2"></i>Hạng thành viên
+                    </h6>
+                    <div id="loyaltyInfo">
+                        <div class="text-center py-2">
+                            <div class="spinner-border spinner-border-sm text-primary"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Security Card -->
+                <div class="card border-0 shadow-sm p-4 wow fadeInLeft" data-wow-delay="0.3s">
+                    <h6 class="mb-3">
+                        <i class="fa fa-shield-alt text-primary me-2"></i>Bảo mật
+                    </h6>
+                    <a href="/Customer/Profile/ChangePassword" class="btn btn-warning w-100 mb-2">
+                        <i class="fa fa-key me-2"></i>Đổi mật khẩu
+                    </a>
+                    <a href="/Customer/Profile/Delete" class="btn btn-outline-danger w-100">
+                        <i class="fa fa-trash me-2"></i>Xóa tài khoản
+                    </a>
+                </div>
             </div>
-            <div class="card-body text-center" id="loyaltyInfo">
-                <p class="text-muted">Đang tải...</p>
+
+            <!-- Right Content -->
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm p-4 mb-4 wow fadeInRight" data-wow-delay="0.1s">
+                    <h5 class="mb-4">
+                        <i class="fa fa-user-edit text-primary me-2"></i>Thông tin cá nhân
+                    </h5>
+
+                    <form id="profileForm">
+                        <div id="success-message" class="alert alert-success" style="display:none;"></div>
+                        <div id="error-message" class="alert alert-danger" style="display:none;"></div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">Email</label>
+                                <input type="text" class="form-control form-control-lg" id="email" readonly />
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label for="fullName" class="form-label fw-semibold">Họ tên</label>
+                                <input type="text" class="form-control form-control-lg" id="fullName" required />
+                            </div>
+                            <div class="col-md-6">
+                                <label for="phone" class="form-label fw-semibold">Số điện thoại</label>
+                                <input type="tel" class="form-control form-control-lg" id="phone" />
+                            </div>
+                        </div>
+
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-primary btn-lg px-5">
+                                <i class="fa fa-save me-2"></i>Cập nhật thông tin
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
@@ -74,12 +112,18 @@
         function loadProfile() {
             $.ajax({
                 type: "GET",
-                url: window.location.origin + '/Customer/Profile/GetProfile',
+                url: '/Customer/Profile/GetProfile',
                 success: function (response) {
                     if (response.success) {
-                        $("#email").val(response.data.Email);
-                        $("#fullName").val(response.data.FullName);
-                        $("#phone").val(response.data.Phone);
+                        var data = response.data;
+                        $("#email").val(data.Email);
+                        $("#fullName").val(data.FullName);
+                        $("#phone").val(data.Phone);
+
+                        // Update display
+                        $("#displayName").text(data.FullName || 'Thành viên');
+                        $("#displayEmail").text(data.Email);
+                        $("#avatarLetter").text((data.FullName || 'U').substring(0, 1).toUpperCase());
                     }
                 }
             });
@@ -88,13 +132,24 @@
         function loadLoyaltyInfo() {
             $.ajax({
                 type: "GET",
-                url: window.location.origin + '/Customer/Profile/GetLoyaltyInfo',
+                url: '/Customer/Profile/GetLoyaltyInfo',
                 success: function (response) {
                     if (response.success) {
-                        var html = '<h1 class="text-primary">' + response.points + '</h1>';
-                        html += '<p>Điểm tích lũy</p>';
-                        html += '<p><strong>Hạng:</strong> ' + response.tierName + '</p>';
-                        html += '<a href="/Customer/Loyalty/Index" class="btn btn-info btn-sm">Xem chi tiết</a>';
+                        var html = `
+                                    <div class="text-center mb-3">
+                                        <h2 class="text-primary mb-0">${response.points}</h2>
+                                        <small class="text-muted">Điểm tích lũy</small>
+                                    </div>
+                                    <div class="mb-3">
+                                        <div class="d-flex justify-content-between small mb-1">
+                                            <span>Hạng:</span>
+                                            <strong class="text-warning">${response.tierName}</strong>
+                                        </div>
+                                    </div>
+                                    <a href="/Customer/Loyalty/Index" class="btn btn-info btn-sm w-100">
+                                        <i class="fa fa-arrow-right me-2"></i>Xem chi tiết
+                                    </a>
+                                `;
                         $("#loyaltyInfo").html(html);
                     }
                 }
@@ -109,19 +164,47 @@
 
             $.ajax({
                 type: "POST",
-                url: window.location.origin + '/Customer/Profile/UpdateProfile',
+                url: '/Customer/Profile/UpdateProfile',
                 data: JSON.stringify(formData),
                 contentType: "application/json; charset=utf-8",
                 success: function (response) {
                     if (response.success) {
                         $("#success-message").text(response.message).show();
                         $("#error-message").hide();
+
+                        // Update display
+                        $("#displayName").text(formData.FullName);
+                        $("#avatarLetter").text(formData.FullName.substring(0, 1).toUpperCase());
+
+                        setTimeout(function () {
+                            $("#success-message").fadeOut();
+                        }, 3000);
                     } else {
                         $("#error-message").text(response.message).show();
                         $("#success-message").hide();
                     }
+                },
+                error: function () {
+                    $("#error-message").text("Đã xảy ra lỗi. Vui lòng thử lại.").show();
+                    $("#success-message").hide();
                 }
             });
         }
     </script>
+
+    <style>
+        .avatar-large {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FEA116 0%, #FF6B6B 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 2.5rem;
+            color: white;
+            box-shadow: 0 4px 12px rgba(254, 161, 22, 0.3);
+        }
+    </style>
 }

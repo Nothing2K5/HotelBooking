@@ -3,48 +3,91 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="row justify-content-center py-4">
-    <div class="col-md-8">
-        <div class="card shadow">
-            <div class="card-header bg-primary text-white">
-                <h4 class="mb-0"><i class="fas fa-pen-nib"></i> Viết đánh giá của bạn</h4>
-            </div>
-            <div class="card-body">
-                <div id="bookingInfo" class="mb-4 p-3 bg-light rounded border">
-                    <div class="spinner-border spinner-border-sm text-primary" role="status"></div> Đang tải thông tin...
-                </div>
+<!-- Page Header -->
+<div class="container-fluid page-header py-5 mb-5" style="background: linear-gradient(rgba(15, 23, 43, 0.7), rgba(15, 23, 43, 0.7)), url('/Content/img/carousel-1.jpg') center/cover;">
+    <div class="container py-5">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb text-white mb-2">
+                <li class="breadcrumb-item"><a href="/" class="text-white">Trang chủ</a></li>
+                <li class="breadcrumb-item"><a href="/Customer/Booking/Index" class="text-white">Lịch sử</a></li>
+                <li class="breadcrumb-item active text-warning">Đánh giá</li>
+            </ol>
+        </nav>
+        <h1 class="display-5 text-white mb-3">Viết đánh giá</h1>
+    </div>
+</div>
 
-                <form id="createReviewForm">
-                    <input type="hidden" id="bookingId" value="@ViewBag.BookingId" />
-                    <input type="hidden" id="ratingValue" name="Rating" value="5" />
-
-                    <div class="mb-4 text-center">
-                        <label class="form-label d-block fw-bold">Bạn cảm thấy thế nào về kỳ nghỉ?</label>
-                        <div class="star-rating fs-1 text-warning" style="cursor: pointer;">
-                            <i class="fas fa-star" data-value="1"></i>
-                            <i class="fas fa-star" data-value="2"></i>
-                            <i class="fas fa-star" data-value="3"></i>
-                            <i class="fas fa-star" data-value="4"></i>
-                            <i class="fas fa-star" data-value="5"></i>
+<!-- Review Form -->
+<div class="container-xxl py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm overflow-hidden wow fadeInUp" style="border-radius: 24px" data-wow-delay="0.1s">
+                    <!-- Header ảnh khách sạn -->
+                    <div class="position-relative">
+                        <img id="hotelImage" src="/Content/images/hotel-placeholder.jpg" class="w-100" style="height: 280px; object-fit: cover" alt="Hotel" />
+                        <div class="position-absolute bottom-0 start-0 end-0 p-5 text-white text-center" style="background: linear-gradient(0deg, rgba(0, 0, 0, 0.8) 0%, transparent 100%);">
+                            <h3 class="fw-bold mb-2" id="hotelName">Loading...</h3>
+                            <p class="fs-5 mb-0" id="bookingInfo">
+                                <i class="fa fa-bed me-2"></i>Đang tải thông tin...
+                            </p>
                         </div>
-                        <div id="ratingText" class="text-primary fw-bold mt-1">Tuyệt vời (5/5)</div>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="title" class="form-label fw-bold">Tiêu đề (Tóm tắt trải nghiệm)</label>
-                        <input type="text" class="form-control" id="title" placeholder="VD: Kỳ nghỉ tuyệt vời, Phòng sạch sẽ..." required>
-                    </div>
+                    <div class="card-body p-5">
+                        <!-- Thông báo chưa có review -->
+                        <div class="text-center mb-5 bg-light rounded-4 py-4">
+                            <p class="mb-2 text-muted fs-6">Khách sạn này hiện chưa có đánh giá nào</p>
+                            <h5 class="text-primary">
+                                <i class="fa fa-star me-2"></i>Hãy chia sẻ trải nghiệm của bạn!
+                            </h5>
+                        </div>
 
-                    <div class="mb-3">
-                        <label for="content" class="form-label fw-bold">Nội dung chi tiết</label>
-                        <textarea class="form-control" id="content" rows="5" placeholder="Chia sẻ chi tiết về phòng ốc, dịch vụ, vị trí..." required></textarea>
-                    </div>
+                        <form id="reviewForm">
+                            <input type="hidden" id="bookingId" value="@ViewBag.BookingId" />
+                            <input type="hidden" id="ratingValue" name="Rating" value="5" />
 
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-success btn-lg">Gửi đánh giá</button>
-                        <a href="/Customer/Booking/Index" class="btn btn-outline-secondary">Hủy bỏ</a>
+                            <!-- Đánh giá tổng thể (sao lớn) -->
+                            <div class="text-center mb-5">
+                                <label class="form-label fw-bold fs-5 mb-4 d-block">
+                                    Đánh giá tổng thể <span class="text-danger">*</span>
+                                </label>
+                                <div class="star-rating-main d-inline-flex gap-3" id="overallRating">
+                                    <i class="fa fa-star fs-1" data-value="1"></i>
+                                    <i class="fa fa-star fs-1" data-value="2"></i>
+                                    <i class="fa fa-star fs-1" data-value="3"></i>
+                                    <i class="fa fa-star fs-1" data-value="4"></i>
+                                    <i class="fa fa-star fs-1" data-value="5"></i>
+                                </div>
+                                <div id="ratingText" class="mt-3 h5 text-primary fw-bold">Tuyệt vời (5/5)</div>
+                            </div>
+
+                            <!-- Tiêu đề & Nội dung -->
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Tiêu đề đánh giá</label>
+                                <input type="text" class="form-control form-control-lg rounded-3" id="title" placeholder="VD: Sang trọng và đáng giá!" required />
+                            </div>
+
+                            <div class="mb-5">
+                                <label class="form-label fw-bold">Nội dung đánh giá <span class="text-danger">*</span></label>
+                                <textarea class="form-control rounded-3" rows="6" id="content" placeholder="Hãy kể chi tiết về trải nghiệm của bạn..." required></textarea>
+                                <small class="text-success mt-2 d-block">
+                                    <i class="fa fa-gift me-2"></i>Viết chi tiết → Nhận thêm 50 điểm thưởng!
+                                </small>
+                            </div>
+
+                            <!-- Nút bấm -->
+                            <div class="text-end">
+                                <a href="/Customer/Booking/Index" class="btn btn-outline-secondary btn-lg px-5 me-3 rounded-pill">
+                                    Hủy bỏ
+                                </a>
+                                <button type="submit" class="btn btn-primary btn-lg px-5 rounded-pill shadow-sm fw-bold">
+                                    <i class="fa fa-paper-plane me-2"></i>Gửi đánh giá
+                                </button>
+                            </div>
+                        </form>
                     </div>
-                </form>
+                </div>
             </div>
         </div>
     </div>
@@ -57,41 +100,43 @@
         $(document).ready(function () {
             loadBookingInfo();
 
-            // Xử lý chọn sao
-            $(".star-rating i").hover(function() {
+            // Xử lý chọn sao - khởi tạo với 5 sao
+            highlightStars(5);
+
+            $(".star-rating-main i").hover(function () {
                 var val = $(this).data("value");
                 highlightStars(val);
-            }, function() {
+            }, function () {
                 var val = $("#ratingValue").val();
                 highlightStars(val);
             });
 
-            $(".star-rating i").click(function() {
+            $(".star-rating-main i").click(function () {
                 var val = $(this).data("value");
                 $("#ratingValue").val(val);
                 highlightStars(val);
                 updateRatingText(val);
             });
 
-            $("#createReviewForm").submit(function(e) {
+            $("#reviewForm").submit(function (e) {
                 e.preventDefault();
                 submitReview();
             });
         });
 
         function highlightStars(count) {
-            $(".star-rating i").each(function(index) {
+            $(".star-rating-main i").each(function (index) {
                 if (index < count) {
-                    $(this).removeClass("far").addClass("fas");
+                    $(this).removeClass("far").addClass("fas").css("color", "#ffc107");
                 } else {
-                    $(this).removeClass("fas").addClass("far");
+                    $(this).removeClass("fas").addClass("far").css("color", "#ddd");
                 }
             });
         }
 
         function updateRatingText(val) {
             var texts = ["Rất tệ", "Tệ", "Bình thường", "Tốt", "Tuyệt vời"];
-            $("#ratingText").text(texts[val-1] + " (" + val + "/5)");
+            $("#ratingText").text(texts[val - 1] + " (" + val + "/5)");
         }
 
         function loadBookingInfo() {
@@ -99,14 +144,15 @@
                 type: "GET",
                 url: '/Customer/Review/GetBookingInfo',
                 data: { bookingId: bookingId },
-                success: function(response) {
+                success: function (response) {
                     if (response.success) {
                         var b = response.data;
+                        $("#hotelName").text(b.HotelName);
                         $("#bookingInfo").html(`
-                            <h5 class="mb-1 text-primary"><i class="fas fa-hotel"></i> ${b.HotelName}</h5>
-                            <p class="mb-0 text-muted small">Mã booking: ${b.Id} (Check-in: ${formatDate(b.CheckInDate)})</p>
-                        `);
+                                    <i class="fa fa-bed me-2"></i>Mã booking: ${b.Id} • Check-in: ${formatDate(b.CheckInDate)}
+                                `);
                     } else {
+                        $("#hotelName").text("Lỗi");
                         $("#bookingInfo").html(`<div class="text-danger">${response.message}</div>`);
                         $("button[type=submit]").prop("disabled", true);
                     }
@@ -122,29 +168,35 @@
                 Content: $("#content").val()
             };
 
+            var btn = $("button[type=submit]");
+            var originalText = btn.html();
+            btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Đang gửi...');
+
             $.ajax({
                 type: "POST",
                 url: '/Customer/Review/CreateReview',
                 data: JSON.stringify(data),
                 contentType: "application/json; charset=utf-8",
-                success: function(response) {
+                success: function (response) {
                     if (response.success) {
                         alert(response.message);
                         window.location.href = "/Customer/Review/Index";
                     } else {
                         alert("Lỗi: " + response.message);
+                        btn.prop('disabled', false).html(originalText);
                     }
                 },
-                error: function() {
+                error: function () {
                     alert("Đã xảy ra lỗi khi gửi đánh giá.");
+                    btn.prop('disabled', false).html(originalText);
                 }
             });
         }
 
         function formatDate(jsonDate) {
-             if (!jsonDate) return "";
-             var date = new Date(parseInt(jsonDate.replace(/\/Date\((-?\d+)\)\//, '$1')));
-             return date.toLocaleDateString('vi-VN');
+            if (!jsonDate) return "";
+            var date = new Date(parseInt(jsonDate.replace(/\/Date\((-?\d+)\)\//, '$1')));
+            return date.toLocaleDateString('vi-VN');
         }
     </script>
 }

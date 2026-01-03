@@ -3,37 +3,258 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="jumbotron">
-    <h1 class="display-4">Chào mừng đến Hotel Booking</h1>
-    <p class="lead">Tìm và đặt phòng khách sạn dễ dàng, nhanh chóng</p>
-    <hr class="my-4">
-    <p>Bắt đầu tìm kiếm khách sạn ngay hôm nay!</p>
-    <a class="btn btn-primary btn-lg" href="/Search/Index" role="button">Tìm kiếm</a>
-</div>
+<!-- ===== Carousel Start ===== -->
+<div class="container-fluid p-0 mb-5">
+    <div id="header-carousel" class="carousel slide" data-bs-ride="carousel">
+        <div class="carousel-inner">
+            <!-- Slide 1 -->
+            <div class="carousel-item active">
+                <img class="w-100" src="~/Content/img/carousel-1.jpg" alt="Khách sạn sang trọng 1" style="height: 600px; object-fit: cover;" />
+                <div class="carousel-caption d-flex flex-column align-items-center justify-content-center">
+                    <div class="p-3 text-center" style="max-width: 700px">
+                        <h6 class="section-title text-white text-uppercase mb-3 animated slideInDown">
+                            Đặt phòng nhanh – trải nghiệm tuyệt vời
+                        </h6>
+                        <h1 class="display-4 text-white mb-4 animated slideInDown fw-bold">
+                            Khám phá hàng ngàn khách sạn 5★ và 4★
+                        </h1>
+                        <a href="/Search/Index" class="btn btn-primary py-md-3 px-md-5 mt-2 animated slideInUp fw-semibold">
+                            BOOKING NGAY
+                        </a>
+                    </div>
+                </div>
+            </div>
 
-<div class="row mt-5">
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-body text-center">
-                <h5 class="card-title">🏨 Nhiều lựa chọn</h5>
-                <p class="card-text">Hàng nghìn khách sạn trên toàn quốc</p>
+            <!-- Slide 2 -->
+            <div class="carousel-item">
+                <img class="w-100" src="~/Content/img/carousel-2.jpg" alt="Khách sạn sang trọng 2" style="height: 600px; object-fit: cover;" />
+                <div class="carousel-caption d-flex flex-column align-items-center justify-content-center">
+                    <div class="p-3 text-center" style="max-width: 700px">
+                        <h6 class="section-title text-white text-uppercase mb-3 animated slideInDown">
+                            Ưu đãi mới ngày – tích điểm lên hạng
+                        </h6>
+                        <h1 class="display-4 text-white mb-4 animated slideInDown fw-bold">
+                            Tích điểm – Nhận thưởng – Nâng hạng
+                        </h1>
+                        <a href="/Search/Index" class="btn btn-primary py-md-3 px-md-5 mt-2 animated slideInUp fw-semibold">
+                            BOOKING NGAY
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 3 -->
+            <div class="carousel-item">
+                <img class="w-100" src="~/Content/img/carousel-3.jpg" alt="Khách sạn sang trọng 3" style="height: 600px; object-fit: cover;" />
+                <div class="carousel-caption d-flex flex-column align-items-center justify-content-center">
+                    <div class="p-3 text-center" style="max-width: 700px">
+                        <h6 class="section-title text-white text-uppercase mb-3 animated slideInDown">
+                            Trải nghiệm cho mọi nhu cầu – từ công tác tới nghỉ dưỡng
+                        </h6>
+                        <h1 class="display-4 text-white mb-4 animated slideInDown fw-bold">
+                            Chọn phòng – Đặt nhanh – Điểm số tăng mỗi lần lưu trú
+                        </h1>
+                        <a href="/Search/Index" class="btn btn-primary py-md-3 px-md-5 mt-2 animated slideInUp fw-semibold">
+                            BOOKING NGAY
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
+
+        <!-- Nút điều hướng -->
+        <button class="carousel-control-prev" type="button" data-bs-target="#header-carousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#header-carousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>
+        </button>
     </div>
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-body text-center">
-                <h5 class="card-title">💰 Giá tốt nhất</h5>
-                <p class="card-text">Đảm bảo giá tốt với nhiều ưu đãi</p>
+</div>
+<!-- ===== Carousel End ===== -->
+<!-- About Start -->
+<div class="container-xxl py-5">
+    <div class="container">
+        <div class="row g-5 align-items-center">
+            <!-- Thông tin về dịch vụ -->
+            <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.1s">
+                <h1 class="mb-4">
+                    Chào mừng đến với
+                    <span class="text-primary text-uppercase">ABC HOTEL</span>
+                </h1>
+                <p class="mb-4">
+                    ABC HOTEL là nền tảng đặt phòng trực tuyến tối ưu, kết nối khách hàng với hàng nghìn khách sạn chất lượng.
+                    Bạn có thể tìm kiếm, đặt phòng dễ dàng, xem và để lại đánh giá, theo dõi khuyến mãi, tích điểm và nâng hạng
+                    thành viên để nhận nhiều ưu đãi độc quyền.
+                </p>
+
+                <!-- Số liệu nổi bật -->
+                <div class="row g-3 pb-4">
+                    <div class="col-sm-4">
+                        <div class="border rounded text-center p-4 shadow-sm">
+                            <i class="fa fa-hotel fa-2x text-primary mb-2"></i>
+                            <h2 class="mb-1" id="totalHotels">0</h2>
+                            <p class="mb-0 fw-bold">Khách sạn</p>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="border rounded text-center p-4 shadow-sm">
+                            <i class="fa fa-star fa-2x text-primary mb-2"></i>
+                            <h2 class="mb-1" id="averageRating">0</h2>
+                            <p class="mb-0 fw-bold">Đánh giá TB</p>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="border rounded text-center p-4 shadow-sm">
+                            <i class="fa fa-users fa-2x text-primary mb-2"></i>
+                            <h2 class="mb-1" id="totalCustomers">0</h2>
+                            <p class="mb-0 fw-bold">Khách hàng</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Nút khám phá -->
+                <a class="btn btn-primary py-3 px-5 mt-3" href="/Search/Index">Tìm Khách Sạn Ngay</a>
             </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-body text-center">
-                <h5 class="card-title">⭐ Loyalty Program</h5>
-                <p class="card-text">Tích điểm và nhận ưu đãi đặc biệt</p>
+
+            <!-- Hình ảnh minh họa -->
+            <div class="col-lg-6">
+                <div class="row g-3">
+                    <div class="col-6 text-end">
+                        <img class="img-fluid rounded w-75 wow zoomIn" data-wow-delay="0.1s"
+                             src="~/Content/img/about-1.jpg" style="margin-top: 25%" alt="Sảnh khách sạn hiện đại" />
+                    </div>
+                    <div class="col-6 text-start">
+                        <img class="img-fluid rounded w-100 wow zoomIn" data-wow-delay="0.3s"
+                             src="~/Content/img/about-2.jpg" alt="Phòng khách sạn tiện nghi" />
+                    </div>
+                    <div class="col-6 text-end">
+                        <img class="img-fluid rounded w-50 wow zoomIn" data-wow-delay="0.5s"
+                             src="~/Content/img/about-3.jpg" alt="Khách hàng đánh giá khách sạn" />
+                    </div>
+                    <div class="col-6 text-start">
+                        <img class="img-fluid rounded w-75 wow zoomIn" data-wow-delay="0.7s"
+                             src="~/Content/img/about-4.jpg" alt="Tiện ích và dịch vụ khách sạn" />
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
+<!-- About End -->
+<!-- Hotels Start -->
+<div class="container-xxl py-5">
+    <div class="container">
+        <!-- Tiêu đề chính -->
+        <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
+            <h6 class="section-title text-center text-primary text-uppercase px-3">
+                Khách sạn nổi bật
+            </h6>
+            <h2 class="mb-5">Trải nghiệm sang trọng và thoải mái tuyệt đối</h2>
+        </div>
+
+        <div class="row g-4" id="hotelsContainer">
+            <!-- Hotels will be loaded here via JavaScript -->
+            <div class="col-12 text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Hotels End -->
+
+@section scripts {
+    <script>
+        $(document).ready(function () {
+            // Load statistics
+            loadStatistics();
+
+            // Load featured hotels
+            loadFeaturedHotels();
+        });
+
+        function loadStatistics() {
+            // Animate counters (fake data for demo)
+            animateCounter('#totalHotels', 150);
+            animateCounter('#averageRating', 4.5);
+            animateCounter('#totalCustomers', 5000);
+        }
+
+        function animateCounter(selector, target) {
+            var $element = $(selector);
+            $({ Counter: 0 }).animate({ Counter: target }, {
+                duration: 2000,
+                easing: 'swing',
+                step: function () {
+                    if (selector === '#averageRating') {
+                        $element.text(this.Counter.toFixed(1));
+                    } else {
+                        $element.text(Math.ceil(this.Counter));
+                    }
+                }
+            });
+        }
+
+        function loadFeaturedHotels() {
+            $.ajax({
+                type: "GET",
+                url: '/Search/GetAllHotels',
+                success: function (response) {
+                    if (response.success && response.hotels && response.hotels.length > 0) {
+                        var hotels = response.hotels.slice(0, 3); // Take first 3 hotels
+                        displayHotels(hotels);
+                    } else {
+                        $('#hotelsContainer').html('<div class="col-12"><div class="alert alert-info text-center">Chưa có khách sạn nào.</div></div>');
+                    }
+                },
+                error: function () {
+                    $('#hotelsContainer').html('<div class="col-12"><div class="alert alert-danger text-center">Không thể tải danh sách khách sạn.</div></div>');
+                }
+            });
+        }
+
+        function displayHotels(hotels) {
+            var html = '';
+            hotels.forEach(function (hotel, index) {
+                var imgUrl = hotel.ImageUrl || '/Content/img/no-image.png';
+                var stars = '';
+                for (let i = 0; i < Math.floor(hotel.StarRating || 0); i++) {
+                    stars += '<small class="fa fa-star text-warning"></small>';
+                }
+
+                html += `
+                <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="${0.1 + index * 0.2}s">
+                    <a href="/Hotel/Details/${hotel.Id}" class="text-decoration-none">
+                        <div class="hotel-item rounded overflow-hidden shadow position-relative d-flex flex-column h-100">
+                            <div class="position-relative">
+                                <img class="img-fluid w-100" src="${imgUrl}" alt="${hotel.Name}"
+                                     style="height: 220px; object-fit: cover" />
+                                <div class="hotel-price bg-warning text-dark rounded py-1 px-3 position-absolute start-0 bottom-0 mb-3 ms-3 fw-bold">
+                                    Từ ${hotel.MinPrice.toLocaleString()}đ
+                                </div>
+                            </div>
+                            <div class="p-4 d-flex flex-column flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h5 class="mb-0 text-truncate text-dark">${hotel.Name}</h5>
+                                    <div class="rating">${stars}</div>
+                                </div>
+                                <p class="text-muted small mb-3">
+                                    <i class="fa fa-map-marker-alt text-primary me-1"></i>${hotel.City || 'N/A'}
+                                </p>
+                                <p class="text-body mb-3 flex-grow-1" style="display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+                                    ${hotel.Description || 'Chưa có mô tả'}
+                                </p>
+                            </div>
+                        </div>
+                    </a>
+                </div>`;
+            });
+
+            $('#hotelsContainer').html(html);
+        }
+    </script>
+}

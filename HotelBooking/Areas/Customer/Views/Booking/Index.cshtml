@@ -1,43 +1,55 @@
 ﻿@{
-    ViewBag.Title = "Danh sách Booking";
+    ViewBag.Title = "Lịch sử đặt phòng";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="container-fluid py-3">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h3 class="mb-0">Danh sách Booking của tôi</h3>
-        <ol class="breadcrumb mb-0">
-            <li class="breadcrumb-item"><a href="/">Trang chủ</a></li>
-            <li class="breadcrumb-item active">Booking</li>
-        </ol>
+<!-- Page Header -->
+<div class="container-fluid page-header py-5 mb-5" style="background: linear-gradient(rgba(15, 23, 43, 0.7), rgba(15, 23, 43, 0.7)), url('/Content/img/carousel-1.jpg') center/cover;">
+    <div class="container py-5">
+        <h1 class="display-3 text-white mb-3 animated slideInDown">Lịch sử đặt phòng</h1>
+        <nav aria-label="breadcrumb animated slideInDown">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a class="text-white" href="/">Trang chủ</a></li>
+                <li class="breadcrumb-item text-white active">Lịch sử Booking</li>
+            </ol>
+        </nav>
     </div>
+</div>
 
-    <ul class="nav nav-pills mb-4" id="statusTabs">
-        <li class="nav-item">
-            <a class="nav-link active" href="#" data-status="">Tất cả</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="#" data-status="paid">Đã thanh toán</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="#" data-status="pending">Chờ thanh toán</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="#" data-status="cancelled">Đã hủy</a>
-        </li>
-    </ul>
+<!-- Booking Content -->
+<div class="container-xxl py-5">
+    <div class="container">
+        <!-- Filter Tabs -->
+        <ul class="nav nav-pills mb-4 justify-content-center" id="statusTabs">
+            <li class="nav-item">
+                <a class="nav-link active" href="#" data-status="">Tất cả</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" data-status="paid">Đã thanh toán</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" data-status="pending">Chờ thanh toán</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" data-status="cancelled">Đã hủy</a>
+            </li>
+        </ul>
 
-    <div id="bookingsList">
-        <div class="text-center">
-            <div class="spinner-border text-primary" role="status"></div>
-            <p>Đang tải dữ liệu...</p>
+        <!-- Loading State -->
+        <div id="loading" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3 text-muted">Đang tải dữ liệu...</p>
         </div>
+
+        <!-- Bookings List -->
+        <div id="bookingsList" class="row g-4" style="display:none;"></div>
     </div>
 </div>
 
 @section scripts {
     <script>
-        var url_domain = window.location.origin;
         var currentFilter = '';
 
         $(document).ready(function () {
@@ -53,10 +65,14 @@
         });
 
         function loadBookings() {
+            $("#loading").show();
+            $("#bookingsList").hide();
+
             $.ajax({
                 type: "GET",
                 url: '/Customer/Booking/GetMyBookings',
                 success: function (response) {
+                    $("#loading").hide();
                     if (response.success) {
                         var bookings = response.data;
                         if (currentFilter) {
@@ -65,78 +81,110 @@
                             });
                         }
                         displayBookings(bookings);
+                        $("#bookingsList").show();
                     } else {
-                        $("#bookingsList").html("<p class='alert alert-danger'>" + response.message + "</p>");
+                        $("#bookingsList").html("<div class='col-12'><div class='alert alert-danger'>" + response.message + "</div></div>").show();
                     }
                 },
                 error: function () {
-                    $("#bookingsList").html("<p class='alert alert-danger'>Đã xảy ra lỗi khi tải dữ liệu</p>");
+                    $("#loading").hide();
+                    $("#bookingsList").html("<div class='col-12'><div class='alert alert-danger'>Đã xảy ra lỗi khi tải dữ liệu</div></div>").show();
                 }
             });
         }
 
         function displayBookings(bookings) {
             if (bookings.length === 0) {
-                $("#bookingsList").html('<div class="alert alert-info text-center py-4"><h5>Chưa có booking nào.</h5><a href="/Search/Index" class="btn btn-primary mt-2">Tìm kiếm khách sạn ngay</a></div>');
+                $("#bookingsList").html(`
+                        <div class="col-12">
+                            <div class="text-center py-5 bg-light rounded-4">
+                                <i class="fa fa-calendar-times fa-3x text-muted mb-3"></i>
+                                <h5>Chưa có booking nào.</h5>
+                                <a href="/Search/Index" class="btn btn-primary mt-2">Tìm kiếm khách sạn ngay</a>
+                            </div>
+                        </div>
+                    `);
                 return;
             }
 
             var html = '';
-            var now = new Date(); // Lấy thời gian hiện tại
+            var now = new Date();
 
-            bookings.forEach(function (booking) {
-                var roomInfo = `<span class="badge bg-light text-dark border me-1"><i class="fas fa-door-open"></i> Phòng ${booking.RoomNumber}</span> 
-                        <span class="badge bg-light text-dark border">${booking.RoomType === 'VIP' ? 'VIP' : 'Thường'}</span>`;
-
-                // --- MỚI: Logic hiển thị nút Review ---
-                // Parse ngày Checkout
+            bookings.forEach(function (booking, index) {
                 var checkOutDate = booking.CheckOutDate.indexOf("/Date(") !== -1
                     ? new Date(parseInt(booking.CheckOutDate.replace(/\/Date\((-?\d+)\)\//, '$1')))
                     : new Date(booking.CheckOutDate);
 
-                // Điều kiện: Đã qua ngày trả phòng VÀ trạng thái là paid/confirmed
                 var isCompleted = (now > checkOutDate) && (booking.Status === 'paid' || booking.Status === 'confirmed');
 
-                var reviewBtn = '';
-                if (isCompleted) {
-                    reviewBtn = `<a href="/Customer/Review/Create?bookingId=${booking.Id}" class="btn btn-outline-warning btn-sm"><i class="fas fa-star"></i> Viết đánh giá</a>`;
-                }
-                // ---------------------------------------
+                var statusBadge = getStatusBadge(booking.Status);
+                var roomType = booking.RoomType === 'VIP' ? 'VIP' : 'Thường';
 
                 html += `
-        <div class="card mb-3 shadow-sm border-start border-4 ${getBorderColor(booking.Status)}">
-            <div class="card-body">
-                <div class="row align-items-center">
-                    <div class="col-md-8">
-                        <h5 class="text-primary mb-1"><i class="fas fa-hotel"></i> ${booking.HotelName}</h5>
-                        <div class="mb-2 text-muted small"><i class="fas fa-barcode"></i> ${booking.Code}</div>
-                        
-                        <div class="mb-2">${roomInfo}</div>
+                        <div class="col-md-6 col-lg-4 wow fadeInUp" data-wow-delay="${0.1 + index * 0.1}s">
+                            <div class="card border-0 shadow-sm h-100 hover-card">
+                                <div class="card-body p-4">
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <h6 class="mb-0">${booking.HotelName}</h6>
+                                        ${statusBadge}
+                                    </div>
+                                    <p class="text-muted small mb-2">
+                                        <i class="fa fa-calendar me-1"></i>${formatDate(booking.CheckInDate)} – ${formatDate(booking.CheckOutDate)}
+                                    </p>
+                                    <p class="text-muted small mb-3">
+                                        <i class="fa fa-door-open me-1"></i>Phòng ${booking.RoomNumber} • ${roomType}
+                                    </p>
+                                    <hr />
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <div>
+                                            <strong class="d-block text-danger h5 mb-0">${booking.TotalAmount.toLocaleString()} ₫</strong>
+                                            ${booking.Status === 'paid' || booking.Status === 'completed' ? '<small class="text-success">Đã tích điểm</small>' : ''}
+                                        </div>
+                                        <a href="/Customer/Booking/Details/${booking.Id}" class="btn btn-sm btn-outline-dark">
+                                            Xem chi tiết
+                                        </a>
+                                    </div>`;
 
-                        <p class="mb-1"><i class="far fa-calendar-alt text-success"></i> ${formatDate(booking.CheckInDate)} <i class="fas fa-arrow-right small text-muted"></i> ${formatDate(booking.CheckOutDate)}</p>
-                        <p class="mb-0"><strong>Tổng tiền:</strong> <span class="text-danger h5 fw-bold">${booking.TotalAmount.toLocaleString()} VNĐ</span></p>
-                    </div>
-                    <div class="col-md-4 text-md-end mt-3 mt-md-0">
-                        <div class="mb-3">${getStatusBadge(booking.Status)}</div>
-                        <div class="btn-group">
-                            <a href="/Customer/Booking/Details/${booking.Id}" class="btn btn-outline-primary btn-sm">Chi tiết</a>
-                            
-                            ${(booking.Status === 'draft' || booking.Status === 'pending') ?
-                        `<a href="/Customer/Booking/Payment/${booking.Id}" class="btn btn-success btn-sm">Thanh toán</a>` : ''}
-                            
-                            ${reviewBtn}  ${(booking.Status !== 'cancelled' && !isCompleted && booking.Status !== 'paid') ?
-                        `<button class="btn btn-outline-danger btn-sm" onclick="confirmCancel(${booking.Id})">Hủy</button>` : ''}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>`;
+                // Review button (chỉ hiện khi đã hoàn thành)
+                if (isCompleted) {
+                    html += `
+                            <div class="mt-3">
+                                <a href="/Customer/Review/Create?bookingId=${booking.Id}" class="btn btn-success btn-sm w-100">
+                                    <i class="fa fa-star me-1"></i>Viết đánh giá
+                                </a>
+                            </div>`;
+                }
+
+                // Payment button
+                if (booking.Status === 'draft' || booking.Status === 'pending') {
+                    html += `
+                            <div class="mt-2">
+                                <a href="/Customer/Booking/Payment/${booking.Id}" class="btn btn-primary btn-sm w-100">
+                                    Thanh toán ngay
+                                </a>
+                            </div>`;
+                }
+
+                // Cancel button
+                if (booking.Status !== 'cancelled' && !isCompleted && booking.Status !== 'paid') {
+                    html += `
+                            <div class="mt-2">
+                                <button class="btn btn-outline-danger btn-sm w-100" onclick="confirmCancel(${booking.Id})">
+                                    Hủy booking
+                                </button>
+                            </div>`;
+                }
+
+                html += `
+                                </div>
+                            </div>
+                        </div>`;
             });
+
             $("#bookingsList").html(html);
         }
 
         function formatDate(dateString) {
-            // Xử lý cả dạng /Date()/ và ISO
             var date;
             if (dateString.indexOf("/Date(") !== -1) {
                 date = new Date(parseInt(dateString.replace(/\/Date\((-?\d+)\)\//, '$1')));
@@ -151,25 +199,39 @@
                 'draft': '<span class="badge bg-secondary">Nháp</span>',
                 'pending': '<span class="badge bg-warning text-dark">Chờ thanh toán</span>',
                 'paid': '<span class="badge bg-success">Đã thanh toán</span>',
-                'confirmed': '<span class="badge bg-info">Đã xác nhận (Trả sau)</span>',
+                'confirmed': '<span class="badge bg-info">Đã xác nhận</span>',
                 'cancelled': '<span class="badge bg-danger">Đã hủy</span>',
                 'completed': '<span class="badge bg-primary">Hoàn thành</span>'
             };
             return badges[status] || '<span class="badge bg-secondary">' + status + '</span>';
         }
 
-        function getBorderColor(status) {
-            switch (status) {
-                case 'paid': return 'border-success';
-                case 'cancelled': return 'border-danger';
-                case 'pending': return 'border-warning';
-                default: return 'border-secondary';
-            }
-        }
-
         function confirmCancel(bookingId) {
-            // Chuyển hướng sang trang Cancel để xem chi tiết phí phạt
             window.location.href = '/Customer/Booking/Cancel/' + bookingId;
         }
     </script>
+
+    <style>
+        .nav-pills .nav-link {
+            color: #6c757d;
+            border-radius: 20px;
+            padding: 0.5rem 1.5rem;
+            transition: all 0.3s;
+        }
+
+            .nav-pills .nav-link.active,
+            .nav-pills .nav-link:hover {
+                background-color: #FEA116;
+                color: white;
+            }
+
+        .hover-card {
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+            .hover-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15) !important;
+            }
+    </style>
 }

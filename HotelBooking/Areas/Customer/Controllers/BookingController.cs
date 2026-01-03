@@ -263,7 +263,6 @@ namespace HotelBooking.Areas.Customer.Controllers
         {
             try
             {
-                // Logic Mới: Lấy thông tin phẳng (Flatten) vì 1 Booking = 1 Room
                 var booking = _db.Bookings
                     .Where(b => b.Id == id && b.UserId == GetCurrentUserId())
                     .Select(b => new
@@ -274,21 +273,50 @@ namespace HotelBooking.Areas.Customer.Controllers
                         b.CheckInDate,
                         b.CheckOutDate,
                         b.Guests,
+                        b.PricePerNight,
+                        b.Nights,
+                        b.SubTotal,
                         b.TotalAmount,
                         b.Note,
                         b.FreeCancellationDeadline,
                         b.PenaltyAmount,
+                        CreatedAt = b.CreatedAt,
+
+                        // Hotel basic info + first image (HotelImages)
                         HotelName = b.Hotel.Name,
                         HotelAddress = b.Hotel.Address + ", " + b.Hotel.City,
-                        // Thông tin phòng lấy trực tiếp
+                        HotelImageUrl = b.Hotel.HotelImages
+                                          .OrderBy(img => img.Id) // hoặc OrderBy(img => img.Id) / img.CreatedAt
+                                          .Select(img => img.Url)
+                                          .FirstOrDefault(),
+
+                        // Room info
                         RoomInfo = new
                         {
                             RoomNumber = b.Room.RoomNumber,
                             RoomType = b.Room.Code,
                             Price = b.PricePerNight,
                             Nights = b.Nights,
-                            SubTotal = b.SubTotal
-                        }
+                            SubTotal = b.SubTotal,
+                            RoomImageUrl = b.Room.RoomImages
+                                               .OrderBy(rimg => rimg.Id)
+                                               .Select(rimg => rimg.Url)
+                                               .FirstOrDefault()
+                        },
+
+                        // Customer (from Customers table)
+                        Customer = new
+                        {
+                            FullName = (b.User != null && b.User.Customer != null) ? b.User.Customer.FullName : null,
+                            Email = b.User != null ? b.User.Email : null,
+                            Phone = (b.User != null && b.User.Customer != null) ? b.User.Customer.Phone : null,
+                            LoyaltyTierName = (b.User != null && b.User.Customer != null && b.User.Customer.LoyaltyTier != null)
+                                                ? b.User.Customer.LoyaltyTier.Name
+                                                : null
+                        },
+
+                        // Discount computed server-side: SubTotal - TotalAmount (if promo / tier applied)
+                        DiscountAmount = (b.SubTotal - b.TotalAmount)
                     })
                     .FirstOrDefault();
 
@@ -302,6 +330,7 @@ namespace HotelBooking.Areas.Customer.Controllers
                 return Json(new { success = false, message = "Lỗi: " + ex.Message }, JsonRequestBehavior.AllowGet);
             }
         }
+
 
         // POST: Customer/Booking/ProcessPayment - AJAX
         [HttpPost]

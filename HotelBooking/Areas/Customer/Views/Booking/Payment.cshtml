@@ -3,49 +3,79 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h2>Thanh toán Booking</h2>
-
-<div class="row">
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-header">
-                <h4>Chọn phương thức thanh toán</h4>
-            </div>
-            <div class="card-body">
-                <form id="paymentForm">
-                    <input type="hidden" id="bookingId" value="@ViewBag.BookingId" />
-
-                    <div class="form-check mb-3">
-                        <input class="form-check-input" type="radio" name="paymentMethod"
-                               id="onlinePayment" value="online" checked>
-                        <label class="form-check-label" for="onlinePayment">
-                            <strong>Thanh toán online</strong> (Mô phỏng - Tự động thành công)
-                        </label>
-                    </div>
-
-                    <div class="form-check mb-3">
-                        <input class="form-check-input" type="radio" name="paymentMethod"
-                               id="directPayment" value="direct">
-                        <label class="form-check-label" for="directPayment">
-                            <strong>Thanh toán trực tiếp</strong> tại khách sạn
-                        </label>
-                    </div>
-
-                    <hr />
-
-                    <button type="submit" class="btn btn-success btn-lg w-100">Xác nhận thanh toán</button>
-                </form>
-            </div>
-        </div>
+<!-- Page Header -->
+<div class="container-fluid page-header py-5 mb-5" style="background: linear-gradient(rgba(15, 23, 43, 0.7), rgba(15, 23, 43, 0.7)), url('/Content/img/carousel-1.jpg') center/cover;">
+    <div class="container py-5">
+        <h1 class="display-3 text-white mb-3 animated slideInDown">Thanh toán</h1>
+        <nav aria-label="breadcrumb animated slideInDown">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a class="text-white" href="/">Trang chủ</a></li>
+                <li class="breadcrumb-item"><a class="text-white" href="/Customer/Booking/Index">Booking</a></li>
+                <li class="breadcrumb-item text-white active">Thanh toán</li>
+            </ol>
+        </nav>
     </div>
+</div>
 
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-header">
-                <h5>Thông tin booking</h5>
+<!-- Main Content -->
+<div class="container-xxl py-5">
+    <div class="container">
+        <div class="row g-5">
+            <!-- Payment Methods -->
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm p-4 wow fadeInUp" data-wow-delay="0.1s">
+                    <h5 class="mb-4">
+                        <i class="fa fa-credit-card me-2 text-primary"></i>Chọn phương thức thanh toán
+                    </h5>
+
+                    <form id="paymentForm">
+                        <input type="hidden" id="bookingId" value="@ViewBag.BookingId" />
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <div class="payment-method p-4 rounded text-center active" data-method="online">
+                                    <i class="fa fa-credit-card fa-3x mb-3 text-primary"></i>
+                                    <h6 class="mb-2 fw-bold">Thanh toán online</h6>
+                                    <p class="small text-muted mb-0">(Mô phỏng - Tự động thành công)</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="payment-method p-4 rounded text-center" data-method="direct">
+                                    <i class="fa fa-hand-holding-usd fa-3x mb-3 text-success"></i>
+                                    <h6 class="mb-2 fw-bold">Thanh toán trực tiếp</h6>
+                                    <p class="small text-muted mb-0">Tại khách sạn khi nhận phòng</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info border-info bg-info bg-opacity-10">
+                            <i class="fa fa-info-circle me-2"></i>
+                            <strong>Lưu ý:</strong> Bạn có thể hủy miễn phí trước thời hạn quy định.
+                            Vui lòng xem chính sách hủy trong chi tiết booking.
+                        </div>
+
+                        <hr class="my-4" />
+
+                        <button type="submit" class="btn btn-success btn-lg w-100 fw-semibold" id="btnSubmit">
+                            <i class="fa fa-check-circle me-2"></i>Xác nhận thanh toán
+                        </button>
+                    </form>
+                </div>
             </div>
-            <div class="card-body" id="bookingInfo">
-                <p class="text-muted">Đang tải...</p>
+
+            <!-- Booking Summary -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm p-4 sticky-top wow fadeInUp" data-wow-delay="0.2s" style="top: 100px">
+                    <h5 class="mb-3">
+                        <i class="fa fa-file-invoice me-2 text-primary"></i>Thông tin booking
+                    </h5>
+                    <div id="bookingInfo">
+                        <div class="text-center py-3">
+                            <div class="spinner-border text-primary" role="status"></div>
+                            <p class="mt-2 small text-muted">Đang tải...</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -54,9 +84,17 @@
 @section scripts {
     <script>
         var bookingId = parseInt($("#bookingId").val());
+        var selectedMethod = 'online';
 
         $(document).ready(function () {
             loadBookingInfo();
+
+            // Payment method selection
+            $(".payment-method").click(function () {
+                $(".payment-method").removeClass('active');
+                $(this).addClass('active');
+                selectedMethod = $(this).data('method');
+            });
 
             $("#paymentForm").submit(function (e) {
                 e.preventDefault();
@@ -67,35 +105,54 @@
         function loadBookingInfo() {
             $.ajax({
                 type: "GET",
-                url: window.location.origin + '/Customer/Booking/GetBookingInfo/' + bookingId,
+                url: '/Customer/Booking/GetBookingInfo',
+                data: { id: bookingId },
                 success: function (response) {
                     if (response.success) {
                         var booking = response.data;
-                        var html = '<p><strong>Mã booking:</strong> ' + booking.Code + '</p>';
-                        html += '<p><strong>Khách sạn:</strong> ' + booking.HotelName + '</p>';
-                        html += '<p><strong>Check-in:</strong> ' + formatDate(booking.CheckInDate) + '</p>';
-                        html += '<p><strong>Check-out:</strong> ' + formatDate(booking.CheckOutDate) + '</p>';
-                        html += '<hr />';
-                        html += '<p class="h5"><strong>Tổng tiền:</strong> <span class="text-danger">' + booking.TotalAmount.toLocaleString() + ' VNĐ</span></p>';
+                        var html = `
+                                        <div class="mb-3">
+                                            <small class="text-muted d-block">Mã booking</small>
+                                            <strong>${booking.Code}</strong>
+                                        </div>
+                                        <div class="mb-3">
+                                            <small class="text-muted d-block">Khách sạn</small>
+                                            <strong>${booking.HotelName}</strong>
+                                        </div>
+                                        <div class="mb-3">
+                                            <small class="text-muted d-block">Check-in</small>
+                                            <strong>${formatDate(booking.CheckInDate)}</strong>
+                                        </div>
+                                        <div class="mb-3">
+                                            <small class="text-muted d-block">Check-out</small>
+                                            <strong>${formatDate(booking.CheckOutDate)}</strong>
+                                        </div>
+                                        <hr />
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span class="fw-bold">Tổng tiền:</span>
+                                            <span class="h4 text-danger fw-bold mb-0">${booking.TotalAmount.toLocaleString()} VNĐ</span>
+                                        </div>
+                                        <small class="text-muted d-block">Đã bao gồm thuế & phí</small>
+                                    `;
                         $("#bookingInfo").html(html);
+                    } else {
+                        $("#bookingInfo").html('<div class="alert alert-danger small">Không tải được thông tin</div>');
                     }
                 }
             });
         }
 
-        function formatDate(dateString) {
-            return new Date(dateString).toLocaleDateString('vi-VN');
-        }
-
         function processPayment() {
-            var paymentMethod = $('input[name="paymentMethod"]:checked').val();
+            var btn = $("#btnSubmit");
+            var originalText = btn.html();
+            btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Đang xử lý...');
 
             $.ajax({
                 type: "POST",
-                url: window.location.origin + '/Customer/Booking/ProcessPayment',
+                url: '/Customer/Booking/ProcessPayment',
                 data: JSON.stringify({
                     bookingId: bookingId,
-                    paymentMethod: paymentMethod
+                    paymentMethod: selectedMethod
                 }),
                 contentType: "application/json; charset=utf-8",
                 success: function (response) {
@@ -104,12 +161,53 @@
                         window.location.href = '/Customer/Booking/Details/' + bookingId;
                     } else {
                         alert(response.message);
+                        btn.prop('disabled', false).html(originalText);
                     }
                 },
                 error: function () {
                     alert("Đã xảy ra lỗi trong quá trình thanh toán");
+                    btn.prop('disabled', false).html(originalText);
                 }
             });
         }
+
+        function formatDate(dateString) {
+            var date;
+            if (dateString.indexOf("/Date(") !== -1) {
+                date = new Date(parseInt(dateString.replace(/\/Date\((-?\d+)\)\//, '$1')));
+            } else {
+                date = new Date(dateString);
+            }
+            return date.toLocaleDateString('vi-VN');
+        }
     </script>
+
+
+    <style>
+        .payment-method {
+            border: 2px solid #e9ecef;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+            .payment-method:hover {
+                border-color: #FEA116;
+                transform: translateY(-5px);
+                box-shadow: 0 5px 15px rgba(254, 161, 22, 0.2);
+            }
+
+            .payment-method.active {
+                border-color: #FEA116;
+                background-color: rgba(254, 161, 22, 0.05);
+                box-shadow: 0 5px 15px rgba(254, 161, 22, 0.3);
+            }
+
+            .payment-method i {
+                transition: transform 0.3s;
+            }
+
+            .payment-method:hover i {
+                transform: scale(1.1);
+            }
+    </style>
 }

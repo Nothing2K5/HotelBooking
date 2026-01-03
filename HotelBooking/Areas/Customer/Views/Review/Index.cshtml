@@ -3,19 +3,28 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3><i class="fas fa-star text-warning"></i> Lịch sử đánh giá</h3>
-        <ol class="breadcrumb mb-0">
-            <li class="breadcrumb-item"><a href="/">Trang chủ</a></li>
-            <li class="breadcrumb-item active">Đánh giá</li>
-        </ol>
+<div class="container-fluid page-header py-5 mb-5" style="background: linear-gradient(rgba(15, 23, 43, 0.7), rgba(15, 23, 43, 0.7)), url('/Content/img/carousel-1.jpg') center/cover;">
+    <div class="container py-5">
+        <h1 class="display-3 text-white mb-3 animated slideInDown">Đánh giá của tôi</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a class="text-white" href="/">Trang chủ</a></li>
+                <li class="breadcrumb-item text-white active">Đánh giá</li>
+            </ol>
+        </nav>
     </div>
+</div>
 
-    <div id="reviewsList">
-        <div class="text-center py-5">
-            <div class="spinner-border text-primary" role="status"></div>
-            <p class="mt-2 text-muted">Đang tải đánh giá...</p>
+<div class="container-xxl py-5">
+    <div class="container">
+        <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
+            <h6 class="section-title text-center text-primary px-3">Lịch sử đánh giá</h6>
+            <h1 class="mb-5">Chia sẻ trải nghiệm của bạn</h1>
+        </div>
+
+        <div id="loading" class="text-center my-5"><div class="spinner-border text-primary"></div></div>
+
+        <div class="row g-4" id="reviewsList" style="display:none;">
         </div>
     </div>
 </div>
@@ -31,107 +40,103 @@
                 type: "GET",
                 url: '/Customer/Review/GetMyReviews',
                 success: function (response) {
+                    $("#loading").hide();
+                    $("#reviewsList").fadeIn();
+
                     if (response.success) {
                         displayReviews(response.data);
                     } else {
-                        $("#reviewsList").html('<div class="alert alert-danger">' + response.message + '</div>');
+                        $("#reviewsList").html('<div class="col-12"><div class="alert alert-danger">' + response.message + '</div></div>');
                     }
                 },
                 error: function () {
-                    $("#reviewsList").html('<div class="alert alert-danger">Đã xảy ra lỗi khi tải đánh giá</div>');
+                    $("#loading").hide();
+                    $("#reviewsList").html('<div class="col-12"><div class="alert alert-danger">Lỗi kết nối.</div></div>');
                 }
             });
         }
 
         function displayReviews(reviews) {
-            if (reviews.length === 0) {
+            if (!reviews || reviews.length === 0) {
                 $("#reviewsList").html(`
-                        <div class="text-center py-5 bg-light rounded">
-                            <i class="far fa-comment-dots fa-3x text-muted mb-3"></i>
-                            <h5>Bạn chưa có đánh giá nào</h5>
-                            <p class="text-muted">Sau khi hoàn thành chuyến đi, hãy quay lại đây để chia sẻ trải nghiệm của bạn nhé!</p>
-                            <a href="/Customer/Booking/Index" class="btn btn-primary">Xem lịch sử đặt phòng</a>
-                        </div>
-                    `);
+                            <div class="col-12 text-center py-5">
+                                <div class="bg-light rounded p-5 d-inline-block">
+                                    <i class="far fa-comment-dots fa-4x text-muted mb-3"></i>
+                                    <h5>Bạn chưa có đánh giá nào</h5>
+                                    <p class="text-muted mb-4">Hãy đặt phòng và chia sẻ trải nghiệm để nhận điểm thưởng!</p>
+                                    <a href="/Search/Index" class="btn btn-primary px-4">Đặt phòng ngay</a>
+                                </div>
+                            </div>
+                        `);
                 return;
             }
 
             var html = '';
-            reviews.forEach(function (review) {
-                // Tạo chuỗi ngôi sao
+            reviews.forEach(function (r) {
+                // Render Stars
                 var stars = '';
                 for (var i = 1; i <= 5; i++) {
-                    if (i <= review.Rating) stars += '<i class="fas fa-star text-warning"></i>';
-                    else stars += '<i class="far fa-star text-warning"></i>';
+                    stars += (i <= r.Rating) ? '<small class="fa fa-star text-warning"></small>' : '<small class="far fa-star text-warning"></small>';
+                }
+
+                var date = new Date(parseInt(r.CreatedAt.replace(/\/Date\((-?\d+)\)\//, '$1'))).toLocaleDateString('vi-VN');
+
+                // Action Buttons
+                var actions = '';
+                if (r.CanEdit) {
+                    actions = `
+                                <div class="mt-3 pt-3 border-top d-flex gap-2">
+                                    <a href="/Customer/Review/Edit/${r.Id}" class="btn btn-sm btn-outline-primary flex-fill"><i class="fa fa-edit me-1"></i> Sửa</a>
+                                    <button class="btn btn-sm btn-outline-danger flex-fill" onclick="deleteReview(${r.Id})"><i class="fa fa-trash me-1"></i> Xóa</button>
+                                </div>`;
+                } else {
+                    actions = `<div class="mt-3 pt-3 border-top text-center"><small class="text-muted"><i class="fa fa-lock me-1"></i> Đã chốt (Quá hạn sửa)</small></div>`;
                 }
 
                 html += `
-                    <div class="card mb-3 shadow-sm hover-shadow">
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-9">
-                                    <h5 class="card-title text-primary"><i class="fas fa-hotel"></i> ${review.HotelName}</h5>
-                                    <div class="mb-2 fs-5">${stars}</div>
-                                    ${review.Title ? `<h6 class="fw-bold mb-1">${review.Title}</h6>` : ''}
-                                    <p class="card-text text-secondary mb-2">${review.Content || '<i>Không có nội dung chi tiết</i>'}</p>
-                                    <small class="text-muted"><i class="far fa-clock"></i> Đánh giá ngày: ${formatDate(review.CreatedAt)}</small>
-                                </div>
-                                <div class="col-md-3 text-end border-start">
-                                    ${review.CanEdit ?
-                        `<a href="/Customer/Review/Edit/${review.Id}" class="btn btn-outline-warning btn-sm mb-2 w-100"><i class="fas fa-edit"></i> Chỉnh sửa</a>
-                                         <button class="btn btn-outline-danger btn-sm w-100" onclick="deleteReview(${review.Id})"><i class="fas fa-trash-alt"></i> Xóa</button>
-                                         <div class="small text-success mt-2"><i class="fas fa-check-circle"></i> Có thể chỉnh sửa</div>`
-                        :
-                        `<button class="btn btn-secondary btn-sm w-100" disabled>Đã chốt</button>
-                                         <div class="small text-muted mt-2">Quá hạn chỉnh sửa (30 ngày)</div>`
-                    }
+                        <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.1s">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body p-4 d-flex flex-column">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="flex-shrink-0 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
+                                            <i class="fa fa-hotel"></i>
+                                        </div>
+                                        <div class="ms-3 overflow-hidden">
+                                            <h6 class="mb-0 text-truncate">${r.HotelName}</h6>
+                                            <small class="text-muted">${date}</small>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-2">${stars}</div>
+                                    <h6 class="fw-bold mb-2">${r.Title || 'Không có tiêu đề'}</h6>
+                                    <p class="text-muted small mb-3 flex-grow-1 text-truncate-3">${r.Content || 'Không có nội dung.'}</p>
+
+                                    ${actions}
                                 </div>
                             </div>
-                        </div>
-                    </div>`;
+                        </div>`;
             });
             $("#reviewsList").html(html);
         }
 
-        function deleteReview(reviewId) {
-            if (!confirm("Bạn có chắc chắn muốn xóa đánh giá này? Hành động này không thể hoàn tác.")) {
-                return;
-            }
-
+        function deleteReview(id) {
+            if (!confirm("Bạn có chắc muốn xóa đánh giá này?")) return;
             $.ajax({
-                type: "POST",
-                url: '/Customer/Review/DeleteReview',
-                data: JSON.stringify({ id: reviewId }),
-                contentType: "application/json; charset=utf-8",
-                success: function (response) {
-                    if (response.success) {
-                        loadMyReviews(); // Reload lại danh sách
-                    } else {
-                        alert(response.message);
-                    }
-                },
-                error: function () {
-                    alert("Đã xảy ra lỗi hệ thống.");
+                type: "POST", url: '/Customer/Review/DeleteReview',
+                data: JSON.stringify({ id: id }), contentType: "application/json",
+                success: function (res) {
+                    if (res.success) loadMyReviews();
+                    else alert(res.message);
                 }
             });
         }
-
-        // Helper xử lý ngày tháng JSON /Date(...)/
-        function formatDate(jsonDate) {
-            if (!jsonDate) return "";
-            var date;
-            if (jsonDate.indexOf("/Date(") !== -1) {
-                date = new Date(parseInt(jsonDate.replace(/\/Date\((-?\d+)\)\//, '$1')));
-            } else {
-                date = new Date(jsonDate);
-            }
-            return date.toLocaleDateString('vi-VN');
-        }
     </script>
     <style>
-        .hover-shadow:hover {
-            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
-            transition: 0.3s;
+        .text-truncate-3 {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
     </style>
 }

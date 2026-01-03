@@ -82,8 +82,20 @@ namespace HotelBooking.Areas.Customer.Controllers
                         b.Id,
                         b.HotelId,
                         HotelName = b.Hotel.Name,
+                        CheckInDate = b.CheckInDate,
+
+                        // SỬA ĐỔI QUAN TRỌNG: Lấy ảnh từ bảng HotelImages
+                        // Lấy ảnh có IsPrimary = true, nếu không có thì lấy ảnh đầu tiên
+                        HotelImage = _db.HotelImages
+                                .Where(img => img.HotelId == b.HotelId)
+                                .Select(img => img.Url)
+                                .FirstOrDefault()
+                                ?? _db.HotelImages
+                                    .Where(img => img.HotelId == b.HotelId)
+                                    .Select(img => img.Url)
+                                    .FirstOrDefault(),
                         // Kiểm tra xem đã có review nào link với booking này chưa
-                        HasReview = _db.Reviews.Any(r => r.BookingId == bookingId)
+                        HasReview = _db.Reviews.Any(r => r.BookingId == bookingId && r.DeletedAt == null)
                     })
                     .FirstOrDefault();
 
@@ -111,7 +123,7 @@ namespace HotelBooking.Areas.Customer.Controllers
                     return Json(new { success = false, message = "Dữ liệu không hợp lệ" });
 
                 // Check if already reviewed
-                if (_db.Reviews.Any(r => r.BookingId == model.BookingId))
+                if (_db.Reviews.Any(r => r.BookingId == model.BookingId && r.DeletedAt == null))
                     return Json(new { success = false, message = "Bạn đã đánh giá booking này rồi" });
 
                 var userId = GetCurrentUserId();
@@ -151,9 +163,19 @@ namespace HotelBooking.Areas.Customer.Controllers
                     .Select(r => new
                     {
                         r.Id,
-                        // r.HotelId, -> Cột này không còn tồn tại
-                        // Lấy tên khách sạn qua Booking
+                        // Truy cập ngược từ Review -> Booking -> Hotel
                         HotelName = r.Booking.Hotel.Name,
+
+                        // SỬA ĐỔI QUAN TRỌNG: Logic lấy ảnh tương tự như trên
+                        HotelImage = _db.HotelImages
+                                .Where(img => img.HotelId == r.Booking.HotelId)
+                                .Select(img => img.Url)
+                                .FirstOrDefault()
+                                ?? _db.HotelImages
+                                    .Where(img => img.HotelId == r.Booking.HotelId)
+                                    .Select(img => img.Url)
+                                    .FirstOrDefault(),
+
                         r.Rating,
                         r.Title,
                         r.Content,

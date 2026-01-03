@@ -3,68 +3,80 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="container py-4">
-    <h2 class="mb-4">Đặt phòng</h2>
+<!-- Page Header -->
+<div class="container-fluid page-header py-5 mb-5" style="background: linear-gradient(rgba(15, 23, 43, 0.7), rgba(15, 23, 43, 0.7)), url('/Content/img/carousel-1.jpg') center/cover;">
+    <div class="container py-5">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb text-white mb-2">
+                <li class="breadcrumb-item"><a href="/" class="text-white">Trang chủ</a></li>
+                <li class="breadcrumb-item"><a href="/Search/Index" class="text-white">Tìm kiếm</a></li>
+                <li class="breadcrumb-item active text-warning">Đặt phòng</li>
+            </ol>
+        </nav>
+        <h1 class="display-5 text-white mb-3">Xác nhận đặt phòng</h1>
+    </div>
+</div>
 
-    <div class="row">
-        <div class="col-md-8">
-            <div class="card mb-3 shadow-sm">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0 text-primary">Thông tin đặt phòng</h5>
-                </div>
-                <div class="card-body">
+<!-- Main Content -->
+<div class="container-xxl py-5">
+    <div class="container">
+        <div class="row g-5">
+            <!-- Form Area -->
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm p-4 mb-4 wow fadeInUp" data-wow-delay="0.1s">
+                    <h5 class="mb-4"><i class="fa fa-calendar-check me-2 text-primary"></i>Thông tin đặt phòng</h5>
+
                     <form id="bookingForm">
                         <input type="hidden" id="hotelId" value="@ViewBag.HotelId" />
                         <input type="hidden" id="roomId" value="@ViewBag.RoomId" />
 
                         <div id="error-message" class="alert alert-danger" style="display:none;"></div>
 
-                        <div class="row mb-3">
+                        <div class="row g-3 mb-3">
                             <div class="col-md-6">
                                 <label for="checkInDate" class="form-label fw-bold">Ngày nhận phòng</label>
-                                <input type="date" class="form-control" id="checkInDate" required />
+                                <input type="date" class="form-control form-control-lg" id="checkInDate" required />
                             </div>
                             <div class="col-md-6">
                                 <label for="checkOutDate" class="form-label fw-bold">Ngày trả phòng</label>
-                                <input type="date" class="form-control" id="checkOutDate" required />
+                                <input type="date" class="form-control form-control-lg" id="checkOutDate" required />
                             </div>
                         </div>
 
                         <div class="mb-3">
                             <label for="guests" class="form-label fw-bold">Số khách (Tối đa <span id="maxCapacity">2</span>)</label>
-                            <input type="number" class="form-control" id="guests" value="1" min="1" required />
+                            <input type="number" class="form-control form-control-lg" id="guests" value="1" min="1" required />
                         </div>
 
                         <div class="mb-3">
                             <label for="promoCode" class="form-label fw-bold">Mã khuyến mãi (nếu có)</label>
-                            <div class="input-group">
+                            <div class="input-group input-group-lg">
                                 <input type="text" class="form-control" id="promoCode" placeholder="Nhập mã giảm giá..." />
                                 <button class="btn btn-outline-primary" type="button" id="btnApplyPromo">Áp dụng</button>
                             </div>
                             <small id="promoMessage" class="mt-1" style="display:none;"></small>
                         </div>
 
-                        <div class="mb-3">
+                        <div class="mb-4">
                             <label for="note" class="form-label fw-bold">Yêu cầu đặc biệt</label>
                             <textarea class="form-control" id="note" rows="3" placeholder="Ví dụ: Nhận phòng trễ, giường đôi..."></textarea>
                         </div>
 
-                        <button type="submit" class="btn btn-primary btn-lg w-100 mt-3">
-                            Tiếp tục thanh toán <i class="fas fa-arrow-right"></i>
+                        <button type="submit" class="btn btn-primary btn-lg w-100 fw-semibold">
+                            Tiếp tục thanh toán <i class="fa fa-arrow-right ms-2"></i>
                         </button>
                     </form>
                 </div>
             </div>
-        </div>
 
-        <div class="col-md-4">
-            <div class="card shadow-sm sticky-top" style="top: 20px;">
-                <div class="card-header bg-light">
-                    <h5 class="mb-0">Tóm tắt chi phí</h5>
-                </div>
-                <div class="card-body" id="bookingSummary">
-                    <div class="text-center py-3">
-                        <div class="spinner-border text-primary" role="status"></div>
+            <!-- Summary Sidebar -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm p-4 sticky-top wow fadeInUp" data-wow-delay="0.2s" style="top: 100px">
+                    <h5 class="mb-3"><i class="fa fa-hotel text-primary me-2"></i>Tóm tắt chi phí</h5>
+                    <div id="bookingSummary">
+                        <div class="text-center py-3">
+                            <div class="spinner-border text-primary" role="status"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -77,13 +89,10 @@
         var roomId = parseInt($("#roomId").val());
         var hotelId = parseInt($("#hotelId").val());
         var roomPrice = 0;
-
-        // Biến lưu thông tin giảm giá
         var discountAmount = 0;
         var appliedPromoCode = "";
 
         $(document).ready(function () {
-            // Setup Datepicker limits
             var today = new Date().toISOString().split('T')[0];
             $("#checkInDate").attr('min', today).val(today);
 
@@ -98,12 +107,10 @@
                 if (this.id === 'checkInDate') {
                     $("#checkOutDate").attr('min', $(this).val());
                 }
-                // Khi đổi ngày, reset promo code vì giá thay đổi
                 resetPromo();
                 updateSummary();
             });
 
-            // Sự kiện bấm nút áp dụng mã
             $("#btnApplyPromo").click(function () {
                 applyPromoCode();
             });
@@ -135,13 +142,13 @@
                         var typeLabel = response.room.Type === 'VIP' ? 'VIP' : 'Thường';
 
                         var html = `
-                                <h6 class="text-primary fw-bold">${response.hotel.Name}</h6>
-                                <hr/>
-                                <p class="mb-1"><strong>Phòng:</strong> ${response.room.RoomNumber}</p>
-                                <p class="mb-1"><strong>Loại:</strong> ${typeLabel}</p>
-                                <p class="mb-3"><strong>Giá:</strong> ${roomPrice.toLocaleString()} ₫/đêm</p>
-                                <div id="priceCalculation"></div>
-                            `;
+                                        <h6 class="text-primary fw-bold">${response.hotel.Name}</h6>
+                                        <hr/>
+                                        <p class="mb-1"><strong>Phòng:</strong> ${response.room.RoomNumber}</p>
+                                        <p class="mb-1"><strong>Loại:</strong> ${typeLabel}</p>
+                                        <p class="mb-3"><strong>Giá:</strong> ${roomPrice.toLocaleString()} ₫/đêm</p>
+                                        <div id="priceCalculation"></div>
+                                    `;
                         $("#bookingSummary").html(html);
                         updateSummary();
                     } else {
@@ -152,7 +159,6 @@
             });
         }
 
-        // Hàm tính toán và hiển thị Tóm tắt
         function updateSummary() {
             var checkIn = new Date($("#checkInDate").val());
             var checkOut = new Date($("#checkOutDate").val());
@@ -171,40 +177,35 @@
                 if (total < 0) total = 0;
 
                 var html = `
-                        <div class="bg-light p-2 rounded">
-                            <div class="d-flex justify-content-between mb-1">
-                                <span>Số đêm:</span>
-                                <span>${nights}</span>
-                            </div>
-                            <div class="d-flex justify-content-between mb-1">
-                                <span>Tạm tính:</span>
-                                <span>${subtotal.toLocaleString()} ₫</span>
-                            </div>
-                    `;
+                                <div class="bg-light p-3 rounded">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Số đêm:</span>
+                                        <strong>${nights}</strong>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Tạm tính:</span>
+                                        <span>${subtotal.toLocaleString()} ₫</span>
+                                    </div>`;
 
-                // Hiển thị dòng giảm giá nếu có
                 if (discountAmount > 0) {
                     html += `
-                            <div class="d-flex justify-content-between mb-1 text-success">
-                                <span>Giảm giá:</span>
-                                <span>-${discountAmount.toLocaleString()} ₫</span>
-                            </div>
-                        `;
+                                    <div class="d-flex justify-content-between mb-2 text-success">
+                                        <span>Giảm giá:</span>
+                                        <span>-${discountAmount.toLocaleString()} ₫</span>
+                                    </div>`;
                 }
 
                 html += `
-                            <hr class="my-2"/>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span class="fw-bold">Tổng cộng:</span>
-                                <span class="text-danger fw-bold h5 mb-0">${total.toLocaleString()} ₫</span>
-                            </div>
-                        </div>
-                    `;
+                                    <hr class="my-2"/>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="fw-bold">Tổng cộng:</span>
+                                        <span class="text-danger fw-bold h5 mb-0">${total.toLocaleString()} ₫</span>
+                                    </div>
+                                </div>`;
                 $("#priceCalculation").html(html);
             }
         }
 
-        // Logic gọi API kiểm tra mã
         function applyPromoCode() {
             var code = $("#promoCode").val().trim();
             if (!code) {
@@ -212,7 +213,6 @@
                 return;
             }
 
-            // Tính tạm subtotal hiện tại để tính % giảm giá nếu cần
             var checkIn = new Date($("#checkInDate").val());
             var checkOut = new Date($("#checkOutDate").val());
             var nights = Math.ceil((checkOut - checkIn) / (1000 * 3600 * 24));
@@ -232,14 +232,12 @@
                     if (response.success) {
                         var promo = response.promo;
 
-                        // Tính tiền giảm
                         if (promo.Type === 'percent') {
                             discountAmount = subtotal * (promo.Value / 100);
                         } else {
                             discountAmount = promo.Value;
                         }
 
-                        // Giới hạn không giảm quá subtotal
                         if (discountAmount > subtotal) discountAmount = subtotal;
 
                         appliedPromoCode = promo.Code;
@@ -280,12 +278,12 @@
                 CheckOutDate: $("#checkOutDate").val(),
                 Guests: guests,
                 Note: $("#note").val(),
-                PromoCode: appliedPromoCode // Gửi mã đã validate lên server
+                PromoCode: appliedPromoCode
             };
 
             var btn = $("button[type=submit]");
             var originalText = btn.html();
-            btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Đang xử lý...');
+            btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Đang xử lý...');
 
             $.ajax({
                 type: "POST",

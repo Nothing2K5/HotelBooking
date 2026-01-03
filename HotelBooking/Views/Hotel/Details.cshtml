@@ -3,223 +3,397 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div id="hotelDetails">
-    <div class="text-center py-5">
-        <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>
+<!-- Page Header (Dynamic with hotel image) -->
+<div id="pageHeader" class="container-fluid page-header py-5 mb-5" style="background: linear-gradient(rgba(15, 23, 43, 0.7), rgba(15, 23, 43, 0.7)), url('/Content/img/carousel-1.jpg') center/cover;">
+    <div class="container py-5">
+        <h1 class="display-3 text-white mb-3 animated slideInDown" id="hotelNameHeader">Chi tiết khách sạn</h1>
+        <nav aria-label="breadcrumb animated slideInDown">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a class="text-white" href="/">Trang chủ</a></li>
+                <li class="breadcrumb-item"><a class="text-white" href="/Search/Index">Tìm kiếm</a></li>
+                <li class="breadcrumb-item text-white active">Chi tiết</li>
+            </ol>
+        </nav>
     </div>
 </div>
 
-<div class="mt-4">
-    <ul class="nav nav-tabs nav-fill" id="hotelTabs" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active fw-bold" id="rooms-tab" data-bs-toggle="tab" data-bs-target="#rooms" type="button">
-                <i class="fas fa-bed"></i> Danh sách phòng
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link fw-bold" id="reviews-tab" data-bs-toggle="tab" data-bs-target="#reviews" type="button">
-                <i class="fas fa-comments"></i> Đánh giá & Bình luận
-            </button>
-        </li>
-    </ul>
-    <div class="tab-content border border-top-0 p-3 bg-white" id="hotelTabsContent">
-        <div class="tab-pane fade show active" id="rooms" role="tabpanel">
-            <div id="hotelRooms" class="mt-3"></div>
+<!-- Hotel Details -->
+<div class="container-xxl py-5">
+    <div class="container">
+        <!-- Loading State -->
+        <div id="hotelDetails">
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
         </div>
-        <div class="tab-pane fade" id="reviews" role="tabpanel">
-            <div id="hotelReviews" class="mt-3"></div>
+
+        <!-- Tabs -->
+        <div class="mt-5">
+            <ul class="nav nav-tabs nav-fill" id="hotelTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active fw-bold" id="rooms-tab" data-bs-toggle="tab"
+                            data-bs-target="#rooms" type="button">
+                        <i class="fa fa-bed me-2"></i>Danh sách phòng
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-bold" id="reviews-tab" data-bs-toggle="tab"
+                            data-bs-target="#reviews" type="button">
+                        <i class="fa fa-comments me-2"></i>Đánh giá & Bình luận
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content border border-top-0 p-4 bg-white shadow-sm" id="hotelTabsContent">
+                <!-- Rooms Tab -->
+                <div class="tab-pane fade show active" id="rooms" role="tabpanel">
+                    <div id="hotelRooms" class="mt-3">
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-primary"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reviews Tab -->
+                <div class="tab-pane fade" id="reviews" role="tabpanel">
+                    <div id="hotelReviews" class="mt-3">
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-primary"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
 @section scripts {
     <script>
-    var hotelId = @ViewBag.HotelId;
-    var isAuthenticated = '@Request.IsAuthenticated'.toLowerCase() === 'true';
+        var hotelId = @ViewBag.HotelId;
+        var isAuthenticated = '@Request.IsAuthenticated'.toLowerCase() === 'true';
 
-    $(document).ready(function () {
-        loadHotelDetails();
-        loadHotelRooms();
-        loadHotelReviews();
-    });
-
-    function loadHotelDetails() {
-        $.ajax({
-            type: "GET",
-            url: '/Hotel/GetDetails/' + hotelId,
-            success: function (response) {
-                if (response.success) {
-                    var hotel = response.data;
-                    var stars = ''; for(let i=0; i<hotel.StarRating; i++) stars+='⭐';
-
-                    var html = `
-                    <div class="row">
-                        <div class="col-md-8">
-                            <h2 class="text-primary fw-bold">${hotel.Name}</h2>
-                            <p class="h5 mb-2">${stars}</p>
-                            <p class="text-muted"><i class="fas fa-map-marker-alt text-danger"></i> ${hotel.Address}, ${hotel.City}, ${hotel.Country}</p>
-                        </div>
-                    </div>`;
-
-                    // Carousel Ảnh
-                    if (hotel.Images && hotel.Images.length > 0) {
-                        html += `<div id="hotelCarousel" class="carousel slide mb-4 rounded overflow-hidden shadow" data-bs-ride="carousel">
-                                    <div class="carousel-inner">`;
-                        hotel.Images.forEach(function(img, index) {
-                            html += `<div class="carousel-item ${index === 0 ? 'active' : ''}">
-                                        <img src="${img.Url}" class="d-block w-100" style="height: 450px; object-fit: cover;" alt="${img.AltText || 'Hotel Image'}">
-                                     </div>`;
-                        });
-                        html += `   </div>
-                                    <button class="carousel-control-prev" type="button" data-bs-target="#hotelCarousel" data-bs-slide="prev">
-                                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                                    </button>
-                                    <button class="carousel-control-next" type="button" data-bs-target="#hotelCarousel" data-bs-slide="next">
-                                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                                    </button>
-                                </div>`;
-                    }
-
-                    html += `<div class="card shadow-sm"><div class="card-body">
-                                <h4 class="card-title">Giới thiệu</h4>
-                                <p class="card-text">${hotel.Description || 'Chưa có mô tả chi tiết.'}</p>
-                             </div></div>`;
-
-                    $("#hotelDetails").html(html);
-                } else {
-                    $("#hotelDetails").html('<div class="alert alert-danger">Không tải được thông tin khách sạn.</div>');
-                }
-            }
+        $(document).ready(function () {
+            loadHotelDetails();
+            loadHotelRooms();
+            loadHotelReviews();
         });
-    }
 
-    function loadHotelRooms() {
-        $("#hotelRooms").html('<div class="text-center"><div class="spinner-border text-primary"></div></div>');
-
-        $.ajax({
-            type: "GET",
-            url: '/Hotel/GetRooms/' + hotelId,
-            success: function (response) {
-                if (response.success && response.rooms.length > 0) {
-                    var html = '<div class="row">';
-
-                    response.rooms.forEach(function(room) {
-                        // Xác định trạng thái phòng
-                        var isAvailable = room.Status === 'Available';
-                        var statusBadge = '';
-                        var statusClass = '';
-
-                        if (isAvailable) {
-                            statusBadge = '<span class="badge bg-success">Còn trống</span>';
-                            statusClass = 'border-success';
-                        } else if (room.Status === 'Booked') {
-                            statusBadge = '<span class="badge bg-warning text-dark">Đã đặt</span>';
-                            statusClass = 'opacity-75'; // Làm mờ nhẹ
-                        } else {
-                            statusBadge = '<span class="badge bg-secondary">Đang sử dụng</span>';
-                            statusClass = 'bg-light text-muted opacity-75'; // Làm mờ + xám
+        function loadHotelDetails() {
+            $.ajax({
+                type: "GET",
+                url: '/Hotel/GetDetails/' + hotelId,
+                success: function (response) {
+                    if (response.success) {
+                        var hotel = response.data;
+                        var stars = '';
+                        for (let i = 0; i < hotel.StarRating; i++) {
+                            stars += '<small class="fa fa-star text-warning"></small>';
                         }
 
-                        // Label Loại phòng
-                        var typeLabel = room.Type === 'VIP' ? '<span class="badge bg-warning text-dark me-2">VIP</span>' : '<span class="badge bg-info text-dark me-2">Thường</span>';
-                        var imgUrl = room.ImageUrl ? room.ImageUrl : '/Content/images/no-image.png';
+                        // Update header
+                        $("#hotelNameHeader").text(hotel.Name);
 
+                        var html = `
+                        <div class="row g-5 mb-5 wow fadeInUp" data-wow-delay="0.1s">
+                            <div class="col-lg-8">
+                                <h2 class="text-primary fw-bold mb-2">${hotel.Name}</h2>
+                                <div class="mb-2">${stars}</div>
+                                <p class="text-muted mb-4">
+                                    <i class="fa fa-map-marker-alt text-danger me-2"></i>${hotel.Address}, ${hotel.City}, ${hotel.Country}
+                                </p>
+                            </div>
+                            <div class="col-lg-4 text-end">
+                                <div class="card border-0 shadow-sm p-3">
+                                    <h5 class="mb-0">Giá từ</h5>
+                                    <h3 class="text-danger fw-bold mb-0">${hotel.MinPrice ? hotel.MinPrice.toLocaleString() + ' ₫' : 'Liên hệ'}</h3>
+                                    <small class="text-muted">/đêm</small>
+                                </div>
+                            </div>
+                        </div>`;
+
+                        // Carousel
+                        if (hotel.img && hotel.img.length > 0) {
+                            html += `
+                            <div id="hotelCarousel" class="carousel slide mb-5 rounded-4 overflow-hidden shadow wow fadeInUp" data-bs-ride="carousel" data-wow-delay="0.2s">
+                                <div class="carousel-inner">`;
+
+                            hotel.img.forEach(function (img, index) {
+                                html += `
+                                <div class="carousel-item ${index === 0 ? 'active' : ''}">
+                                    <img src="${img.Url}" class="d-block w-100" style="height: 500px; object-fit: cover;" alt="${img.AltText || 'Hotel Image'}">
+                                </div>`;
+                            });
+
+                            html += `
+                                </div>
+                                <button class="carousel-control-prev" type="button" data-bs-target="#hotelCarousel" data-bs-slide="prev">
+                                    <span class="carousel-control-prev-icon"></span>
+                                </button>
+                                <button class="carousel-control-next" type="button" data-bs-target="#hotelCarousel" data-bs-slide="next">
+                                    <span class="carousel-control-next-icon"></span>
+                                </button>
+                            </div>`;
+                        }
+
+                        // Description
                         html += `
-                        <div class="col-md-6 mb-4">
-                            <div class="card h-100 ${statusClass} shadow-sm">
-                                <div class="row g-0 h-100">
-                                    <div class="col-md-5">
-                                        <img src="${imgUrl}" class="img-fluid rounded-start h-100" style="object-fit: cover; min-height: 200px;" alt="Room Image">
-                                    </div>
-                                    <div class="col-md-7">
-                                        <div class="card-body d-flex flex-column h-100">
-                                            <div class="d-flex justify-content-between mb-2">
-                                                <h5 class="card-title mb-0">Phòng ${room.RoomNumber}</h5>
-                                                ${statusBadge}
-                                            </div>
-                                            <div class="mb-2">${typeLabel}</div>
+                        <div class="card border-0 shadow-sm p-4 wow fadeInUp" data-wow-delay="0.3s">
+                            <h4 class="fw-bold mb-3">
+                                <i class="fa fa-info-circle text-primary me-2"></i>Giới thiệu
+                            </h4>
+                            <p class="text-body">${hotel.Description || 'Chưa có mô tả chi tiết.'}</p>
+                        </div>`;
 
-                                            <p class="card-text small mb-2">${room.Description || 'Mô tả đang cập nhật'}</p>
+                        $("#hotelDetails").html(html);
+                    } else {
+                        $("#hotelDetails").html('<div class="alert alert-danger">Không tải được thông tin khách sạn.</div>');
+                    }
+                }
+            });
+        }
 
-                                            <ul class="list-unstyled small text-muted mb-3">
-                                                <li><i class="fas fa-user-friends"></i> Sức chứa: ${room.Capacity} người</li>
-                                            </ul>
+        function loadHotelRooms() {
+            $("#hotelRooms").html('<div class="text-center py-4"><div class="spinner-border text-primary"></div></div>');
 
-                                            <div class="mt-auto pt-2 border-top">
-                                                <div class="d-flex justify-content-between align-items-center">
+            $.ajax({
+                type: "GET",
+                url: '/Hotel/GetRooms/' + hotelId,
+                success: function (response) {
+                    if (response.success && response.rooms.length > 0) {
+                        var html = '<div class="row g-4">';
+
+                        response.rooms.forEach(function (room, index) {
+                            var isAvailable = room.Status === 'Available';
+                            var statusBadge = '';
+                            var statusClass = '';
+
+                            if (isAvailable) {
+                                statusBadge = '<span class="badge bg-success">Còn trống</span>';
+                                statusClass = '';
+                            } else if (room.Status === 'Booked') {
+                                statusBadge = '<span class="badge bg-warning text-dark">Đã đặt</span>';
+                                statusClass = 'opacity-75';
+                            } else {
+                                statusBadge = '<span class="badge bg-secondary">Đang sử dụng</span>';
+                                statusClass = 'opacity-75';
+                            }
+
+                            var typeLabel = room.Type === 'VIP'
+                                ? '<span class="badge bg-warning text-dark me-2">VIP</span>'
+                                : '<span class="badge bg-info text-white me-2">Thường</span>';
+
+                            var imgUrl = room.ImageUrl || '/Content/img/no-image.png';
+
+                            html += `
+                            <div class="col-12 wow fadeInUp" data-wow-delay="${0.1 + (index % 3) * 0.1}s">
+                                <div class="card border-0 shadow-sm ${statusClass}">
+                                    <div class="row g-0">
+                                        <div class="col-md-4">
+                                            <img src="${imgUrl}" class="img-fluid rounded-start h-100"
+                                                 style="object-fit: cover; min-height: 250px;" alt="Room ${room.RoomNumber}">
+                                        </div>
+                                        <div class="col-md-8">
+                                            <div class="card-body d-flex flex-column h-100">
+                                                <div class="d-flex justify-content-between align-items-start mb-3">
                                                     <div>
-                                                        <span class="text-danger fw-bold h5 mb-0">${room.PricePerNight.toLocaleString()} ₫</span>
-                                                        <small class="text-muted">/đêm</small>
+                                                        <h5 class="card-title mb-2">Phòng ${room.RoomNumber}</h5>
+                                                        ${typeLabel}
                                                     </div>
+                                                    ${statusBadge}
+                                                </div>
 
-                                                    ${isAvailable ?
-                                                        (isAuthenticated ?
-                                                            `<a href="/Customer/Booking/Create?roomId=${room.Id}&hotelId=${hotelId}" class="btn btn-sm btn-primary">Đặt ngay</a>` :
-                                                            `<a href="/Account/Login?returnUrl=${window.location.pathname}" class="btn btn-sm btn-outline-primary">Đăng nhập</a>`
-                                                        ) :
-                                                        `<button class="btn btn-sm btn-secondary" disabled>Không khả dụng</button>`
-                                                    }
+                                                <p class="card-text text-muted mb-3">
+                                                    ${room.Description || 'Mô tả đang cập nhật'}
+                                                </p>
+
+                                                <div class="mb-3">
+                                                    <span class="badge bg-light text-dark border me-2">
+                                                        <i class="fa fa-user-friends text-primary"></i> ${room.Capacity} người
+                                                    </span>
+                                                </div>
+
+                                                <div class="mt-auto pt-3 border-top">
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <div>
+                                                            <h4 class="text-danger fw-bold mb-0">${room.PricePerNight.toLocaleString()} ₫</h4>
+                                                            <small class="text-muted">/đêm</small>
+                                                        </div>
+                                                        ${isAvailable
+                                                            ? (isAuthenticated
+                                                                ? `<a href="/Customer/Booking/Create?roomId=${room.Id}&hotelId=${hotelId}" class="btn btn-primary">Đặt ngay</a>`
+                                                                : `<a href="/Account/Login?returnUrl=${encodeURIComponent(window.location.pathname)}" class="btn btn-outline-primary">Đăng nhập để đặt</a>`
+                                                            )
+                                                            : '<button class="btn btn-secondary" disabled>Không khả dụng</button>'
+                                                        }
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        </div>`;
-                    });
-
-                    html += '</div>';
-                    $("#hotelRooms").html(html);
-                } else {
-                    $("#hotelRooms").html('<div class="alert alert-warning text-center">Khách sạn này hiện chưa có danh sách phòng.</div>');
-                }
-            }
-        });
-    }
-
-    function loadHotelReviews() {
-        $.ajax({
-            type: "GET",
-            url: '/Hotel/GetReviews/' + hotelId,
-            success: function (response) {
-                if (response.success) {
-                    var html = '';
-                    if (response.reviews && response.reviews.length > 0) {
-                        var avg = response.avgRating.toFixed(1);
-                        html += `
-                        <div class="d-flex align-items-center mb-4 p-3 bg-light rounded">
-                            <div class="display-4 fw-bold text-primary me-3">${avg}</div>
-                            <div>
-                                <div class="text-warning small">${'⭐'.repeat(Math.round(response.avgRating))}</div>
-                                <div class="text-muted">Dựa trên ${response.reviews.length} đánh giá</div>
-                            </div>
-                        </div>`;
-
-                        response.reviews.forEach(function(review) {
-                            var date = new Date(review.CreatedAt).toLocaleDateString('vi-VN');
-                            // Sao đánh giá
-                            var stars = ''; for(let i=0; i<review.Rating; i++) stars += '<i class="fas fa-star text-warning"></i>';
-
-                            html += `
-                            <div class="card mb-3 border-0 shadow-sm">
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between">
-                                        <h6 class="fw-bold mb-0">${review.UserEmail}</h6>
-                                        <small class="text-muted">${date}</small>
-                                    </div>
-                                    <div class="mb-2">${stars}</div>
-                                    <h6 class="fw-bold small text-dark">${review.Title || ''}</h6>
-                                    <p class="card-text text-secondary">${review.Content}</p>
-                                </div>
                             </div>`;
                         });
+
+                        html += '</div>';
+                        $("#hotelRooms").html(html);
                     } else {
-                        html = '<div class="text-center text-muted py-4"><i class="far fa-comment-dots fa-3x mb-3"></i><p>Chưa có đánh giá nào cho khách sạn này.</p></div>';
+                        $("#hotelRooms").html('<div class="alert alert-warning text-center">Khách sạn này hiện chưa có danh sách phòng.</div>');
                     }
-                    $("#hotelReviews").html(html);
                 }
-            }
-        });
-    }
+            });
+        }
+
+        function loadHotelReviews() {
+            $.ajax({
+                type: "GET",
+                url: '/Hotel/GetReviews/' + hotelId,
+                success: function (response) {
+                    if (response.success) {
+                        var html = '';
+
+                        if (response.reviews && response.reviews.length > 0) {
+                            var avg = response.avgRating.toFixed(1);
+                            html += `
+                            <div class="card border-0 bg-light p-4 mb-4 wow fadeInUp" data-wow-delay="0.1s">
+                                <div class="row align-items-center">
+                                    <div class="col-md-3 text-center">
+                                        <div class="display-3 fw-bold text-primary">${avg}</div>
+                                        <div class="text-warning mb-2">
+                                            ${'⭐'.repeat(Math.round(response.avgRating))}
+                                        </div>
+                                        <small class="text-muted">${response.reviews.length} đánh giá</small>
+                                    </div>
+                                    <div class="col-md-9">
+                                        <h5 class="mb-2">Đánh giá trung bình</h5>
+                                        <p class="text-muted mb-0">Dựa trên ${response.reviews.length} đánh giá từ khách hàng</p>
+                                    </div>
+                                </div>
+                            </div>`;
+
+                            response.reviews.forEach(function (review, index) {
+                                var date = new Date(review.CreatedAt).toLocaleDateString('vi-VN');
+                                var stars = '';
+                                for (let i = 0; i < review.Rating; i++) {
+                                    stars += '<i class="fa fa-star text-warning"></i>';
+                                }
+
+                                html += `
+                                <div class="card border-0 shadow-sm mb-3 wow fadeInUp" data-wow-delay="${0.1 + (index % 3) * 0.1}s">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-circle me-3">${review.UserEmail.substring(0, 1).toUpperCase()}</div>
+                                                <div>
+                                                    <h6 class="fw-bold mb-0">${review.UserEmail}</h6>
+                                                    <small class="text-muted">${date}</small>
+                                                </div>
+                                            </div>
+                                            <div>${stars}</div>
+                                        </div>
+                                        ${review.Title ? `<h6 class="fw-bold text-dark mt-3">${review.Title}</h6>` : ''}
+                                        <p class="card-text text-secondary mb-0">${review.Content}</p>
+                                    </div>
+                                </div>`;
+                            });
+                        } else {
+                            html = `
+                            <div class="text-center text-muted py-5">
+                                <i class="far fa-comment-dots fa-3x mb-3"></i>
+                                <p class="h5">Chưa có đánh giá nào cho khách sạn này.</p>
+                            </div>`;
+                        }
+
+                        $("#hotelReviews").html(html);
+                    }
+                }
+            });
+        }
     </script>
+
+    <style>
+        .page-header {
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+        }
+
+        .page-header .breadcrumb {
+            background: transparent;
+            padding: 0;
+        }
+
+        .page-header .breadcrumb-item + .breadcrumb-item::before {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .nav-tabs .nav-link {
+            border: none;
+            color: #6c757d;
+            padding: 1rem 1.5rem;
+            transition: all 0.3s;
+        }
+
+        .nav-tabs .nav-link:hover {
+            color: #FEA116;
+            border-color: transparent;
+        }
+
+        .nav-tabs .nav-link.active {
+            color: #FEA116;
+            background: #fff;
+            border-bottom: 3px solid #FEA116;
+        }
+
+        .card {
+            border-radius: 15px;
+            transition: all 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+        }
+
+        .avatar-circle {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FEA116 0%, #FF6B6B 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #fff;
+        }
+
+        .btn-primary {
+            background: #FEA116;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 24px;
+            transition: all 0.3s;
+        }
+
+        .btn-primary:hover {
+            background: #0F172B;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(15, 23, 43, 0.3);
+        }
+
+        .btn-outline-primary {
+            border: 2px solid #FEA116;
+            color: #FEA116;
+            border-radius: 8px;
+            padding: 10px 24px;
+            transition: all 0.3s;
+        }
+
+        .btn-outline-primary:hover {
+            background: #FEA116;
+            color: #fff;
+        }
+    </style>
 }

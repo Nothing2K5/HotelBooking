@@ -1,63 +1,71 @@
 ﻿@{
-    ViewBag.Title = "Loyalty Program";
+    ViewBag.Title = "Hạng thành viên";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="container-fluid">
-    <div class="row mb-3">
-        <div class="col-sm-12">
-            <h3 class="mb-0"><i class="fas fa-gift"></i> Loyalty Program</h3>
-        </div>
+<!-- Page Header -->
+<div class="container-fluid page-header py-5 mb-5" style="background: linear-gradient(rgba(15, 23, 43, 0.7), rgba(15, 23, 43, 0.7)), url('/Content/img/carousel-1.jpg') center/cover;">
+    <div class="container py-5">
+        <h1 class="display-3 text-white mb-3 animated slideInDown">Hạng thành viên</h1>
+        <nav aria-label="breadcrumb animated slideInDown">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a class="text-white" href="/">Trang chủ</a></li>
+                <li class="breadcrumb-item text-white active">Hạng thành viên</li>
+            </ol>
+        </nav>
     </div>
+</div>
 
-    <div class="row">
-        <!-- Current Points Card -->
-        <div class="col-md-4 mb-3">
-            <div class="card bg-gradient text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                <div class="card-body text-center">
-                    <h5 class="card-title">Điểm hiện tại</h5>
-                    <h1 class="display-3" id="currentPoints">0</h1>
-                    <p class="card-text">điểm</p>
+<!-- Membership Content -->
+<div class="container-xxl py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            @*<div class="mx-auto mb-3 d-flex align-items-center justify-content-center rounded-circle text-white" id="userAvatar"
+                 style="width:96px;height:96px;background-color:#0d6efd;">
+                <span id="avatarLetter" class="h3 mb-0">U</span>
+            </div>*@
+
+            <h4 class="mb-1" id="userName">Thành viên</h4>
+            <p class="text-muted mb-3" id="userEmail">...</p>
+
+            <div class="card border-0 shadow-sm p-4 d-inline-block w-100" style="max-width:520px;">
+                <h6 class="mb-2">
+                    Hạng hiện tại: <span class="text-warning fw-bold" id="currentTierName">Chưa có</span>
+                </h6>
+
+                <div class="mb-2">
+                    <h3 class="text-primary mb-0" id="currentPoints">0</h3>
+                    <small class="text-muted">điểm tích lũy</small>
+                </div>
+
+                <div class="progress mb-2" style="height:12px;">
+                    <div class="progress-bar bg-warning" id="progressBar" role="progressbar" style="width:0%;" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+
+                <div class="d-flex justify-content-between small text-muted">
+                    <span id="progressFrom">0 điểm</span>
+                    <span id="nextTierInfo">Cần ... điểm để lên hạng tiếp theo</span>
                 </div>
             </div>
         </div>
 
-        <!-- Current Tier Card -->
-        <div class="col-md-8 mb-3">
-            <div class="card">
-                <div class="card-header bg-info text-white">
-                    <h5 class="mb-0"><i class="fas fa-crown"></i> Hạng thành viên hiện tại</h5>
-                </div>
-                <div class="card-body" id="currentTierInfo">
-                    <p class="text-muted">Đang tải...</p>
-                </div>
+        <div class="row g-4 mb-5">
+            <div class="col-12 text-center mb-3">
+                <h3 class="fw-bold">Các hạng thành viên</h3>
+                <p class="text-muted">Nâng hạng để nhận nhiều ưu đãi hơn</p>
             </div>
-        </div>
-    </div>
 
-    <!-- All Tiers -->
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-layer-group"></i> Các hạng thành viên</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row" id="allTiers"></div>
-                </div>
-            </div>
+            <div id="tiersContainer" class="row g-4"></div>
         </div>
-    </div>
 
-    <!-- Points History -->
-    <div class="row mt-3">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-history"></i> Lịch sử điểm</h5>
-                </div>
-                <div class="card-body">
-                    <div id="pointsHistory"></div>
+        <!-- Points History card -->
+        <div class="row mt-5">
+            <div class="col-12">
+                <div id="pointsHistoryCard" class="card border-0 shadow-sm p-4">
+                    <h5 class="mb-4"><i class="fa fa-history me-2 text-primary"></i>Lịch sử điểm</h5>
+                    <div id="pointsHistory">
+                        <div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -66,99 +74,178 @@
 
 @section scripts {
     <script>
-        $(document).ready(function () {
+        $(function () {
             loadLoyaltyInfo();
             loadPointsHistory();
         });
 
+        // helper đọc số
+        function readNumber(obj, ...keys) {
+            for (const k of keys) {
+                if (obj && obj[k] != null && !isNaN(Number(obj[k]))) return Number(obj[k]);
+            }
+            return 0;
+        }
+        function readAny(obj, ...keys) {
+            for (const k of keys) {
+                if (obj && obj[k] != null) return obj[k];
+            }
+            return null;
+        }
+
         function loadLoyaltyInfo() {
             $.ajax({
                 type: "GET",
-                url: window.location.origin + '/Customer/Loyalty/GetLoyaltyInfo',
+                url: '/Customer/Loyalty/GetLoyaltyInfo',
+                dataType: "json",
                 success: function (response) {
-                    if (response.success) {
-                        var data = response.data;
-
-                        // Display current points
-                        $("#currentPoints").text(data.TotalPoints.toLocaleString());
-
-                        // Display current tier
-                        var tierHtml = '';
-                        if (data.currentTier) {
-                            tierHtml += '<h4 class="text-info"><i class="fas fa-medal"></i> ' + data.currentTier.Name + '</h4>';
-                            tierHtml += '<div class="row">';
-                            tierHtml += '<div class="col-md-6">';
-                            tierHtml += '<p><i class="fas fa-percentage"></i> <strong>Giảm giá:</strong> ' + data.currentTier.DiscountPercent + '%</p>';
-                            tierHtml += '</div>';
-                            tierHtml += '<div class="col-md-6">';
-                            tierHtml += '<p><i class="fas fa-coins"></i> <strong>Hệ số điểm:</strong> x' + data.currentTier.Multiplier + '</p>';
-                            tierHtml += '</div></div>';
-                        } else {
-                            tierHtml = '<p class="text-muted">Bạn chưa có hạng thành viên</p>';
-                        }
-                        $("#currentTierInfo").html(tierHtml);
-
-                        // Display all tiers
-                        var tiersHtml = '';
-                        data.allTiers.forEach(function (tier, index) {
-                            var isCurrent = data.currentTier && data.currentTier.Name === tier.Name;
-                            var cardClass = isCurrent ? 'border-info' : '';
-                            var badgeClass = isCurrent ? 'bg-info' : 'bg-secondary';
-
-                            tiersHtml += '<div class="col-md-4 mb-3">';
-                            tiersHtml += '<div class="card ' + cardClass + '">';
-                            tiersHtml += '<div class="card-body text-center">';
-                            if (isCurrent) {
-                                tiersHtml += '<span class="badge ' + badgeClass + ' mb-2">Hạng hiện tại</span>';
-                            }
-                            tiersHtml += '<h5 class="card-title">' + getTierIcon(index) + ' ' + tier.Name + '</h5>';
-                            tiersHtml += '<p class="card-text">';
-                            tiersHtml += '<i class="fas fa-percentage"></i> Giảm ' + tier.DiscountPercent + '%<br/>';
-                            tiersHtml += '<i class="fas fa-coins"></i> Tích điểm x' + tier.Multiplier;
-                            tiersHtml += '</p></div></div></div>';
-                        });
-                        $("#allTiers").html(tiersHtml);
+                    if (!response || response.success === false) {
+                        $("#userName").text('Thành viên');
+                        $("#currentTierName").text('Chưa có');
+                        $("#currentPoints").text('0');
+                        $("#tiersContainer").html('');
+                        $("#progressBar").css('width', '0%');
+                        $("#nextTierInfo").text('Không thể tải thông tin');
+                        return;
                     }
+
+                    var data = response.data || {};
+                    var userName = readAny(data, 'UserName', 'userName') || 'Thành viên';
+                    var userEmail = readAny(data, 'UserEmail', 'userEmail') || '';
+                    var totalPoints = readNumber(data, 'TotalPoints', 'totalPoints');
+                    var currentTier = readAny(data, 'currentTier', 'currentTier') || null;
+                    var allTiers = readAny(data, 'allTiers', 'allTiers') || [];
+
+                    // Hiển thị user
+                    $("#userName").text(userName);
+                    $("#userEmail").text(userEmail);
+                    $("#avatarLetter").text((userName || 'U').substring(0, 1).toUpperCase());
+                    $("#currentPoints").text(totalPoints.toLocaleString('vi-VN'));
+
+                    // Sắp xếp (phòng trường hợp backend trả lộn)
+                    allTiers = allTiers.slice().sort(function (a, b) {
+                        return readNumber(a, 'MinPoints') - readNumber(b, 'MinPoints');
+                    });
+
+                    // Tính progress dựa trên MinPoints
+                    var currentMin = currentTier ? readNumber(currentTier, 'MinPoints') : 0;
+                    var nextTier = allTiers.find(function (t) { return readNumber(t, 'MinPoints') > totalPoints; });
+
+                    if (nextTier) {
+                        var nextMin = readNumber(nextTier, 'MinPoints');
+                        var denom = nextMin - currentMin;
+                        var progress = 0;
+                        if (denom > 0) progress = ((totalPoints - currentMin) / denom) * 100;
+                        progress = Math.max(0, Math.min(100, progress));
+                        $("#progressBar").css('width', progress + '%').attr('aria-valuenow', Math.round(progress));
+                        $("#nextTierInfo").text('Cần ' + (nextMin - totalPoints).toLocaleString('vi-VN') + ' điểm để lên ' + (nextTier.Name || nextTier.name || 'hạng tiếp theo'));
+                        $("#progressFrom").text(currentMin.toLocaleString('vi-VN') + ' điểm');
+                    } else {
+                        $("#progressBar").css('width', '100%').attr('aria-valuenow', 100);
+                        $("#nextTierInfo").text('Bạn đã đạt hạng cao nhất!');
+                        $("#progressFrom").text(currentMin.toLocaleString('vi-VN') + ' điểm');
+                    }
+
+                    // Hiển thị tên hạng hiện tại (nếu có)
+                    if (currentTier && (currentTier.Name || currentTier.name)) {
+                        $("#currentTierName").text(currentTier.Name || currentTier.name);
+                    } else {
+                        $("#currentTierName").text('Chưa có');
+                    }
+
+                    // Hiển thị tất cả tiers
+                    displayTiers(allTiers, currentTier, totalPoints);
+                },
+                error: function () {
+                    $("#userName").text('Thành viên');
+                    $("#currentTierName").text('Chưa có');
+                    $("#currentPoints").text('0');
+                    $("#tiersContainer").html('');
+                    $("#progressBar").css('width', '0%');
+                    $("#nextTierInfo").text('Không thể tải thông tin');
                 }
             });
+        }
+
+        function displayTiers(tiers, currentTier, totalPoints) {
+            var html = '';
+            var defaultIcons = ['🥉', '🥈', '🥇', '💎'];
+
+            tiers.forEach(function (tier, index) {
+                var name = tier.Name || tier.name || 'Hạng';
+                var minPoints = readNumber(tier, 'MinPoints', 'minPoints');
+                var discount = readNumber(tier, 'DiscountPercent', 'discountPercent', 'discount');
+                var multiplier = readNumber(tier, 'Multiplier', 'multiplier', 'pointMultiplier');
+
+                var isCurrent = false;
+                if (currentTier) {
+                    var curId = currentTier.Id || currentTier.id;
+                    if (curId && (tier.Id === curId || tier.id === curId)) isCurrent = true;
+                    else if ((currentTier.Name || currentTier.name) === name) isCurrent = true;
+                }
+
+                var borderClass = isCurrent ? 'border-warning' : 'border-secondary';
+                var badgeHtml = isCurrent ? '<span class="badge bg-warning text-dark mb-3">Hạng hiện tại</span>' : '';
+                var remainingHtml = (!isCurrent && minPoints > totalPoints) ? '<small class="text-muted">Còn ' + (minPoints - totalPoints).toLocaleString('vi-VN') + ' điểm</small>' : '';
+                var icon = defaultIcons[index] || '⭐';
+
+                html += '<div class="col-12 col-sm-6 col-md-3">';
+                html += '  <div class="card h-100 ' + borderClass + ' border-2 shadow-sm">';
+                html += '    <div class="card-body text-center p-4">';
+                html += badgeHtml;
+                html += '      <div style="font-size:2.2rem;" class="mb-2">' + icon + '</div>';
+                html += '      <h5 class="card-title fw-bold mb-1">' + $('<div>').text(name).html() + '</h5>';
+                html += '      <p class="text-muted small mb-3">Từ ' + minPoints.toLocaleString('vi-VN') + ' điểm</p>';
+                html += '      <ul class="list-unstyled text-start small mb-3">';
+                html += '        <li class="mb-2"><i class="fa fa-check text-success me-2"></i>Giảm ' + discount + '%</li>';
+                html += '        <li class="mb-2"><i class="fa fa-coins text-warning me-2"></i>Tích điểm x' + multiplier + '</li>';
+                html += '      </ul>';
+                html += remainingHtml;
+                html += '    </div>';
+                html += '  </div>';
+                html += '</div>';
+            });
+
+            $("#tiersContainer").html(html);
         }
 
         function loadPointsHistory() {
+            $("#pointsHistory").html('<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>');
             $.ajax({
                 type: "GET",
-                url: window.location.origin + '/Customer/Loyalty/GetPointsHistory',
+                url: '/Customer/Loyalty/GetPointsHistory',
+                dataType: "json",
                 success: function (response) {
-                    if (response.success && response.data.length > 0) {
-                        var html = '<div class="table-responsive">';
-                        html += '<table class="table table-striped">';
-                        html += '<thead><tr><th>Ngày</th><th>Điểm</th><th>Lý do</th><th>Booking</th></tr></thead>';
-                        html += '<tbody>';
-
-                        response.data.forEach(function (item) {
-                            var pointsClass = item.Points > 0 ? 'text-success' : 'text-danger';
-                            var pointsSign = item.Points > 0 ? '+' : '';
-
-                            html += '<tr>';
-                            html += '<td>' + new Date(item.CreatedAt).toLocaleDateString('vi-VN') + '</td>';
-                            html += '<td class="' + pointsClass + '"><strong>' + pointsSign + item.Points + '</strong></td>';
-                            html += '<td>' + item.Reason + '</td>';
-                            html += '<td>' + (item.BookingCode || '-') + '</td>';
-                            html += '</tr>';
-                        });
-
-                        html += '</tbody></table></div>';
-                        $("#pointsHistory").html(html);
-                    } else {
-                        $("#pointsHistory").html('<p class="text-muted">Chưa có lịch sử điểm</p>');
+                    if (!response || response.success === false || !Array.isArray(response.data) || response.data.length === 0) {
+                        $("#pointsHistory").html('<p class="text-muted text-center py-3">Chưa có lịch sử điểm</p>');
+                        return;
                     }
+
+                    var rows = '';
+                    response.data.forEach(function (item) {
+                        var pts = Number(item.Points || item.points || 0);
+                        var ptsClass = pts > 0 ? 'text-success' : 'text-danger';
+                        var sign = pts > 0 ? '+' : '';
+                        var d = item.CreatedAt ? new Date(item.CreatedAt) : null;
+                        var dateText = d ? d.toLocaleDateString('vi-VN') : '';
+                        var reason = $('<div>').text(item.Reason || item.reason || '').html();
+                        var booking = $('<div>').text(item.BookingCode || item.bookingCode || '-').html();
+
+                        rows += '<tr>';
+                        rows += '<td>' + dateText + '</td>';
+                        rows += '<td class="' + ptsClass + '"><strong>' + sign + pts.toLocaleString('vi-VN') + '</strong></td>';
+                        rows += '<td>' + reason + '</td>';
+                        rows += '<td>' + booking + '</td>';
+                        rows += '</tr>';
+                    });
+
+                    var table = '<div class="table-responsive"><table class="table table-hover mb-0"><thead class="table-light"><tr><th>Ngày</th><th>Điểm</th><th>Lý do</th><th>Booking</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+                    $("#pointsHistory").html(table);
+                },
+                error: function () {
+                    $("#pointsHistory").html('<p class="text-muted text-center py-3">Không thể tải lịch sử điểm</p>');
                 }
             });
         }
-
-        function getTierIcon(index) {
-            var icons = ['🥉', '🥈', '🥇', '💎'];
-            return icons[index] || '⭐';
-        }
     </script>
-
 }

@@ -3,42 +3,58 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h3>Đăng nhập</h3>
-            </div>
-            <div class="card-body">
-                <form id="loginForm">
-                    <div id="error-message" class="alert alert-danger" style="display:none;"></div>
+<!-- Page Header -->
+<div class="container-fluid page-header py-5 mb-5" style="background: linear-gradient(rgba(15, 23, 43, 0.7), rgba(15, 23, 43, 0.7)), url('/Content/img/carousel-1.jpg') center/cover;">
+    <div class="container py-5">
+        <h1 class="display-3 text-white mb-3 animated slideInDown">Đăng nhập</h1>
+        <nav aria-label="breadcrumb animated slideInDown">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a class="text-white" href="/">Trang chủ</a></li>
+                <li class="breadcrumb-item text-white active">Đăng nhập</li>
+            </ol>
+        </nav>
+    </div>
+</div>
 
-                    <div class="form-group mb-3">
-                        <label for="email">Email</label>
-                        <input type="email" class="form-control" id="email" name="Email" placeholder="Email" required />
-                    </div>
+<!-- Login Form -->
+<div class="container-xxl py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm p-4 wow fadeInUp" data-wow-delay="0.1s">
+                    <h3 class="text-center mb-4 fw-bold">Đăng nhập tài khoản</h3>
 
-                    <div class="form-group mb-3">
-                        <label for="password">Mật khẩu</label>
-                        <input type="password" class="form-control" id="password" name="Password" placeholder="Mật khẩu" required />
-                    </div>
+                    <form id="loginForm">
+                        <div id="error-message" class="alert alert-danger" style="display:none;"></div>
 
-                    <div class="form-group mb-3">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="rememberMe" name="RememberMe" />
-                            <label class="form-check-label" for="rememberMe">Ghi nhớ đăng nhập</label>
+                        <div class="mb-3">
+                            <label for="email" class="form-label fw-semibold">Email</label>
+                            <input type="email" class="form-control" id="email" name="Email" placeholder="Nhập email của bạn" required />
                         </div>
-                    </div>
 
-                    <div class="form-group mb-3">
-                        <button type="submit" class="btn btn-primary btn-block w-100">Đăng nhập</button>
-                    </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label fw-semibold">Mật khẩu</label>
+                            <input type="password" class="form-control" id="password" name="Password" placeholder="Nhập mật khẩu" required />
+                        </div>
 
-                    <div class="text-center">
-                        <a href="/Account/ForgotPassword">Quên mật khẩu?</a> |
-                        <a href="/Account/Register">Đăng ký tài khoản mới</a>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="rememberMe" name="RememberMe" />
+                                <label class="form-check-label" for="rememberMe">Nhớ mật khẩu</label>
+                            </div>
+                            <a href="/Account/ForgotPassword" class="text-primary text-decoration-none">Quên mật khẩu?</a>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 py-3 fw-semibold">Đăng nhập</button>
+                    </form>
+
+                    <div class="text-center mt-4">
+                        <p class="mb-0">
+                            Chưa có tài khoản?
+                            <a href="/Account/Register" class="text-primary fw-semibold text-decoration-none">Đăng ký ngay</a>
+                        </p>
                     </div>
-                </form>
+                </div>
             </div>
         </div>
     </div>
